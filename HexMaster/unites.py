@@ -68,7 +68,3 @@ class Goule(Unite):
 class Vampire(Unite):
     def __init__(self, equipe, pos, nom, pv, dmg, mv, tier):
         super().__init__(equipe, pos, "Vampire", pv=12, dmg=3, mv=2, tier=2)
-
-class Cavalier(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, "Cavalier", 5, 2, 3)

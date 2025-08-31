@@ -2,6 +2,8 @@ import pygame
 import sys
 from jeu import Jeu
 from utils import Button
+from boutique import Boutique
+from inventaire import Inventaire
 
 BLANC = (255,255,255)
 BLEU = (50,150,250)
@@ -26,10 +28,10 @@ class HexaMaster:
         w, h = self.screen.get_size()
         center_x = w // 2
         self.boutons_menu = [
-            Button((center_x-140, h//2-130, 280, 60), "Jouer", lambda: self.set_etat("playmenu"), self.font_med),
-            Button((center_x-140, h//2-50, 280, 60), "Inventaire", lambda: self.set_etat("inventaire"), self.font_med),
-            Button((center_x-140, h//2+30, 280, 60), "Boutique", lambda: self.set_etat("boutique"), self.font_med),
-            Button((center_x-140, h//2+110, 280, 60), "Missions", lambda: self.set_etat("missions"), self.font_med),
+            Button((center_x-140, h//2-130, 280, 60), "Jouer", self.open_playmenu, self.font_med),
+            Button((center_x-140, h//2-50, 280, 60), "Inventaire", self.open_inventaire, self.font_med),
+            Button((center_x-140, h//2+30, 280, 60), "Boutique", self.open_boutique, self.font_med),
+            Button((center_x-140, h//2+110, 280, 60), "Missions", self.open_missions_placeholder, self.font_med),
             Button((center_x-140, h//2+190, 280, 60), "Quitter", lambda: sys.exit(), self.font_med),
         ]
 
@@ -37,12 +39,34 @@ class HexaMaster:
             Button((center_x-140, h//2-90, 280, 60), "1 personnage", lambda: self.start_play_mode(1), self.font_med),
             Button((center_x-140, h//2-10, 280, 60), "2 personnages", lambda: self.start_play_mode(2), self.font_med),
             Button((center_x-140, h//2+70, 280, 60), "3 personnages", lambda: self.start_play_mode(3), self.font_med),
-            Button((20, h-70, 150, 50), "Retour", lambda: self.set_etat("menu"), self.font_med),
+            Button((20, h-70, 150, 50), "Retour", self.back_to_menu, self.font_med),
         ]
 
-        self.boutons_retour = [
-            Button((20, h-70, 150, 50), "Retour", lambda: self.set_etat("menu"), self.font_med)
+        self.boutons_retour_placeholder = [
+            Button((20, h-70, 150, 50), "Retour", self.back_to_menu, self.font_med)
         ]
+
+    # ------ actions boutons ------
+    def back_to_menu(self):
+        if self.etat == "jeu":
+            self.jeu = None
+        self.etat = "menu"
+
+    def open_playmenu(self):
+        self.etat = "playmenu"
+
+    def open_inventaire(self):
+        inv = Inventaire(self.screen)
+        inv.afficher()
+        self.creer_boutons()  # re-sync positions après retour
+
+    def open_boutique(self):
+        shop = Boutique(self.screen)
+        shop.afficher()
+        self.creer_boutons()  # re-sync positions après retour
+
+    def open_missions_placeholder(self):
+        self.etat = "missions"
 
     def set_etat(self, e):
         if self.etat == "jeu" and e != "jeu":
@@ -50,11 +74,11 @@ class HexaMaster:
         self.etat = e
 
     def start_play_mode(self, n_players):
-        # Pour l'instant: lancer la démo pour 2 (ou autres), tu peux adapter plus tard
         if n_players >= 1:
-            self.jeu = Jeu(ia_strategy=None, screen=self.screen)  # ia_strategy None ou défaut
+            self.jeu = Jeu(ia_strategy=None, screen=self.screen)
             self.etat = "jeu"
 
+    # ------ boucle principale ------
     def run(self):
         while True:
             dt = self.clock.tick(60)
@@ -74,8 +98,8 @@ class HexaMaster:
                     for b in self.boutons_menu: b.handle_event(event)
                 elif self.etat == "playmenu":
                     for b in self.boutons_playmenu: b.handle_event(event)
-                elif self.etat in ["inventaire", "boutique", "missions"]:
-                    for b in self.boutons_retour: b.handle_event(event)
+                elif self.etat in ["missions"]:  # placeholder
+                    for b in self.boutons_retour_placeholder: b.handle_event(event)
                 elif self.etat == "jeu":
                     if self.jeu:
                         self.jeu.handle_event(event)
@@ -93,11 +117,11 @@ class HexaMaster:
                 self.screen.blit(titre, (self.screen.get_width()//2 - titre.get_width()//2, 80))
                 for b in self.boutons_playmenu: b.draw(self.screen)
 
-            elif self.etat in ["inventaire", "boutique", "missions"]:
+            elif self.etat in ["missions"]:  # placeholder
                 self.screen.fill(BLANC)
-                titre = self.font_big.render(self.etat.capitalize(), True, BLEU)
+                titre = self.font_big.render("Missions", True, BLEU)
                 self.screen.blit(titre, (self.screen.get_width()//2 - titre.get_width()//2, 80))
-                for b in self.boutons_retour: b.draw(self.screen)
+                for b in self.boutons_retour_placeholder: b.draw(self.screen)
                 info = self.font_small.render("Écran en construction — contenu placeholder", True, (0,0,0))
                 self.screen.blit(info, (50, 200))
 
