@@ -1,4 +1,5 @@
-# fichier: ia.py
+# stratégie simple: cible la cible la plus faible, approche et attaque si adjacent
+
 def cible_faible(unite, ennemis, unites):
     cibles = [e for e in ennemis if e.vivant]
     if not cibles:
@@ -12,6 +13,7 @@ def cible_faible(unite, ennemis, unites):
         cq, cr = cible.pos
         dq, dr = cq - q, cr - r
         step = (0, 0)
+        # simple pas axial (garde comportement précédent)
         if abs(dq) > abs(dr):
             step = (1 if dq > 0 else -1, 0)
         else:
