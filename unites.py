@@ -63,12 +63,8 @@ class Squelette(Unite):
 
 class Goule(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, "Goule", pv=10, dmg=2, tier=1)
+        super().__init__(equipe, pos, "Goule", pv=10, dmg=2, mv=1, tier=1)
 
 class Vampire(Unite):
-    def __init__(self, equipe, pos, nom, pv, dmg, mv, tier):
-        super().__init__(equipe, pos, "Vampire", pv=12, dmg=3, mv=2, tier=2)
-
-class Cavalier(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, "Cavalier", 5, 2, 3)
+        super().__init__(equipe, pos, "Vampire", pv=12, dmg=3, mv=2, tier=2)

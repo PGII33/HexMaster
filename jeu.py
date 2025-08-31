@@ -12,17 +12,43 @@ from tour import reset_actions_tour
 BTN_H_RATIO = 0.06
 
 class Jeu:
-    def __init__(self, ia_strategy=ia.cible_faible, screen=None):
+    def __init__(self, ia_strategy=ia.cible_faible, screen=None,
+                 initial_player_units=None, initial_enemy_units=None):
         self.screen = screen if screen is not None else pygame.display.set_mode((1200, 900), pygame.RESIZABLE)
         self.clock = pygame.time.Clock()
 
         # État du jeu
-        self.unites = [
-            unites.Squelette("joueur", (0, 0)),
-            unites.Cavalier("joueur", (1, 0)),
-            unites.Squelette("ennemi", (0, 2)),
-            unites.Barbare("ennemi", (1, 2)),
-        ]
+        self.unites = []
+
+        # si pas d'unités passées, unités par défaut (démo)
+        if initial_player_units is None:
+            self.unites.extend([
+                unites.Squelette("joueur", (0, 0)),
+                unites.Vampire("joueur", (1, 0)),
+            ])
+        else:
+            for nom, pos in initial_player_units:
+                if nom == "Squelette":
+                    self.unites.append(unites.Squelette("joueur", pos))
+                elif nom == "Goule":
+                    self.unites.append(unites.Goule("joueur", pos))
+                elif nom == "Vampire":
+                    self.unites.append(unites.Vampire("joueur", pos))
+
+        if initial_enemy_units is None:
+            self.unites.extend([
+                unites.Squelette("ennemi", (0, 2)),
+                unites.Goule("ennemi", (1, 2)),
+            ])
+        else:
+            for nom, pos in initial_enemy_units:
+                if nom == "Squelette":
+                    self.unites.append(unites.Squelette("ennemi", pos))
+                elif nom == "Goule":
+                    self.unites.append(unites.Goule("ennemi", pos))
+                elif nom == "Vampire":
+                    self.unites.append(unites.Vampire("ennemi", pos))
+
         self.tour = "joueur"
         self.selection = None
         self.deplacement_possibles = {}

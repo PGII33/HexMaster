@@ -4,9 +4,10 @@ from jeu import Jeu
 from utils import Button
 from boutique import Boutique
 from inventaire import Inventaire
+from hexarene import HexArène  # nouveau
 
-BLANC = (255,255,255)
-BLEU = (50,150,250)
+BLANC = (255, 255, 255)
+BLEU = (50, 150, 250)
 
 class HexaMaster:
     def __init__(self):
@@ -35,10 +36,10 @@ class HexaMaster:
             Button((center_x-140, h//2+190, 280, 60), "Quitter", lambda: sys.exit(), self.font_med),
         ]
 
+        # Play menu : Demo et HexArène
         self.boutons_playmenu = [
-            Button((center_x-140, h//2-90, 280, 60), "1 personnage", lambda: self.start_play_mode(1), self.font_med),
-            Button((center_x-140, h//2-10, 280, 60), "2 personnages", lambda: self.start_play_mode(2), self.font_med),
-            Button((center_x-140, h//2+70, 280, 60), "3 personnages", lambda: self.start_play_mode(3), self.font_med),
+            Button((center_x-140, h//2-50, 280, 60), "Demo", self.start_demo, self.font_med),
+            Button((center_x-140, h//2+50, 280, 60), "HexArène", self.start_hexarene_mode, self.font_med),
             Button((20, h-70, 150, 50), "Retour", self.back_to_menu, self.font_med),
         ]
 
@@ -58,25 +59,45 @@ class HexaMaster:
     def open_inventaire(self):
         inv = Inventaire(self.screen)
         inv.afficher()
-        self.creer_boutons()  # re-sync positions après retour
+        self.creer_boutons()
 
     def open_boutique(self):
         shop = Boutique(self.screen)
         shop.afficher()
-        self.creer_boutons()  # re-sync positions après retour
+        self.creer_boutons()
 
     def open_missions_placeholder(self):
         self.etat = "missions"
 
-    def set_etat(self, e):
-        if self.etat == "jeu" and e != "jeu":
-            self.jeu = None
-        self.etat = e
+    def start_demo(self):
+        self.jeu = Jeu(ia_strategy=None, screen=self.screen)
+        self.etat = "jeu"
 
-    def start_play_mode(self, n_players):
-        if n_players >= 1:
-            self.jeu = Jeu(ia_strategy=None, screen=self.screen)
-            self.etat = "jeu"
+    def start_hexarene_mode(self):
+        # Charger inventaire du joueur
+        inv_data = Inventaire(self.screen).data
+        player_units_names = inv_data.get("unites", [])
+
+        if not player_units_names:
+            print("Aucune unité disponible dans l'inventaire !")
+            return
+
+        # Lancer HexArène
+        hex_arene = HexArène(self.screen)
+        # remplacer la sélection automatique par inventaire
+        hex_arene.selected_units = player_units_names[:hex_arene.max_units]
+        hex_arene._placement_phase()  # placement automatique
+        player_units_specs = [(nom, pos) for nom, pos in hex_arene.unit_positions]
+        enemy_units_specs = hex_arene._generate_enemies()
+
+        # Lancer le jeu
+        self.jeu = Jeu(
+            ia_strategy=None,
+            screen=self.screen,
+            initial_player_units=player_units_specs,
+            initial_enemy_units=enemy_units_specs
+        )
+        self.etat = "jeu"
 
     # ------ boucle principale ------
     def run(self):
@@ -98,7 +119,7 @@ class HexaMaster:
                     for b in self.boutons_menu: b.handle_event(event)
                 elif self.etat == "playmenu":
                     for b in self.boutons_playmenu: b.handle_event(event)
-                elif self.etat in ["missions"]:  # placeholder
+                elif self.etat in ["missions"]:
                     for b in self.boutons_retour_placeholder: b.handle_event(event)
                 elif self.etat == "jeu":
                     if self.jeu:
@@ -117,7 +138,7 @@ class HexaMaster:
                 self.screen.blit(titre, (self.screen.get_width()//2 - titre.get_width()//2, 80))
                 for b in self.boutons_playmenu: b.draw(self.screen)
 
-            elif self.etat in ["missions"]:  # placeholder
+            elif self.etat in ["missions"]:
                 self.screen.fill(BLANC)
                 titre = self.font_big.render("Missions", True, BLEU)
                 self.screen.blit(titre, (self.screen.get_width()//2 - titre.get_width()//2, 80))
