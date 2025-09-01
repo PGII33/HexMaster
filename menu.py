@@ -1,9 +1,11 @@
 import pygame
 import sys
+import ia
 from jeu import Jeu
 from utils import Button
 from boutique import Boutique
 from inventaire import Inventaire
+from tuto import Tuto
 from hexarene import HexArène  # nouveau
 
 BLANC = (255, 255, 255)
@@ -38,7 +40,7 @@ class HexaMaster:
 
         # Play menu : Demo et HexArène
         self.boutons_playmenu = [
-            Button((center_x-140, h//2-50, 280, 60), "Demo", self.start_demo, self.font_med),
+            Button((center_x-140, h//2-50, 280, 60), "Tutoriel", self.start_tuto, self.font_med),
             Button((center_x-140, h//2+50, 280, 60), "HexArène", self.start_hexarene_mode, self.font_med),
             Button((20, h-70, 150, 50), "Retour", self.back_to_menu, self.font_med),
         ]
@@ -69,9 +71,11 @@ class HexaMaster:
     def open_missions_placeholder(self):
         self.etat = "missions"
 
-    def start_demo(self):
-        self.jeu = Jeu(ia_strategy=None, screen=self.screen)
+    def start_tuto(self):
+        tuto = Tuto(self.screen)
+        self.jeu = tuto.run_flow()
         self.etat = "jeu"
+
 
     def start_hexarene_mode(self):
         # Charger inventaire du joueur
@@ -92,7 +96,7 @@ class HexaMaster:
 
         # Lancer le jeu
         self.jeu = Jeu(
-            ia_strategy=None,
+            ia_strategy=ia.cible_faible,
             screen=self.screen,
             initial_player_units=player_units_specs,
             initial_enemy_units=enemy_units_specs

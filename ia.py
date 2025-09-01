@@ -5,9 +5,7 @@ def cible_faible(unite, ennemis, unites):
     if not cibles:
         return None
     cible = min(cibles, key=lambda x: x.pv)
-    if unite.est_adjacente(cible) and not unite.a_attaque:
-        unite.attaquer(cible)
-        return "attaque"
+
     if unite.pm > 0:
         q, r = unite.pos
         cq, cr = cible.pos
@@ -24,4 +22,7 @@ def cible_faible(unite, ennemis, unites):
             unite.pos = new_pos
             unite.pm -= 1
             return "deplacement"
+    if unite.est_adjacente(cible) and not unite.a_attaque:
+        unite.attaquer(cible)
+        return "attaque"
     return None
