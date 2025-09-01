@@ -1,6 +1,7 @@
 import math
 import pygame
 from layout import hex_to_pixel
+from animations import dessiner_unite_animee
 
 BLANC = (255,255,255)
 NOIR = (0,0,0)
@@ -43,7 +44,10 @@ def dessiner(jeu):
             continue
         x,y = hex_to_pixel(jeu, u.pos[0], u.pos[1])
         color = VERT if u.equipe == 'joueur' else ROUGE
-        pygame.draw.circle(jeu.screen, color, (x,y), jeu.unit_radius)
+
+        # utilise la fonction d’animation
+        x, y = dessiner_unite_animee(jeu, u, x, y, color)
+
         name_txt = jeu.font_small.render(u.nom, True, NOIR)
         jeu.screen.blit(name_txt, (x - name_txt.get_width() // 2, y - jeu.unit_radius - name_txt.get_height() - 2))
         if jeu.selection == u:

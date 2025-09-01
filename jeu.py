@@ -3,6 +3,7 @@ import sys
 import math
 import ia
 import unites
+import animations
 from layout import recalculer_layout, axial_to_pixel, hex_to_pixel
 from affichage import dessiner
 from input_mod import handle_click
@@ -38,7 +39,7 @@ class Jeu:
         if initial_enemy_units is None:
             self.unites.extend([
                 unites.Squelette("ennemi", (0, 2)),
-                unites.Goule("ennemi", (1, 2)),
+                # unites.Goule("ennemi", (1, 2)),
             ])
         else:
             for nom, pos in initial_enemy_units:
@@ -88,6 +89,13 @@ class Jeu:
         if not joueurs or not ennemis:
             self.finished = True
             return
+
+        # Mettre à jour les animations
+        for u in self.unites:
+            if u.anim:
+                if u.anim.update(dt_ms):
+                    animations.appliquer_effet(u.anim)
+                    u.anim = None
 
         # Tour IA
         if self.tour == "ennemi":

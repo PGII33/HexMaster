@@ -1,4 +1,5 @@
 from collections import deque
+from animations import Animation
 
 class Unite:
     def __init__(self, equipe, pos, nom, pv, dmg, mv, tier):
@@ -12,6 +13,7 @@ class Unite:
         self.tier = tier
         self.vivant = True
         self.a_attaque = False
+        self.anim = None
 
     def reset_actions(self):
         self.a_attaque = False
@@ -52,10 +54,9 @@ class Unite:
 
     def attaquer(self, autre):
         if not self.a_attaque and self.est_adjacente(autre) and autre.vivant:
-            autre.pv -= self.dmg
             self.a_attaque = True
-            if autre.pv <= 0:
-                autre.vivant = False
+            # Crée une animation d’attaque de 250 ms
+            self.anim = Animation("attack", 250, self, cible=autre)
 
 class Squelette(Unite):
     def __init__(self, equipe, pos):
