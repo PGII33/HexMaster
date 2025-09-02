@@ -2,7 +2,8 @@ import pygame
 import sys
 from utils import Button
 import sauvegarde
-from boutique import CATALOGUE
+from unites import CLASSES_UNITES
+from competences import COMPETENCES
 
 class Inventaire:
     def __init__(self, screen):
@@ -12,7 +13,6 @@ class Inventaire:
         self.data = sauvegarde.charger()
         self.boutons = []
 
-    # ------------- helpers -------------
     def wrap_text(self, text, max_width):
         if not text:
             return [""]
@@ -53,7 +53,6 @@ class Inventaire:
     def retour_menu(self):
         self.running = False
 
-    # ------------- loop / draw -------------
     def afficher(self):
         self.creer_boutons()
         self.running = True
@@ -64,20 +63,23 @@ class Inventaire:
             titre = self.title_font.render("Inventaire", True, (30, 30, 60))
             self.screen.blit(titre, (margin, 30))
 
-            # Grille des unités possédées
             x, y, col = margin, start_y, 0
             for nom in self.data.get("unites", []):
-                infos = CATALOGUE.get(nom)
-                if not infos:
+                cls = CLASSES_UNITES.get(nom)
+                if not cls:
                     continue
+                tmp = cls(0, (0,0))
+                comp = tmp.get_competence()
+                comp_nom = "Aucune" if not comp else comp
+                comp_desc = "" if not comp else COMPETENCES.get(comp, "")
 
                 base_lines = [
                     f"{nom}",
-                    f"PV: {infos['pv']} | DMG: {infos['dmg']} | MV: {infos['mv']}",
-                    f"Tier: {infos['tier']}",
-                    f"Compétence: {infos['comp'][0]}",
+                    f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
+                    f"Tier: {tmp.get_tier()}",
+                    f"Compétence: {comp_nom}",
                 ]
-                desc_lines = self.wrap_text(infos['comp'][1], card_w - 20)
+                desc_lines = self.wrap_text(comp_desc, card_w - 20)
                 card_h = 20 + len(base_lines) * 30 + len(desc_lines) * 26 + 20
 
                 rect = pygame.Rect(x, y, card_w, card_h)
@@ -102,7 +104,6 @@ class Inventaire:
                 else:
                     x += card_w + margin
 
-            # bouton retour
             self.boutons[-1].draw(self.screen)
 
             for event in pygame.event.get():

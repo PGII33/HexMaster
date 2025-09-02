@@ -1,6 +1,7 @@
 import pygame
 import sys
 import ia
+import unites  # <-- ajout
 from jeu import Jeu
 from utils import Button
 from boutique import Boutique
@@ -76,7 +77,6 @@ class HexaMaster:
         self.jeu = tuto.run_flow()
         self.etat = "jeu"
 
-
     def start_hexarene_mode(self):
         # Charger inventaire du joueur
         inv_data = Inventaire(self.screen).data
@@ -86,9 +86,21 @@ class HexaMaster:
             print("Aucune unité disponible dans l'inventaire !")
             return
 
+        # Conversion noms -> classes
+        name_to_class = {
+            "Squelette": unites.Squelette,
+            "Goule": unites.Goule,
+            "Vampire": unites.Vampire,
+        }
+        player_units_classes = [name_to_class[n] for n in player_units_names if n in name_to_class]
+
+        if not player_units_classes:
+            print("Aucune correspondance trouvée pour les unités de l'inventaire.")
+            return
+
         # Lancer HexArène avec sélection
         hex_arene = HexArène(self.screen)
-        hex_arene._select_units_phase(player_units_names)
+        hex_arene._select_units_phase(player_units_classes)
 
         # si Retour → on ne lance pas le jeu
         if hex_arene.cancelled or not hex_arene.selected_units:
@@ -96,7 +108,7 @@ class HexaMaster:
             return
 
         hex_arene._placement_phase()
-        player_units_specs = [(nom, pos) for nom, pos in hex_arene.unit_positions]
+        player_units_specs = [(cls, pos) for cls, pos in hex_arene.unit_positions]
         enemy_units_specs = hex_arene._generate_enemies()
 
         self.jeu = Jeu(
@@ -106,9 +118,6 @@ class HexaMaster:
             initial_enemy_units=enemy_units_specs
         )
         self.etat = "jeu"
-
-
-
 
     # ------ boucle principale ------
     def run(self):

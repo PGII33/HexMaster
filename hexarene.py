@@ -1,6 +1,7 @@
 import pygame
 import sys
 from utils import Button
+import unites
 
 class HexArène:
     def __init__(self, screen):
@@ -11,7 +12,7 @@ class HexArène:
         self.selected_units = []
         self.max_units = 5  # limite d'unités du joueur
         self.running = True
-        self.unit_positions = []  # contiendra (nom, pos) après placement
+        self.unit_positions = []  # contiendra (classe, pos) après placement
 
     # --- Flow principal ---
     def run_flow(self, available_units):
@@ -57,17 +58,17 @@ class HexArène:
             # dessiner les cartes
             x, y = margin, 120
             rects = {}
-            for nom in available_units:
+            for cls in available_units:
                 rect = pygame.Rect(x, y, card_w, card_h)
-                rects[nom] = rect
+                rects[cls] = rect
 
                 pygame.draw.rect(self.screen, (235,235,235), rect, border_radius=12)
                 pygame.draw.rect(self.screen, (0,0,0), rect, width=2, border_radius=12)
 
-                txt = self.font_small.render(nom, True, (0,0,0))
+                txt = self.font_small.render(cls.__name__, True, (0,0,0))
                 self.screen.blit(txt, (x+10, y+10))
 
-                count = self.selected_units.count(nom)
+                count = self.selected_units.count(cls)
                 if count > 0:
                     c_txt = self.font_small.render(f"x{count}", True, (200,0,0))
                     self.screen.blit(c_txt, (x+card_w-40, y+10))
@@ -94,10 +95,10 @@ class HexArène:
                     retour_btn.rect.topleft = (20, self.screen.get_height()-70)
                     valider_btn.rect.topleft = (self.screen.get_width()-180, self.screen.get_height()-70)
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    for nom, rect in rects.items():
+                    for cls, rect in rects.items():
                         if rect.collidepoint(event.pos):
                             if len(self.selected_units) < self.max_units:
-                                self.selected_units.append(nom)
+                                self.selected_units.append(cls)
                     retour_btn.handle_event(event)
                     valider_btn.handle_event(event)
 
@@ -112,13 +113,13 @@ class HexArène:
     def _placement_phase(self):
         self.unit_positions = []
         start_positions = [(0,0), (1,0), (2,0), (0,1), (1,1)]
-        for i, nom in enumerate(self.selected_units[:self.max_units]):
-            self.unit_positions.append((nom, start_positions[i]))
+        for i, cls in enumerate(self.selected_units[:self.max_units]):
+            self.unit_positions.append((cls, start_positions[i]))
 
     # --- Génération ennemis ---
     def _generate_enemies(self):
         enemies = []
         start_positions = [(5,5), (5,6), (6,5), (6,6), (6,4)]
         for i, _ in enumerate(self.selected_units[:self.max_units]):
-            enemies.append(("Squelette", start_positions[i]))
+            enemies.append((unites.Squelette, start_positions[i]))
         return enemies

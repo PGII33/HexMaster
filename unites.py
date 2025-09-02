@@ -1,9 +1,9 @@
 from collections import deque
-from animations import Animation
+import animations
+import competences as co
 
 class Unite:
-    def __init__(self, equipe, pos, nom, pv, dmg, mv, tier):
-        self.nom = nom
+    def __init__(self, equipe, pos, pv, dmg, mv, tier, nom, prix=None, comp=None):
         self.equipe = equipe
         self.pos = pos
         self.pv = pv
@@ -11,14 +11,30 @@ class Unite:
         self.mv = mv
         self.pm = self.mv
         self.tier = tier
+        self.nom = nom
+        # prix par défaut = tier * 5 ; si prix < 0 => "Bloqué"
+        self.prix = prix if prix is not None else (tier * 5)
+        # comp doit être le nom de la compétence (string) ou None/""
+        self.comp = comp or ""
         self.vivant = True
         self.a_attaque = False
         self.anim = None
 
+    # ---------- Getters ----------
+    def get_nom(self): return self.nom
+    def get_pv(self): return self.pv
+    def get_dmg(self): return self.dmg
+    def get_mv(self): return self.mv
+    def get_tier(self): return self.tier
+    def get_prix(self): return "Bloqué" if self.prix < 0 else self.prix
+    def get_competence(self): return self.comp
+
+    # ---------- Logique ----------
     def reset_actions(self):
         self.a_attaque = False
         self.pm = self.mv
 
+    # ---------- Déplacements ----------
     def est_adjacente(self, autre):
         q1, r1 = self.pos
         q2, r2 = autre.pos
@@ -26,13 +42,11 @@ class Unite:
         return any((q1+dx, r1+dy) == (q2, r2) for dx, dy in directions)
 
     def cases_accessibles(self, toutes_unites):
-        # retourne dict {(q,r): coût} en PM pour atteindre la case (coût = distance en pas)
         if self.pm <= 0:
             return {}
 
         accessibles = {}
         file = deque([(self.pos, 0)])
-
         directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
         occupees = {u.pos for u in toutes_unites if u.vivant and u != self}
 
@@ -52,20 +66,40 @@ class Unite:
                     file.append((new_pos, new_cout))
         return accessibles
 
+    # ---------- Combat ----------
     def attaquer(self, autre):
+        """Applique l’animation et les dégâts séparément."""
         if not self.a_attaque and self.est_adjacente(autre) and autre.vivant:
-            self.a_attaque = True
-            # Crée une animation d’attaque de 250 ms
-            self.anim = Animation("attack", 250, self, cible=autre)
+            
+            # Compétences
+            if self.comp == "sangsue":
+                co.sangsue(self)
 
+            # Animation
+            self.anim = animations.Animation("attack", 250, self, cible=autre)
+            
+            autre.pv -= self.dmg
+            if autre.pv <= 0:
+                autre.vivant = False
+
+            self.a_attaque = True
+
+
+# ---------- Sous-classes d’unités ----------
 class Squelette(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, "Squelette", pv=3, dmg=5, mv=2, tier=1)
+        super().__init__(equipe, pos, nom="Squelette", pv=3, dmg=5, mv=2, tier=1)
+
 
 class Goule(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, "Goule", pv=10, dmg=2, mv=1, tier=1)
+        super().__init__(equipe, pos, nom="Goule", pv=10, dmg=2, mv=1, tier=1)
+
 
 class Vampire(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, "Vampire", pv=12, dmg=3, mv=2, tier=2)
+        super().__init__(equipe, pos, nom="Vampire", pv=12, dmg=3, mv=2, tier=2, comp="sangsue")
+
+
+# Liste des classes utilisables
+CLASSES_UNITES = [Squelette, Goule, Vampire]

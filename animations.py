@@ -18,13 +18,6 @@ class Animation:
         """Retourne une progression 0 → 1"""
         return max(0, min(1, 1 - self.timer / self.duree))
 
-def appliquer_effet(animation):
-    """Applique les effets quand une anim se termine"""
-    if animation.type == "attack" and animation.cible and animation.cible.vivant:
-        animation.cible.pv -= animation.unite.dmg
-        if animation.cible.pv <= 0:
-            animation.cible.vivant = False
-
 def dessiner_unite_animee(jeu, unite, x, y, base_color):
     """Dessine une unité avec animation éventuelle"""
     if unite.anim and unite.anim.type == "attack" and unite.anim.cible:

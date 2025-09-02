@@ -2,13 +2,8 @@ import pygame
 import sys
 from utils import Button
 import sauvegarde
-
-# Catalogue des unités dispo dans la boutique
-CATALOGUE = {
-    "Squelette": {"prix": 5, "pv": 3, "dmg": 5, "mv": 2, "tier": 1, "comp": ("Aucune", "")},
-    "Goule": {"prix": 5, "pv": 10, "dmg": 2, "mv": 1, "tier": 1, "comp": ("Aucune", "")},
-    "Vampire": {"prix": 15, "pv": 12, "dmg": 3, "mv": 2, "tier": 2, "comp": ("Sangsue", "Attaque équilibrée, unité rare.")}
-}
+from unites import CLASSES_UNITES
+from competences import COMPETENCES
 
 class Boutique:
     def __init__(self, screen):
@@ -18,29 +13,34 @@ class Boutique:
         self.boutons = []
 
     def creer_boutons(self):
-        """Créer les boutons Acheter et Retour"""
         self.boutons = []
         screen_w, screen_h = self.screen.get_size()
         margin = 40
         card_w = min(300, (screen_w - margin * 2) // 3)
         x, y = margin, 100
 
-        for nom, infos in CATALOGUE.items():
+        for nom, cls in CLASSES_UNITES.items():
+            tmp = cls(0, (0,0))  # instance temporaire
+            prix = tmp.get_prix()
+            comp = tmp.get_competence()
+            comp_nom = "Aucune" if not comp else comp
+            comp_desc = "" if not comp else COMPETENCES.get(comp, "")
+
             deja_achete = nom in self.data["unites"]
 
-            def callback(nom_unite=nom, prix=infos["prix"]):
-                if self.data["pa"] >= prix and nom_unite not in self.data["unites"]:
+            def callback(nom_unite=nom, prix=prix):
+                if prix != "Bloqué" and self.data["pa"] >= prix and nom_unite not in self.data["unites"]:
                     self.data["pa"] -= prix
                     self.data["unites"].append(nom_unite)
                     sauvegarde.sauvegarder(self.data)
                     self.creer_boutons()
 
             lignes = [
-                f"{nom} - {infos['prix']} PA",
-                f"PV: {infos['pv']} | DMG: {infos['dmg']} | MV: {infos['mv']}",
-                f"Tier: {infos['tier']}",
-                f"Compétence: {infos['comp'][0]}",
-                f"{infos['comp'][1]}",
+                f"{nom} - {prix} PA",
+                f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
+                f"Tier: {tmp.get_tier()}",
+                f"Compétence: {comp_nom}",
+                f"{comp_desc}",
             ]
             card_h = 40 + len(lignes) * 30 + 50
 
@@ -56,7 +56,6 @@ class Boutique:
             )
             self.boutons.append(bouton)
 
-            # responsive placement
             x += card_w + margin
             if x + card_w > screen_w:
                 x = margin
@@ -74,7 +73,6 @@ class Boutique:
         while self.running:
             self.screen.fill((240,240,250))
 
-            # Afficher solde
             solde = self.font.render(f"Points d'âmes : {self.data['pa']}", True, (0,0,0))
             self.screen.blit(solde, (20, 20))
 
@@ -84,15 +82,21 @@ class Boutique:
             x, y = margin, 100
             idx = 0
 
-            for nom, infos in CATALOGUE.items():
+            for nom, cls in CLASSES_UNITES.items():
+                tmp = cls(0, (0,0))
+                prix = tmp.get_prix()
+                comp = tmp.get_competence()
+                comp_nom = "Aucune" if not comp else comp
+                comp_desc = "" if not comp else COMPETENCES.get(comp, "")
+
                 deja_achete = nom in self.data["unites"]
 
                 lignes = [
-                    f"{nom} - {infos['prix']} PA",
-                    f"PV: {infos['pv']} | DMG: {infos['dmg']} | MV: {infos['mv']}",
-                    f"Tier: {infos['tier']}",
-                    f"Compétence: {infos['comp'][0]}",
-                    f"{infos['comp'][1]}",
+                    f"{nom} - {prix} PA",
+                    f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
+                    f"Tier: {tmp.get_tier()}",
+                    f"Compétence: {comp_nom}",
+                    f"{comp_desc}",
                 ]
                 card_h = 40 + len(lignes) * 30 + 50
 
@@ -112,7 +116,6 @@ class Boutique:
                     x = margin
                     y += card_h + margin
 
-            # bouton retour
             self.boutons[-1].draw(self.screen)
 
             for event in pygame.event.get():

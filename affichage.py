@@ -48,7 +48,7 @@ def dessiner(jeu):
         # utilise la fonction d’animation
         x, y = dessiner_unite_animee(jeu, u, x, y, color)
 
-        name_txt = jeu.font_small.render(u.nom, True, NOIR)
+        name_txt = jeu.font_small.render(u.get_nom(), True, NOIR)
         jeu.screen.blit(name_txt, (x - name_txt.get_width() // 2, y - jeu.unit_radius - name_txt.get_height() - 2))
         if jeu.selection == u:
             pygame.draw.circle(jeu.screen, color, (x,y), int(jeu.unit_radius * 1.25), width=max(2, int(jeu.taille_hex * 0.08)))

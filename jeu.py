@@ -21,34 +21,15 @@ class Jeu:
         # État du jeu
         self.unites = []
 
-        # si pas d'unités passées, unités par défaut (démo)
-        if initial_player_units is None:
-            self.unites.extend([
-                unites.Squelette("joueur", (0, 0)),
-                unites.Vampire("joueur", (1, 0)),
-            ])
-        else:
-            for nom, pos in initial_player_units:
-                if nom == "Squelette":
-                    self.unites.append(unites.Squelette("joueur", pos))
-                elif nom == "Goule":
-                    self.unites.append(unites.Goule("joueur", pos))
-                elif nom == "Vampire":
-                    self.unites.append(unites.Vampire("joueur", pos))
+        # Ajout des unités joueur
+        if initial_player_units:
+            for cls, pos in initial_player_units:
+                self.unites.append(cls("joueur", pos))
 
-        if initial_enemy_units is None:
-            self.unites.extend([
-                unites.Squelette("ennemi", (0, 2)),
-                # unites.Goule("ennemi", (1, 2)),
-            ])
-        else:
-            for nom, pos in initial_enemy_units:
-                if nom == "Squelette":
-                    self.unites.append(unites.Squelette("ennemi", pos))
-                elif nom == "Goule":
-                    self.unites.append(unites.Goule("ennemi", pos))
-                elif nom == "Vampire":
-                    self.unites.append(unites.Vampire("ennemi", pos))
+        # Ajout des unités ennemies
+        if initial_enemy_units:
+            for cls, pos in initial_enemy_units:
+                self.unites.append(cls("ennemi", pos))
 
         self.tour = "joueur"
         self.selection = None
@@ -83,19 +64,20 @@ class Jeu:
             handle_click(self, mx, my)
 
     def update(self, dt_ms):
+
+        # Mettre à jour les animations
+        for u in self.unites:
+            if u.anim:
+                if u.anim.update(dt_ms):
+                    u.anim = None
+
+
         # Vérifier fin
         joueurs = [u for u in self.unites if u.equipe == "joueur" and u.vivant]
         ennemis = [u for u in self.unites if u.equipe == "ennemi" and u.vivant]
         if not joueurs or not ennemis:
             self.finished = True
             return
-
-        # Mettre à jour les animations
-        for u in self.unites:
-            if u.anim:
-                if u.anim.update(dt_ms):
-                    animations.appliquer_effet(u.anim)
-                    u.anim = None
 
         # Tour IA
         if self.tour == "ennemi":
