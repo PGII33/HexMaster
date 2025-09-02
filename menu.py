@@ -86,21 +86,23 @@ class HexaMaster:
             print("Aucune unité disponible dans l'inventaire !")
             return
 
-        # Conversion noms -> classes
-        name_to_class = {
-            "Squelette": unites.Squelette,
-            "Goule": unites.Goule,
-            "Vampire": unites.Vampire,
-        }
-        player_units_classes = [name_to_class[n] for n in player_units_names if n in name_to_class]
+        # Créer une liste des classes disponibles basée sur les noms dans l'inventaire
+        available_classes = []
+        for nom in player_units_names:
+            # Chercher la classe correspondante dans toutes les classes d'unités
+            for classe in unites.CLASSES_UNITES + [unites.Zombie]:  # Inclure Zombie même s'il n'est pas dans CLASSES_UNITES
+                tmp_instance = classe("joueur", (0,0))
+                if tmp_instance.get_nom() == nom:
+                    available_classes.append(classe)
+                    break
 
-        if not player_units_classes:
+        if not available_classes:
             print("Aucune correspondance trouvée pour les unités de l'inventaire.")
             return
 
         # Lancer HexArène avec sélection
         hex_arene = HexArène(self.screen)
-        hex_arene._select_units_phase(player_units_classes)
+        hex_arene._select_units_phase(available_classes)
 
         # si Retour → on ne lance pas le jeu
         if hex_arene.cancelled or not hex_arene.selected_units:

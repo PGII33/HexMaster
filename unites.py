@@ -68,10 +68,10 @@ class Unite:
 
     # ---------- Combat ----------
     def attaquer(self, autre):
-        """Applique l’animation et les dégâts séparément."""
+        """Applique l'animation et les dégâts séparément."""
         if not self.a_attaque and self.est_adjacente(autre) and autre.vivant:
             
-            # Compétences
+            # Compétences avant l'attaque
             if self.comp == "sangsue":
                 co.sangsue(self)
 
@@ -81,6 +81,10 @@ class Unite:
             autre.pv -= self.dmg
             if autre.pv <= 0:
                 autre.vivant = False
+                
+                # Compétences après la mort de la cible
+                if self.comp == "zombification":
+                    co.zombification(self, autre)
 
             self.a_attaque = True
 
@@ -100,6 +104,9 @@ class Vampire(Unite):
     def __init__(self, equipe, pos):
         super().__init__(equipe, pos, nom="Vampire", pv=12, dmg=3, mv=2, tier=2, comp="sangsue")
 
+class Zombie(Unite):
+    def __init__(self, equipe, pos):
+        super().__init__(equipe, pos, pv=8, dmg=4, mv=1, tier=2, nom="Zombie", comp="zombification")
 
 # Liste des classes utilisables
-CLASSES_UNITES = [Squelette, Goule, Vampire]
+CLASSES_UNITES = [Squelette, Goule, Vampire, Zombie]

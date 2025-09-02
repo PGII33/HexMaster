@@ -19,8 +19,9 @@ class Boutique:
         card_w = min(300, (screen_w - margin * 2) // 3)
         x, y = margin, 100
 
-        for nom, cls in CLASSES_UNITES.items():
-            tmp = cls(0, (0,0))  # instance temporaire
+        for cls in CLASSES_UNITES:
+            tmp = cls("joueur", (0,0))  # instance temporaire
+            nom = tmp.get_nom()
             prix = tmp.get_prix()
             comp = tmp.get_competence()
             comp_nom = "Aucune" if not comp else comp
@@ -28,41 +29,51 @@ class Boutique:
 
             deja_achete = nom in self.data["unites"]
 
-            def callback(nom_unite=nom, prix=prix):
-                if prix != "Bloqué" and self.data["pa"] >= prix and nom_unite not in self.data["unites"]:
-                    self.data["pa"] -= prix
-                    self.data["unites"].append(nom_unite)
-                    sauvegarde.sauvegarder(self.data)
-                    self.creer_boutons()
+            if deja_achete:
+                couleur = (150,150,150)
+                texte = "Déjà acheté"
+            elif self.data["pa"] >= prix:
+                couleur = (100,200,100)
+                texte = f"Acheter ({prix} PA)"
+            else:
+                couleur = (200,100,100)
+                texte = f"Pas assez de PA ({prix})"
 
-            lignes = [
-                f"{nom} - {prix} PA",
-                f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
-                f"Tier: {tmp.get_tier()}",
-                f"Compétence: {comp_nom}",
-                f"{comp_desc}",
-            ]
-            card_h = 40 + len(lignes) * 30 + 50
-
-            texte_bouton = "Épuisé" if deja_achete else "Acheter"
-            couleur = (150, 150, 150) if deja_achete else (50, 150, 250)
-
-            bouton = Button(
-                (x + card_w//2 - 50, y + card_h - 45, 100, 35),
-                texte_bouton,
-                callback if not deja_achete else (lambda: None),
-                self.font,
-                base_color=couleur
-            )
-            self.boutons.append(bouton)
+            btn_rect = pygame.Rect(x, y + 170, card_w, 40)
+            btn = Button(btn_rect, texte, 
+                         lambda c=cls, p=prix, n=nom: self.acheter_unite(c, p, n),
+                         self.font, base_color=couleur)
+            self.boutons.append(btn)
 
             x += card_w + margin
             if x + card_w > screen_w:
                 x = margin
-                y += card_h + margin
+                y += 220
 
-        # bouton retour
-        self.boutons.append(Button((20, screen_h - 70, 150, 40), "Retour", self.retour_menu, self.font))
+        # Bouton retour
+        btn_retour_rect = pygame.Rect(50, screen_h - 80, 100, 50)
+        btn_retour = Button(btn_retour_rect, "Retour", self.retour_menu, self.font, base_color=(200,200,200))
+        self.boutons.append(btn_retour)
+
+    def acheter_unite(self, classe, prix, nom):
+        """Achète une unité si possible"""
+        # Vérifier si déjà acheté
+        if nom in self.data["unites"]:
+            return
+        
+        # Vérifier si assez de PA
+        if self.data["pa"] < prix:
+            return
+        
+        # Effectuer l'achat
+        self.data["pa"] -= prix
+        self.data["unites"].append(nom)
+        
+        # Sauvegarder
+        sauvegarde.sauvegarder(self.data)
+        
+        # Recréer les boutons pour mettre à jour l'affichage
+        self.creer_boutons()
 
     def retour_menu(self):
         self.running = False
@@ -82,8 +93,9 @@ class Boutique:
             x, y = margin, 100
             idx = 0
 
-            for nom, cls in CLASSES_UNITES.items():
-                tmp = cls(0, (0,0))
+            for cls in CLASSES_UNITES:
+                tmp = cls("joueur", (0,0))
+                nom = tmp.get_nom()
                 prix = tmp.get_prix()
                 comp = tmp.get_competence()
                 comp_nom = "Aucune" if not comp else comp

@@ -7,7 +7,7 @@ class Tuto:
         self.screen = screen
 
     def run_flow(self):
-        # Ici, le tuto démarre une partie simple contre l’IA.
+        # Ici, le tuto démarre une partie simple contre l'IA.
         initial_player_units = [
             (unites.Squelette, (0, 0)),
             (unites.Vampire, (1, 0)),

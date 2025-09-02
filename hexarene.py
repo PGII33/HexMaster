@@ -65,7 +65,11 @@ class HexArène:
                 pygame.draw.rect(self.screen, (235,235,235), rect, border_radius=12)
                 pygame.draw.rect(self.screen, (0,0,0), rect, width=2, border_radius=12)
 
-                txt = self.font_small.render(cls.__name__, True, (0,0,0))
+                # Récupérer le nom depuis une instance temporaire
+                tmp_instance = cls("joueur", (0,0))
+                unit_name = tmp_instance.get_nom()
+                
+                txt = self.font_small.render(unit_name, True, (0,0,0))
                 self.screen.blit(txt, (x+10, y+10))
 
                 count = self.selected_units.count(cls)

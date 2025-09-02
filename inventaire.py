@@ -63,12 +63,18 @@ class Inventaire:
             titre = self.title_font.render("Inventaire", True, (30, 30, 60))
             self.screen.blit(titre, (margin, 30))
 
+            # Créer un dictionnaire de mapping nom -> classe
+            classes_dict = {}
+            for classe in CLASSES_UNITES:
+                tmp_instance = classe("joueur", (0,0))
+                classes_dict[tmp_instance.get_nom()] = classe
+
             x, y, col = margin, start_y, 0
             for nom in self.data.get("unites", []):
-                cls = CLASSES_UNITES.get(nom)
+                cls = classes_dict.get(nom)
                 if not cls:
                     continue
-                tmp = cls(0, (0,0))
+                tmp = cls("joueur", (0,0))
                 comp = tmp.get_competence()
                 comp_nom = "Aucune" if not comp else comp
                 comp_desc = "" if not comp else COMPETENCES.get(comp, "")

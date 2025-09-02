@@ -42,15 +42,18 @@ def cible_faible(unite, ennemis, unites):
 
     # 3) Sinon, opportunisme: une autre cible attaquable depuis une case atteignable (y compris sans bouger)
     meilleure_option = None  # (cout, pv_ennemi, pos, enn)
+    meilleur_score = None    # (cout, pv_ennemi) pour la comparaison
+    
     for pos, cout in accessibles.items():
         # Si plus de PM que le coût nécessaire
         if cout > unite.pm:
             continue
         for enn in cibles:
             if est_adjacent_pos(pos, enn.pos):
-                cand = (cout, enn.pv, pos, enn)
-                if (meilleure_option is None) or (cand < meilleure_option):
-                    meilleure_option = cand
+                score = (cout, enn.pv)  # Seulement les critères de comparaison
+                if (meilleur_score is None) or (score < meilleur_score):
+                    meilleur_score = score
+                    meilleure_option = (cout, enn.pv, pos, enn)
 
     if (meilleure_option is not None) and not unite.a_attaque:
         cout, _, pos, enn = meilleure_option
