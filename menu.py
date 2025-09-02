@@ -86,15 +86,19 @@ class HexaMaster:
             print("Aucune unité disponible dans l'inventaire !")
             return
 
-        # Lancer HexArène
+        # Lancer HexArène avec sélection
         hex_arene = HexArène(self.screen)
-        # remplacer la sélection automatique par inventaire
-        hex_arene.selected_units = player_units_names[:hex_arene.max_units]
-        hex_arene._placement_phase()  # placement automatique
+        hex_arene._select_units_phase(player_units_names)
+
+        # si Retour → on ne lance pas le jeu
+        if hex_arene.cancelled or not hex_arene.selected_units:
+            print("Sélection annulée ou aucune unité choisie.")
+            return
+
+        hex_arene._placement_phase()
         player_units_specs = [(nom, pos) for nom, pos in hex_arene.unit_positions]
         enemy_units_specs = hex_arene._generate_enemies()
 
-        # Lancer le jeu
         self.jeu = Jeu(
             ia_strategy=ia.cible_faible,
             screen=self.screen,
@@ -102,6 +106,9 @@ class HexaMaster:
             initial_enemy_units=enemy_units_specs
         )
         self.etat = "jeu"
+
+
+
 
     # ------ boucle principale ------
     def run(self):
