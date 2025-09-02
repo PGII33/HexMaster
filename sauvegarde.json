@@ -1,8 +1,9 @@
 {
-  "pa": 10,
+  "pa": 50,
   "unites": [
     "Squelette",
     "Vampire",
-    "Zombie"
+    "Zombie",
+    "Goule"
   ]
 }

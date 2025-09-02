@@ -3,7 +3,7 @@ import animations
 import competences as co
 
 class Unite:
-    def __init__(self, equipe, pos, pv, dmg, mv, tier, nom, prix=None, comp=None):
+    def __init__(self, equipe, pos, pv, dmg, mv, tier, nom, faction, prix=None, comp=None):
         self.equipe = equipe
         self.pos = pos
         self.pv = pv
@@ -12,6 +12,7 @@ class Unite:
         self.pm = self.mv
         self.tier = tier
         self.nom = nom
+        self.faction = faction
         # prix par défaut = tier * 5 ; si prix < 0 => "Bloqué"
         self.prix = prix if prix is not None else (tier * 5)
         # comp doit être le nom de la compétence (string) ou None/""
@@ -27,6 +28,8 @@ class Unite:
     def get_mv(self): return self.mv
     def get_tier(self): return self.tier
     def get_prix(self): return "Bloqué" if self.prix < 0 else self.prix
+    def get_name(self): return self.nom
+    def get_faction(self): return self.faction
     def get_competence(self): return self.comp
 
     # ---------- Logique ----------
@@ -90,23 +93,36 @@ class Unite:
 
 
 # ---------- Sous-classes d’unités ----------
+
+# Bêtes
+# Loup-Garou / lycanthrope
+# Pégase
+# Dragon
+
+# Morts-Vivants
 class Squelette(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Squelette", pv=3, dmg=5, mv=2, tier=1)
-
+        super().__init__(equipe, pos, nom="Squelette", pv=3, dmg=5, mv=2, tier=1, faction="Morts-Vivants")
 
 class Goule(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Goule", pv=10, dmg=2, mv=1, tier=1)
-
+        super().__init__(equipe, pos, nom="Goule", pv=10, dmg=2, mv=1, tier=1, faction="Morts-Vivants")
 
 class Vampire(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Vampire", pv=12, dmg=3, mv=2, tier=2, comp="sangsue")
+        super().__init__(equipe, pos, nom="Vampire", pv=12, dmg=3, mv=2, tier=2, comp="sangsue", faction="Morts-Vivants")
 
 class Zombie(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, pv=8, dmg=4, mv=1, tier=2, nom="Zombie", comp="zombification")
+        super().__init__(equipe, pos, nom="Zombie", pv=8, dmg=4, mv=1, tier=2, comp="zombification", faction="Morts-Vivants")
+
+
+# Célestes
+
+
+
+#
+
 
 # Liste des classes utilisables
 CLASSES_UNITES = [Squelette, Goule, Vampire, Zombie]
