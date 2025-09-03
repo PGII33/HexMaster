@@ -85,43 +85,46 @@ class Unite:
             if autre.pv <= 0:
                 autre.vivant = False
                 
-                # Compétences après la mort de la cible
-                if self.comp == "zombification":
-                    co.zombification(self, autre)
-
+            if self.comp == "zombification":
+                co.zombification(self, autre)
+            elif self.comp == "tas_d_os":
+                co.tas_d_os(autre)
             self.a_attaque = True
 
 
 # ---------- Sous-classes d’unités ----------
 
-# Bêtes
-# Loup-Garou / lycanthrope
-# Pégase
-# Dragon
-
 # Morts-Vivants
-class Squelette(Unite):
+
+class Tas_D_Os(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Squelette", pv=3, dmg=5, mv=2, tier=1, faction="Morts-Vivants")
+        super().__init__(equipe, pos, nom="Tas d'Os", pv=1, dmg=0, mv=0, tier=0, faction="Morts-Vivants")
 
 class Goule(Unite):
     def __init__(self, equipe, pos):
         super().__init__(equipe, pos, nom="Goule", pv=10, dmg=2, mv=1, tier=1, faction="Morts-Vivants")
 
-class Vampire(Unite):
+class Squelette(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Vampire", pv=12, dmg=3, mv=2, tier=2, comp="sangsue", faction="Morts-Vivants")
+        super().__init__(equipe, pos, nom="Squelette", pv=3, dmg=5, mv=2, tier=1, comp="tas_d_os", faction="Morts-Vivants")
+
+class Spectre(Unite):
+    def __init__(self, equipe, pos):
+        super().__init__(equipe, pos, nom="Spectre", pv=6, dmg=4, mv=3, tier=1, faction="Morts-Vivants")
+
+class Zombie_BASE(Unite):
+    """ Pour crée les zombies zombifiés """
+    def __init__(self, equipe, pos):
+        super().__init__(equipe, pos, nom="Zombie", pv=8, dmg=4, mv=1, tier=2, faction="Morts-Vivants")
 
 class Zombie(Unite):
     def __init__(self, equipe, pos):
         super().__init__(equipe, pos, nom="Zombie", pv=8, dmg=4, mv=1, tier=2, comp="zombification", faction="Morts-Vivants")
 
+class Vampire(Unite):
+    def __init__(self, equipe, pos):
+        super().__init__(equipe, pos, nom="Vampire", pv=12, dmg=3, mv=2, tier=2, comp="sangsue", faction="Morts-Vivants")
 
-# Célestes
-
-
-
-#
 
 
 # Liste des classes utilisables

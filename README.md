@@ -18,7 +18,6 @@ Le mode arène, qui permet d'affronter des adversaires un peu plus puissant que 
 ## Factions
 
 Différentes factions sont disponibles.
-Chaque 
 
 ### Morts-Vivants
 
@@ -43,7 +42,7 @@ Chaque
 | Esprit Saint     | 2    |Bouclier de la foi|
 | Paladin          | 2    | Bénédiction      |
 | Ange             | 3    | Purificateur     |
-| ArchAnge         | 4    | |
+| ArchAnge         | 4    |                  |
 
 ### Mystiques
 
@@ -53,7 +52,7 @@ Chaque
 | Salamandre| 1    |                |
 | Fée       | 1    |                |
 | Golem     | 2    |Armure de pierre|
-| Nymphes   | 2    |                |
+| Nymphe    | 2    |                |
 | TRUC      | 3    |                |
 
 ### Humains
@@ -86,6 +85,7 @@ Chaque
     Armure de pierre : Dégats subis moins 2.
     Bénédiction : Augemente l'attaque et la vie de la cible.
     Bouclier de la foi : 2 Shield sur les unités autour de soi.
+    Commandement : ???
     Explosion sacrée : Se sacrifie pour infliger ses points de vie en dégats.
     Fantomatique : Se déplace au tavers des unites gratuitement.
     Invocation : Invoque une unitée de tier 1 ou 2 des Morts-Vivants sur une case adjacente (chaque tour).
@@ -97,7 +97,7 @@ Chaque
     Sangsue : Augmente sa vie du nombre de dégâts infligés.
     Soin : Régénère 5 points de vie.
     Vol : Ignore la première attaque subie.
-    Zombification : Transforme l'unite ennemie morte en zombie.
+    Zombification : Transforme l'unite ennemie tuée en zombie.
 
 ## Extra
 
@@ -112,8 +112,13 @@ Dinosaures
 | Vincent OP | 4    | Lancé de Claquette |
 | Micky   OP | 4    | Réincarnation      |
 | Clément OP | 4    | Paléonthologue     |
+| Mathis     | 4    |                    |
 
 ### Idées Compétences
     Lancé de Claquette : Tout les 3 tours, peut lancer une claquette n'importe où sur la carte infligeant des dégats.
     Paléonthologue : Invoque une unité "Dinosaures" sur une case adjacente (chaque tour, tier + 1, max à 4 (tier des boss)).
-    Réincarnation : Quand meurt, se réincarne dans le corps d'une unite allié de plus bas rang disponible.
+    Réincarnation : Quand meurt, se réincarne dans le corps d'une unite allié de plus bas rang disponible (max rang 3).
+
+
+### Autre
+Clem voudrait remplacer "Paléonthologue" par "M. ADN"
