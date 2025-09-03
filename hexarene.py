@@ -13,6 +13,8 @@ class HexArène:
         self.max_units = 5  # limite d'unités du joueur
         self.running = True
         self.unit_positions = []  # contiendra (classe, pos) après placement
+        self.scroll_y = 0
+        self.scroll_speed = 40
 
     # --- Flow principal ---
     def run_flow(self, available_units):
@@ -50,13 +52,28 @@ class HexArène:
         margin = 20
         card_w, card_h = 220, 120
 
+        # --- SCROLL LIMITS ---
+        total_height = 120
+        x_tmp, y_tmp, col_tmp = margin, 120, 0
+        for cls in available_units:
+            total_height = max(total_height, y_tmp + card_h)
+            col_tmp += 1
+            if x_tmp + card_w > self.screen.get_width() - margin:
+                col_tmp = 0
+                x_tmp = margin
+                y_tmp += card_h + margin
+            else:
+                x_tmp += card_w + margin
+        max_scroll = max(0, total_height - (screen_h - 120 - 40))
+        # --- FIN SCROLL LIMITS ---
+
         while self.running:
             self.screen.fill((250, 245, 230))
             titre = self.font_big.render("Sélection des unités", True, (30,30,60))
             self.screen.blit(titre, (40, 30))
 
             # dessiner les cartes
-            x, y = margin, 120
+            x, y = margin, 120 - self.scroll_y
             rects = {}
             for cls in available_units:
                 rect = pygame.Rect(x, y, card_w, card_h)
@@ -105,6 +122,9 @@ class HexArène:
                                 self.selected_units.append(cls)
                     retour_btn.handle_event(event)
                     valider_btn.handle_event(event)
+                elif event.type == pygame.MOUSEWHEEL:
+                    self.scroll_y -= event.y * self.scroll_speed
+                    self.scroll_y = max(0, min(self.scroll_y, max_scroll))
 
             pygame.display.flip()
 

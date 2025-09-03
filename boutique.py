@@ -12,6 +12,8 @@ class Boutique:
         self.title_font = pygame.font.SysFont(None, 36)
         self.data = sauvegarde.charger()
         self.boutons = []
+        self.scroll_y = 0
+        self.scroll_speed = 40
 
     def _grid_specs(self):
         screen_w, screen_h = self.screen.get_size()
@@ -76,14 +78,43 @@ class Boutique:
     def afficher(self):
         self.creer_boutons()
         self.running = True
+        self.scroll_y = 0
         while self.running:
             self.screen.fill((240,240,250))
             screen_w, screen_h, margin, cols, card_w, start_y = self._grid_specs()
 
+            # --- SCROLL LIMITS ---
+            total_height = start_y
+            x, y, col = margin, start_y, 0
+            for cls in CLASSES_UNITES:
+                tmp = cls("joueur", (0,0))
+                comp = tmp.get_competence()
+                comp_desc = "" if not comp else COMPETENCES.get(comp, "")
+                base_lines = [
+                    f"{tmp.get_nom()}",
+                    f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
+                    f"Attaques: {tmp.attaque_max}",
+                    f"Faction: {tmp.faction}",
+                    f"Tier: {tmp.get_tier()}",
+                    f"Compétence: {'Aucune' if not comp else comp}",
+                ]
+                desc_lines = self.wrap_text(comp_desc, card_w - 20)
+                card_h = 20 + len(base_lines) * 30 + len(desc_lines) * 26 + 60
+                total_height = max(total_height, y + card_h)
+                col += 1
+                if col >= cols:
+                    col = 0
+                    x = margin
+                    y += card_h + margin
+                else:
+                    x += card_w + margin
+            max_scroll = max(0, total_height - (screen_h - start_y - 40))
+            # --- FIN SCROLL LIMITS ---
+
             titre = self.title_font.render("Boutique", True, (30, 30, 60))
             self.screen.blit(titre, (margin, 30))
 
-            x, y, col = margin, start_y, 0
+            x, y, col = margin, start_y - self.scroll_y, 0
             for cls in CLASSES_UNITES:
                 tmp = cls("joueur", (0,0))
                 nom = tmp.get_nom()
@@ -164,5 +195,8 @@ class Boutique:
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     for b in self.boutons:
                         b.handle_event(event)
+                elif event.type == pygame.MOUSEWHEEL:
+                    self.scroll_y -= event.y * self.scroll_speed
+                    self.scroll_y = max(0, min(self.scroll_y, max_scroll))
 
             pygame.display.flip()
