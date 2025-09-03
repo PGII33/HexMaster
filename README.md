@@ -87,7 +87,7 @@ Différentes factions sont disponibles.
     Bouclier de la foi : 2 Shield sur les unités autour de soi.
     Commandement : Une attaque supplémentaire avec des dégats additionnels (dmg) pour la cible.
     Explosion sacrée : Se sacrifie pour infliger ses points de vie en dégats.
-    Fantomatique : Se déplace au tavers des unites gratuitement.
+    Fantomatique : Se déplace au travers des unites gratuitement.
     Invocation : Invoque une unitée de tier 1 ou 2 des Morts-Vivants sur une case adjacente (chaque tour).
     Nécromancie : Crée un squelette sur une case adjacente (chaque tour).
     Purificateur : Regagne son attaque lorsqu'il tue un Mort-Vivant.
