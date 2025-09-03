@@ -87,3 +87,22 @@ def recalculer_layout(jeu):
                                   jeu.top_h + MARGE,
                                   jeu.sidebar_w - 2 * MARGE,
                                   int(jeu.hauteur * 0.25))
+
+def pixel_to_hex(jeu, x, y):
+    """Convertit des coordonnées pixel en coordonnées hexagonales"""
+    # Inverse de hex_to_pixel
+    grid_x = jeu.largeur - jeu.sidebar_w
+    grid_y = jeu.hauteur - jeu.top_h
+    
+    center_x = grid_x // 2
+    center_y = jeu.top_h + grid_y // 2
+    
+    # Conversion approximative - peut nécessiter des ajustements
+    rel_x = x - center_x
+    rel_y = y - center_y
+    
+    # Formules de conversion hexagonale inverse
+    q = (2./3 * rel_x) / jeu.taille_hex
+    r = (-1./3 * rel_x + math.sqrt(3)/3 * rel_y) / jeu.taille_hex
+    
+    return round(q), round(r)

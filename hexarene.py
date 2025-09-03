@@ -2,6 +2,7 @@ import pygame
 import sys
 from utils import Button
 import unites
+from placement import PlacementPhase
 
 class HexArène:
     def __init__(self, screen):
@@ -10,7 +11,7 @@ class HexArène:
         self.font_small = pygame.font.SysFont(None, 28)
 
         self.selected_units = []
-        self.max_units = 5  # limite d'unités du joueur
+        self.max_units = 14  #
         self.running = True
         self.unit_positions = []  # contiendra (classe, pos) après placement
         self.scroll_y = 0
@@ -20,10 +21,19 @@ class HexArène:
     def run_flow(self, available_units):
         if not self.selected_units:
             self._select_units_phase(available_units)
-        self._placement_phase()
+            if self.cancelled:
+                return None, None
+        
+        # NOUVELLE PHASE DE PLACEMENT
+        placement = PlacementPhase(self.screen, self.selected_units)
+        unit_positions = placement.run()
+        
+        if unit_positions is None:  # Annulé
+            return None, None
+        
         enemies = self._generate_enemies()
-        return self.unit_positions, enemies
-
+        return unit_positions, enemies
+    
     # --- Sélection des unités ---
     def _select_units_phase(self, available_units):
         """
@@ -133,17 +143,24 @@ class HexArène:
         self.cancelled = cancel
         self.running = False
 
-    # --- Placement automatique des unités ---
-    def _placement_phase(self):
-        self.unit_positions = []
-        start_positions = [(0,0), (1,0), (2,0), (0,1), (1,1)]
-        for i, cls in enumerate(self.selected_units[:self.max_units]):
-            self.unit_positions.append((cls, start_positions[i]))
-
     # --- Génération ennemis ---
     def _generate_enemies(self):
         enemies = []
-        start_positions = [(5,5), (5,6), (6,5), (6,6), (6,4)]
-        for i, _ in enumerate(self.selected_units[:self.max_units]):
-            enemies.append((unites.Squelette, start_positions[i]))
+        # Positions de spawn ennemies (zone rouge : r = 4, 5, 6)
+        enemy_positions = []
+        for r in [4, 5, 6]:
+            for q in range(-1, 7):
+                enemy_positions.append((q, r))
+        
+        # Générer autant d'ennemis que le joueur a d'unités placées
+        num_enemies = len(self.selected_units)
+        
+        # Classes d'ennemis disponibles
+        enemy_classes = [unites.Squelette, unites.Goule, unites.Spectre, unites.Zombie, unites.Vampire]
+        
+        import random
+        for i in range(min(num_enemies, len(enemy_positions))):
+            enemy_class = random.choice(enemy_classes)
+            enemies.append((enemy_class, enemy_positions[i]))
+        
         return enemies

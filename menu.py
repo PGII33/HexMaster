@@ -1,13 +1,16 @@
 import pygame
 import sys
 import ia
-import unites  # <-- ajout
+import unites
 from jeu import Jeu
 from utils import Button
 from boutique import Boutique
 from inventaire import Inventaire
 from tuto import Tuto
-from hexarene import HexArène  # nouveau
+from hexarene import HexArène
+from campagne import Campagne, get_niveau_data
+from unit_selector import UnitSelector
+from ia_selector import IASelector
 
 BLANC = (255, 255, 255)
 BLEU = (50, 150, 250)
@@ -39,10 +42,13 @@ class HexaMaster:
             Button((center_x-140, h//2+190, 280, 60), "Quitter", lambda: sys.exit(), self.font_med),
         ]
 
-        # Play menu : Demo et HexArène
+        # Play menu étendu
         self.boutons_playmenu = [
-            Button((center_x-140, h//2-50, 280, 60), "Tutoriel", self.start_tuto, self.font_med),
-            Button((center_x-140, h//2+50, 280, 60), "HexArène", self.start_hexarene_mode, self.font_med),
+            Button((center_x-140, h//2-100, 280, 50), "Tutoriel", self.start_tuto, self.font_med),
+            Button((center_x-140, h//2-40, 280, 50), "HexArène", self.start_hexarene_mode, self.font_med),
+            Button((center_x-140, h//2+20, 280, 50), "Campagne", self.start_campagne, self.font_med),
+            Button((center_x-140, h//2+80, 280, 50), "Versus Local", self.start_versus, self.font_med),
+            Button((center_x-140, h//2+140, 280, 50), "Mode Mixte", self.start_mixte, self.font_med),
             Button((20, h-70, 150, 50), "Retour", self.back_to_menu, self.font_med),
         ]
 
@@ -77,47 +83,109 @@ class HexaMaster:
         self.jeu = tuto.run_flow()
         self.etat = "jeu"
 
-    def start_hexarene_mode(self):
-        # Charger inventaire du joueur
-        inv_data = Inventaire(self.screen).data
-        player_units_names = inv_data.get("unites", [])
-
-        if not player_units_names:
-            print("Aucune unité disponible dans l'inventaire !")
+    def start_campagne(self):
+        """Lance le mode campagne"""
+        campagne = Campagne(self.screen)
+        niveau_info = campagne.run()
+        
+        if niveau_info is None:  # Annulé
             return
-
-        # Créer une liste des classes disponibles basée sur les noms dans l'inventaire
-        available_classes = []
-        for nom in player_units_names:
-            # Chercher la classe correspondante dans toutes les classes d'unités
-            for classe in unites.CLASSES_UNITES + [unites.Zombie]:  # Inclure Zombie même s'il n'est pas dans CLASSES_UNITES
-                tmp_instance = classe("joueur", (0,0))
-                if tmp_instance.get_nom() == nom:
-                    available_classes.append(classe)
-                    break
-
-        if not available_classes:
-            print("Aucune correspondance trouvée pour les unités de l'inventaire.")
+        
+        chapitre, numero = niveau_info
+        niveau_data = get_niveau_data(chapitre, numero)
+        
+        # Sélection des unités (prédéfinies en campagne)
+        selector = UnitSelector(self.screen, "campagne", 
+                              unites_predefinies=niveau_data["unites_joueur"])
+        player_units = selector.run()
+        
+        if player_units is None:  # Annulé
             return
-
-        # Lancer HexArène avec sélection
-        hex_arene = HexArène(self.screen)
-        hex_arene._select_units_phase(available_classes)
-
-        # si Retour → on ne lance pas le jeu
-        if hex_arene.cancelled or not hex_arene.selected_units:
-            print("Sélection annulée ou aucune unité choisie.")
-            return
-
-        hex_arene._placement_phase()
-        player_units_specs = [(cls, pos) for cls, pos in hex_arene.unit_positions]
-        enemy_units_specs = hex_arene._generate_enemies()
-
+        
         self.jeu = Jeu(
             ia_strategy=ia.cible_faible,
             screen=self.screen,
-            initial_player_units=player_units_specs,
-            initial_enemy_units=enemy_units_specs
+            initial_player_units=player_units,
+            initial_enemy_units=niveau_data["unites_ennemis"]
+        )
+        self.etat = "jeu"
+
+    def start_versus(self):
+        """Lance le mode versus local"""
+        # Sélection Joueur 1
+        selector1 = UnitSelector(self.screen, "versus", joueur=1)
+        player1_units = selector1.run()
+        
+        if player1_units is None:  # Annulé
+            return
+        
+        # Sélection Joueur 2
+        selector2 = UnitSelector(self.screen, "versus", joueur=2)
+        player2_units = selector2.run()
+        
+        if player2_units is None:  # Annulé
+            return
+        
+        # Lancement du jeu
+        self.jeu = Jeu(
+            ia_strategy=None,  # Pas d'IA en versus
+            screen=self.screen,
+            initial_player_units=player1_units,   # Juste les classes
+            initial_enemy_units=player2_units,    # Juste les classes
+            enable_placement=True
+        )
+        self.etat = "jeu"
+
+    def start_mixte(self):
+        """Lance le mode mixte"""
+        # Sélection du joueur
+        selector = UnitSelector(self.screen, "mixte")
+        player_units = selector.run()
+        
+        if player_units is None:  # Annulé
+            return
+        
+        # Sélection de l'IA
+        import sauvegarde
+        data = sauvegarde.charger()
+        ia_selector = IASelector("mixte", cp_disponible=data.get("cp", 5))
+        ia_units = ia_selector.select_units()
+        
+        self.jeu = Jeu(
+            ia_strategy=ia.cible_faible,
+            screen=self.screen,
+            initial_player_units=player_units,   # Juste les classes
+            initial_enemy_units=ia_units,        # Juste les classes
+            enable_placement=True
+        )
+        self.etat = "jeu"
+
+    def start_hexarene_mode(self):
+        """Lance le mode HexArène (modifié)"""
+        # Sélection des unités du joueur
+        selector = UnitSelector(self.screen, "hexarene")
+        player_units = selector.run()
+        
+        if player_units is None:  # Annulé
+            return
+        
+        # Calculer le tier max du joueur pour l'IA
+        player_max_tier = max([cls("joueur", (0,0)).tier for cls in player_units]) if player_units else 1
+        
+        # Sélection de l'IA
+        import sauvegarde
+        data = sauvegarde.charger()
+        ia_selector = IASelector("hexarene", 
+                                player_cp=data.get("cp", 5),
+                                player_max_tier=player_max_tier)
+        ia_units = ia_selector.select_units()
+        
+        self.jeu = Jeu(
+            ia_strategy=ia.cible_faible,
+            screen=self.screen,
+            initial_player_units=player_units,  # Passer juste les classes
+            initial_enemy_units=ia_units,       # Passer juste les classes
+            enable_placement=True
         )
         self.etat = "jeu"
 

@@ -14,22 +14,50 @@ BTN_H_RATIO = 0.06
 
 class Jeu:
     def __init__(self, ia_strategy=ia.cible_faible, screen=None,
-                 initial_player_units=None, initial_enemy_units=None):
+                 initial_player_units=None, initial_enemy_units=None, enable_placement=False):
         self.screen = screen if screen is not None else pygame.display.set_mode((1200, 900), pygame.RESIZABLE)
         self.clock = pygame.time.Clock()
 
         # État du jeu
         self.unites = []
+        self.enable_placement = enable_placement
+        
+        # Traitement des unités selon le mode
+        if enable_placement and initial_player_units:
+            # Mode avec placement : initial_player_units contient des classes
+            from placement import PlacementPhase
+            placement = PlacementPhase(screen, initial_player_units)
+            placed_units = placement.run()
+            
+            if placed_units:
+                # placed_units contient [(classe, position), ...]
+                for cls, pos in placed_units:
+                    self.unites.append(cls("joueur", pos))
+            else:
+                # Placement annulé
+                self.finished = True
+                return
+            
+            # Placement automatique des ennemis en zone rouge
+            if initial_enemy_units:
+                enemy_positions = []
+                for r in [4, 5, 6]:  # Zone ennemie
+                    for q in range(-1, 7):
+                        enemy_positions.append((q, r))
+                
+                for i, cls in enumerate(initial_enemy_units):
+                    if i < len(enemy_positions):
+                        self.unites.append(cls("ennemi", enemy_positions[i]))
+        
+        else:
+            # Mode sans placement : initial_player_units contient [(classe, position), ...]
+            if initial_player_units:
+                for cls, pos in initial_player_units:
+                    self.unites.append(cls("joueur", pos))
 
-        # Ajout des unités joueur
-        if initial_player_units:
-            for cls, pos in initial_player_units:
-                self.unites.append(cls("joueur", pos))
-
-        # Ajout des unités ennemies
-        if initial_enemy_units:
-            for cls, pos in initial_enemy_units:
-                self.unites.append(cls("ennemi", pos))
+            if initial_enemy_units:
+                for cls, pos in initial_enemy_units:
+                    self.unites.append(cls("ennemi", pos))
 
         self.tour = "joueur"
         self.selection = None
