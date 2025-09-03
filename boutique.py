@@ -95,8 +95,10 @@ class Boutique:
                 deja_achete = nom in self.data["unites"]
 
                 base_lines = [
-                    f"{nom} - {prix} PA",
+                    f"{nom}",
                     f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
+                    f"Attaques: {tmp.attaque_max}",
+                    f"Faction: {tmp.faction}",
                     f"Tier: {tmp.get_tier()}",
                     f"Compétence: {comp_nom}",
                 ]
