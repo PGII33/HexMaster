@@ -82,7 +82,9 @@ class Inventaire:
                 comp_desc = "" if not comp else COMPETENCES.get(comp, "")
                 base_lines = [
                     f"{nom}",
+                    f"{tmp.faction}",  # Faction ajoutée
                     f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
+                    f"Attaques: {tmp.attaque_max} | Portée: {tmp.portee}",
                     f"Tier: {tmp.get_tier()}",
                     f"Compétence: {'Aucune' if not comp else comp}",
                 ]
@@ -114,7 +116,9 @@ class Inventaire:
 
                 base_lines = [
                     f"{nom}",
+                    f"{tmp.faction}",  # Faction mise en valeur
                     f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
+                    f"Attaques: {tmp.attaque_max} | Portée: {tmp.portee}",
                     f"Tier: {tmp.get_tier()}",
                     f"Compétence: {comp_nom}",
                 ]
@@ -126,7 +130,12 @@ class Inventaire:
                 pygame.draw.rect(self.screen, (0, 0, 0), rect, width=2, border_radius=12)
 
                 for i, l in enumerate(base_lines):
-                    txt = self.font.render(l, True, (0, 0, 0))
+                    if i == 0:  # Nom de l'unité
+                        txt = self.font.render(l, True, (20, 20, 120))  # Bleu foncé pour le nom
+                    elif i == 1:  # Faction
+                        txt = self.font.render(l, True, (120, 20, 20))  # Rouge foncé pour la faction
+                    else:  # Autres infos
+                        txt = self.font.render(l, True, (0, 0, 0))
                     self.screen.blit(txt, (x + 10, y + 12 + i * 30))
 
                 y_text = y + 12 + len(base_lines) * 30 + 6

@@ -93,7 +93,7 @@ class Boutique:
                 base_lines = [
                     f"{tmp.get_nom()}",
                     f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
-                    f"Attaques: {tmp.attaque_max}",
+                    f"Attaques: {tmp.attaque_max} | Portée: {tmp.portee}",
                     f"Faction: {tmp.faction}",
                     f"Tier: {tmp.get_tier()}",
                     f"Compétence: {'Aucune' if not comp else comp}",
@@ -128,7 +128,7 @@ class Boutique:
                 base_lines = [
                     f"{nom}",
                     f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
-                    f"Attaques: {tmp.attaque_max}",
+                    f"Attaques: {tmp.attaque_max} | Portée: {tmp.portee}",
                     f"Faction: {tmp.faction}",
                     f"Tier: {tmp.get_tier()}",
                     f"Compétence: {comp_nom}",
