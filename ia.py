@@ -12,6 +12,12 @@ def hex_distance(a, b):
     dr = a[1] - b[1]
     return (abs(dq) + abs(dr) + abs(dq + dr)) // 2
 
+def est_a_portee_pos(pos1, pos2, portee):
+    dq = pos1[0] - pos2[0]
+    dr = pos1[1] - pos2[1]
+    dist = max(abs(dq), abs(dr), abs((pos1[0]+pos1[1])-(pos2[0]+pos2[1])))
+    return dist <= portee
+
 # --- IA cible faible corrigée ---
 
 def cible_faible(unite, ennemis, unites):
@@ -28,8 +34,8 @@ def cible_faible(unite, ennemis, unites):
     accessibles.setdefault(unite.pos, 0)
 
     # 2) Peut-on atteindre ET attaquer la cible ce tour-ci ?
-    adj_to_target = [pos for pos in accessibles if est_adjacent_pos(pos, cible.pos)]
-    if adj_to_target and not unite.a_attaque:
+    adj_to_target = [pos for pos in accessibles if est_a_portee_pos(pos, cible.pos, unite.portee)]
+    if adj_to_target and unite.attaque_restantes > 0:
         # Choix: coût minimal puis (optionnel) distance au centre de la cible (toujours 1 si adjacent)
         best_pos = min(adj_to_target, key=lambda p: (accessibles[p], hex_distance(p, cible.pos)))
         cout = accessibles[best_pos]
@@ -55,7 +61,7 @@ def cible_faible(unite, ennemis, unites):
                     meilleur_score = score
                     meilleure_option = (cout, enn.pv, pos, enn)
 
-    if (meilleure_option is not None) and not unite.a_attaque:
+    if (meilleure_option is not None) and unite.attaque_restantes > 0:
         cout, _, pos, enn = meilleure_option
         if pos != unite.pos:
             unite.pos = pos

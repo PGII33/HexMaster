@@ -3,22 +3,25 @@ import animations
 import competences as co
 
 class Unite:
-    def __init__(self, equipe, pos, pv, dmg, mv, tier, nom, faction, prix=None, comp=None):
+    def __init__(self, equipe, pos, pv, dmg, mv, tier, nom, faction, prix=None, comp=None, portee=1, pv_max=None, attaque_max=1):
         self.equipe = equipe
         self.pos = pos
         self.pv = pv
+        self.pv_max = pv_max if pv_max is not None else pv
         self.dmg = dmg
         self.mv = mv
         self.pm = self.mv
         self.tier = tier
         self.nom = nom
         self.faction = faction
+        self.portee = portee
+        self.attaque_max = attaque_max
+        self.attaque_restantes = attaque_max
         # prix par défaut = tier * 5 ; si prix < 0 => "Bloqué"
         self.prix = prix if prix is not None else (tier * 5)
         # comp doit être le nom de la compétence (string) ou None/""
         self.comp = comp or ""
         self.vivant = True
-        self.a_attaque = False
         self.anim = None
 
     # ---------- Getters ----------
@@ -31,10 +34,12 @@ class Unite:
     def get_name(self): return self.nom
     def get_faction(self): return self.faction
     def get_competence(self): return self.comp
+    def get_portee(self): return self.portee
+    def get_pv_max(self): return self.pv_max
 
     # ---------- Logique ----------
     def reset_actions(self):
-        self.a_attaque = False
+        self.attaque_restantes = self.attaque_max
         self.pm = self.mv
 
     # ---------- Déplacements ----------
@@ -69,11 +74,17 @@ class Unite:
                     file.append((new_pos, new_cout))
         return accessibles
 
+    def est_a_portee(self, autre):
+        """Vrai si l'unité 'autre' est à portée d'attaque."""
+        q1, r1 = self.pos
+        q2, r2 = autre.pos
+        distance = max(abs(q1 - q2), abs(r1 - r2), abs((q1 + r1) - (q2 + r2)))
+        return distance <= self.portee
+
     # ---------- Combat ----------
     def attaquer(self, autre):
         """Applique l'animation et les dégâts séparément."""
-        if not self.a_attaque and self.est_adjacente(autre) and autre.vivant:
-            
+        if self.attaque_restantes > 0 and self.est_a_portee(autre) and autre.vivant:
             # Compétences avant l'attaque
             if self.comp == "sangsue":
                 co.sangsue(self)
@@ -84,12 +95,11 @@ class Unite:
             autre.pv -= self.dmg
             if autre.pv <= 0:
                 autre.vivant = False
-                
             if self.comp == "zombification":
                 co.zombification(self, autre)
-            elif self.comp == "tas_d_os":
+            elif autre.comp == "tas d'os":
                 co.tas_d_os(autre)
-            self.a_attaque = True
+            self.attaque_restantes -= 1
 
 
 # ---------- Sous-classes d’unités ----------
@@ -98,7 +108,7 @@ class Unite:
 
 class Tas_D_Os(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Tas d'Os", pv=1, dmg=0, mv=0, tier=0, faction="Morts-Vivants")
+        super().__init__(equipe, pos, nom="Tas d'Os", pv=1, dmg=0, mv=0, tier=0, faction="Morts-Vivants", attaque_max=0)
 
 class Goule(Unite):
     def __init__(self, equipe, pos):
@@ -106,7 +116,7 @@ class Goule(Unite):
 
 class Squelette(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Squelette", pv=3, dmg=5, mv=2, tier=1, comp="tas_d_os", faction="Morts-Vivants")
+        super().__init__(equipe, pos, nom="Squelette", pv=3, dmg=5, mv=2, tier=1, comp="tas d'os", faction="Morts-Vivants")
 
 class Spectre(Unite):
     def __init__(self, equipe, pos):
@@ -128,4 +138,4 @@ class Vampire(Unite):
 
 
 # Liste des classes utilisables
-CLASSES_UNITES = [Squelette, Goule, Vampire, Zombie]
+CLASSES_UNITES = [Goule, Squelette, Vampire, Zombie]

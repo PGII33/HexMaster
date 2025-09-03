@@ -10,8 +10,9 @@ def zombification(self, cible):
         cible.__class__ = Zombie_BASE
         cible.__init__(self.equipe, cible.pos)
         cible.pm = 0
-        cible.a_attaque = True
+        cible.attaque_restantes = 0
         cible.comp = "zombification"
+        cible.attaque_restantes = 0
 
 
 def tas_d_os(self):
@@ -23,5 +24,6 @@ def tas_d_os(self):
 # Dictionnaire des compétences (nom -> description)
 COMPETENCES = {
     "sangsue": "Augmente sa vie du nombre de dégâts infligés.",
-    "zombification": "Transforme l'unite ennemie tuée en zombie"
+    "zombification": "Transforme l'unite ennemie tuée en zombie",
+    "tas d'os": "À la mort, un tas d'os d'1PV apparaît sur la cellule.",
 }

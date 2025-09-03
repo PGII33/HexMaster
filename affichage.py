@@ -53,18 +53,33 @@ def dessiner(jeu):
         if jeu.selection == u:
             pygame.draw.circle(jeu.screen, color, (x,y), int(jeu.unit_radius * 1.25), width=max(2, int(jeu.taille_hex * 0.08)))
 
+    if jeu.selection and jeu.selection.equipe == jeu.tour and jeu.selection.attaque_restantes > 0:
+        for u in jeu.unites:
+            if (
+                u.vivant
+                and u.equipe != jeu.selection.equipe
+                and jeu.selection.est_a_portee(u)
+            ):
+                # Dessiner un cercle rouge autour de u
+                x, y = hex_to_pixel(jeu, u.pos[0], u.pos[1])
+                pygame.draw.circle(jeu.screen, (220, 30, 30), (x, y), jeu.unit_radius+4, 3)
+
     # panneau info
     if jeu.selection:
         u = jeu.selection
         pygame.draw.rect(jeu.screen, (225,225,225), jeu.info_panel, border_radius=8)
         lignes = [
             f"Nom: {u.nom}",
-            f"Equipe: {u.equipe}",
+            f"Faction: {u.faction}",
             f"PV: {u.pv}",
             f"DMG: {u.dmg}",
+            f"Portée: {u.portee}",
+            f"Attaques restantes: {u.attaque_restantes}/{u.attaque_max}",
             f"PM restants: {u.pm}/{u.mv}",
-            f"Attaque dispo: {'non' if u.a_attaque else 'oui'}",
+            f"Equipe: {u.equipe}",
         ]
+        if u.comp:
+            lignes.append(f"Compétence: {u.comp}")
         for i, l in enumerate(lignes):
             txt = jeu.font_norm.render(l, True, NOIR)
             jeu.screen.blit(txt, (jeu.info_panel.x + 10, jeu.info_panel.y + 10 + i * (txt.get_height() + 4)))

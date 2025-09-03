@@ -9,51 +9,29 @@ class Boutique:
     def __init__(self, screen):
         self.screen = screen
         self.font = pygame.font.SysFont(None, 28)
+        self.title_font = pygame.font.SysFont(None, 36)
         self.data = sauvegarde.charger()
         self.boutons = []
 
+    def _grid_specs(self):
+        screen_w, screen_h = self.screen.get_size()
+        margin = max(20, screen_w // 40)
+        cols = 3
+        card_w = (screen_w - margin * (cols + 1)) // cols
+        if card_w < 260:
+            cols = 2
+            card_w = (screen_w - margin * (cols + 1)) // cols
+        if card_w < 220:
+            cols = 1
+            card_w = (screen_w - margin * (cols + 1)) // cols
+        card_w = max(200, card_w)
+        start_y = max(100, int(0.12 * screen_h))
+        return screen_w, screen_h, margin, cols, card_w, start_y
+
     def creer_boutons(self):
         self.boutons = []
-        screen_w, screen_h = self.screen.get_size()
-        margin = 40
-        card_w = min(300, (screen_w - margin * 2) // 3)
-        x, y = margin, 100
-
-        for cls in CLASSES_UNITES:
-            tmp = cls("joueur", (0,0))  # instance temporaire
-            nom = tmp.get_nom()
-            prix = tmp.get_prix()
-            comp = tmp.get_competence()
-            comp_nom = "Aucune" if not comp else comp
-            comp_desc = "" if not comp else COMPETENCES.get(comp, "")
-
-            deja_achete = nom in self.data["unites"]
-
-            if deja_achete:
-                couleur = (150,150,150)
-                texte = "Déjà acheté"
-            elif self.data["pa"] >= prix:
-                couleur = (100,200,100)
-                texte = f"Acheter ({prix} PA)"
-            else:
-                couleur = (200,100,100)
-                texte = f"Pas assez de PA ({prix})"
-
-            btn_rect = pygame.Rect(x, y + 170, card_w, 40)
-            btn = Button(btn_rect, texte, 
-                         lambda c=cls, p=prix, n=nom: self.acheter_unite(c, p, n),
-                         self.font, base_color=couleur)
-            self.boutons.append(btn)
-
-            x += card_w + margin
-            if x + card_w > screen_w:
-                x = margin
-                y += 220
-
-        # Bouton retour
-        btn_retour_rect = pygame.Rect(50, screen_h - 80, 100, 50)
-        btn_retour = Button(btn_retour_rect, "Retour", self.retour_menu, self.font, base_color=(200,200,200))
-        self.boutons.append(btn_retour)
+        screen_w, screen_h, *_ = self._grid_specs()
+        self.boutons.append(Button((20, screen_h - 70, 160, 44), "Retour", self.retour_menu, self.font))
 
     def acheter_unite(self, classe, prix, nom):
         """Achète une unité si possible"""
@@ -78,21 +56,34 @@ class Boutique:
     def retour_menu(self):
         self.running = False
 
+    def wrap_text(self, text, max_width):
+        if not text:
+            return [""]
+        words = text.split()
+        lines, cur = [], ""
+        for w in words:
+            test = (cur + " " + w).strip()
+            if self.font.size(test)[0] <= max_width:
+                cur = test
+            else:
+                if cur:
+                    lines.append(cur)
+                cur = w
+        if cur:
+            lines.append(cur)
+        return lines or [""]
+
     def afficher(self):
         self.creer_boutons()
         self.running = True
         while self.running:
             self.screen.fill((240,240,250))
+            screen_w, screen_h, margin, cols, card_w, start_y = self._grid_specs()
 
-            solde = self.font.render(f"Points d'âmes : {self.data['pa']}", True, (0,0,0))
-            self.screen.blit(solde, (20, 20))
+            titre = self.title_font.render("Boutique", True, (30, 30, 60))
+            self.screen.blit(titre, (margin, 30))
 
-            screen_w, screen_h = self.screen.get_size()
-            margin = 40
-            card_w = min(300, (screen_w - margin * 2) // 3)
-            x, y = margin, 100
-            idx = 0
-
+            x, y, col = margin, start_y, 0
             for cls in CLASSES_UNITES:
                 tmp = cls("joueur", (0,0))
                 nom = tmp.get_nom()
@@ -103,32 +94,55 @@ class Boutique:
 
                 deja_achete = nom in self.data["unites"]
 
-                lignes = [
+                base_lines = [
                     f"{nom} - {prix} PA",
                     f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
                     f"Tier: {tmp.get_tier()}",
                     f"Compétence: {comp_nom}",
-                    f"{comp_desc}",
                 ]
-                card_h = 40 + len(lignes) * 30 + 50
+                desc_lines = self.wrap_text(comp_desc, card_w - 20)
+                card_h = 20 + len(base_lines) * 30 + len(desc_lines) * 26 + 60
 
                 rect = pygame.Rect(x, y, card_w, card_h)
                 pygame.draw.rect(self.screen, (220,220,220), rect, border_radius=12)
-                pygame.draw.rect(self.screen, (0,0,0), rect, 2, border_radius=12)
+                pygame.draw.rect(self.screen, (0,0,0), rect, width=2, border_radius=12)
 
-                for i, l in enumerate(lignes):
+                for i, l in enumerate(base_lines):
                     txt = self.font.render(l, True, (0,0,0))
-                    self.screen.blit(txt, (x+10, y+10+i*30))
+                    self.screen.blit(txt, (x + 10, y + 12 + i * 30))
 
-                self.boutons[idx].draw(self.screen)
-                idx += 1
+                y_text = y + 12 + len(base_lines) * 30 + 6
+                for line in desc_lines:
+                    txt = self.font.render(line, True, (20, 20, 20))
+                    self.screen.blit(txt, (x + 10, y_text))
+                    y_text += 26
+
+                # Bouton achat sur la carte
+                if deja_achete:
+                    couleur = (150,150,150)
+                    texte = "Déjà acheté"
+                elif self.data["pa"] >= prix:
+                    couleur = (100,200,100)
+                    texte = f"Acheter ({prix} PA)"
+                else:
+                    couleur = (200,100,100)
+                    texte = f"Pas assez de PA ({prix})"
+
+                btn_rect = pygame.Rect(x + 10, y + card_h - 50, card_w - 20, 40)
+                btn = Button(btn_rect, texte, lambda c=cls, p=prix, n=nom: self.acheter_unite(c, p, n), self.font, base_color=couleur)
+                btn.draw(self.screen)
 
                 x += card_w + margin
-                if x + card_w > screen_w:
+                col += 1
+                if col >= cols:
+                    col = 0
                     x = margin
                     y += card_h + margin
 
-            self.boutons[-1].draw(self.screen)
+            self.boutons[0].draw(self.screen)  # bouton retour
+
+            solde = self.font.render(f"Points d'âmes : {self.data['pa']}", True, (0,0,0))
+            self.screen.blit(solde, (self.screen.get_width() - solde.get_width() - 20, 20))
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:

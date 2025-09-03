@@ -71,7 +71,7 @@ Différentes factions sont disponibles.
 
 | Nom      | Tier | Compétences |
 |----------|------|-------------|
-| Pégase   | 1    |   Vol       |
+| Pégase   | 1    |    Vol      |
 | Cerbère  | 1    |             |
 | Centaure | 1    |             |
 | Griffon  | 2    |    Vol      |
@@ -85,7 +85,7 @@ Différentes factions sont disponibles.
     Armure de pierre : Dégats subis moins 2.
     Bénédiction : Augemente l'attaque et la vie de la cible.
     Bouclier de la foi : 2 Shield sur les unités autour de soi.
-    Commandement : ???
+    Commandement : Une attaque supplémentaire avec des dégats additionnels (dmg) pour la cible.
     Explosion sacrée : Se sacrifie pour infliger ses points de vie en dégats.
     Fantomatique : Se déplace au tavers des unites gratuitement.
     Invocation : Invoque une unitée de tier 1 ou 2 des Morts-Vivants sur une case adjacente (chaque tour).
@@ -93,7 +93,7 @@ Différentes factions sont disponibles.
     Purificateur : Regagne son attaque lorsqu'il tue un Mort-Vivant.
     Rage : Augemente l'attaque de 1 par morts.
     Regard Mortel : ???
-    Tas d'os : A la mort, un tas d'os d'1PV apparaît sur la cellule.
+    Tas d'os : À la mort, un tas d'os d'1PV apparaît sur la cellule.
     Sangsue : Augmente sa vie du nombre de dégâts infligés.
     Soin : Régénère 5 points de vie.
     Vol : Ignore la première attaque subie.
@@ -122,3 +122,7 @@ Dinosaures
 
 ### Autre
 Clem voudrait remplacer "Paléonthologue" par "M. ADN"
+
+## Mentions
+
+Je remercie Mathis, Vincent et Clément pour m'avoir aidé au niveau inspiration.
