@@ -22,7 +22,7 @@ def handle_click(jeu, mx, my):
                     jeu.deplacement_possibles = {}
                 else:
                     jeu.selection = u
-                    jeu.deplacement_possibles = u.cases_accessibles(jeu.unites)
+                    jeu.deplacement_possibles = u.cases_accessibles(jeu.unites, jeu.q_range, jeu.r_range)
             else:
                 # clic sur ennemi
                 if (
@@ -34,7 +34,7 @@ def handle_click(jeu, mx, my):
                 ):
                     jeu.selection.attaquer(u)
                     # Met à jour les cases accessibles après l'attaque
-                    jeu.deplacement_possibles = jeu.selection.cases_accessibles(jeu.unites)
+                    jeu.deplacement_possibles = jeu.selection.cases_accessibles(jeu.unites, jeu.q_range, jeu.r_range)
                 else:
                     jeu.selection = u
                     jeu.deplacement_possibles = {}
@@ -50,7 +50,7 @@ def handle_click(jeu, mx, my):
                     jeu.selection.pos = case
                     jeu.selection.pm -= cout
                     # Met à jour les cases accessibles après déplacement
-                    jeu.deplacement_possibles = jeu.selection.cases_accessibles(jeu.unites)
+                    jeu.deplacement_possibles = jeu.selection.cases_accessibles(jeu.unites, jeu.q_range, jeu.r_range)
                 else:
                     jeu.deplacement_possibles = {}
                 return

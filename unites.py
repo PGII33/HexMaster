@@ -49,12 +49,18 @@ class Unite:
         directions = [(1,0), (-1,0), (0,1), (0,-1), (1,-1), (-1,1)]
         return any((q1+dx, r1+dy) == (q2, r2) for dx, dy in directions)
 
-    def cases_accessibles(self, toutes_unites):
+    def cases_accessibles(self, toutes_unites, q_range=None, r_range=None):
         if self.pm <= 0:
             return {}
 
+        # Limites par défaut si non spécifiées
+        if q_range is None:
+            q_range = range(-1, 7)
+        if r_range is None:
+            r_range = range(-1, 7)
+
         if self.comp == "fantomatique":
-            return co.cases_fantomatiques(self, toutes_unites)
+            return co.cases_fantomatiques(self, toutes_unites, q_range, r_range)
 
         accessibles = {}
         file = deque([(self.pos, 0)])
@@ -67,6 +73,12 @@ class Unite:
                 continue
             for dq, dr in directions:
                 new_pos = (q+dq, r+dr)
+                new_q, new_r = new_pos
+                
+                # VÉRIFIER QUE LA NOUVELLE POSITION EST DANS LA GRILLE
+                if new_q not in q_range or new_r not in r_range:
+                    continue
+                    
                 new_cout = cout + 1
                 if new_pos in occupees:
                     continue
@@ -104,11 +116,12 @@ class Unite:
                 co.tas_d_os(autre)
             self.attaque_restantes -= 1
 
-    def debut_tour(self, toutes_unites, plateau):
+    def debut_tour(self, toutes_unites, plateau, q_range=None, r_range=None):
+        """À appeler au début du tour de l'unité pour déclencher les compétences passives."""
         if self.comp == "nécromancie":
-            co.nécromancie(self, toutes_unites, plateau)
+            co.nécromancie(self, toutes_unites, plateau, q_range, r_range)
         elif self.comp == "invocation":
-            co.invocation(self, toutes_unites, plateau)
+            co.invocation(self, toutes_unites, plateau, q_range, r_range)
         # Ajoute ici d'autres compétences passives si besoin
 
 
