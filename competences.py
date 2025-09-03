@@ -26,4 +26,5 @@ COMPETENCES = {
     "sangsue": "Augmente sa vie du nombre de dégâts infligés.",
     "zombification": "Transforme l'unite ennemie tuée en zombie",
     "tas d'os": "À la mort, un tas d'os d'1PV apparaît sur la cellule.",
+    "fantomatique": "Se déplace au travers des unites gratuitement.",
 }

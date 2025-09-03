@@ -53,6 +53,9 @@ class Unite:
         if self.pm <= 0:
             return {}
 
+        if self.comp == "fantomatique":
+            return self.cases_fantomatiques(toutes_unites)
+
         accessibles = {}
         file = deque([(self.pos, 0)])
         directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
@@ -72,6 +75,30 @@ class Unite:
                 if new_pos not in accessibles or new_cout < accessibles[new_pos]:
                     accessibles[new_pos] = new_cout
                     file.append((new_pos, new_cout))
+        return accessibles
+
+    def cases_fantomatiques(self, toutes_unites):
+        """Retourne toutes les cases accessibles en traversant les unités (traverser une unité ne coûte pas de PM, s'arrêter sur une case vide coûte 1 PM par case vide)."""
+        accessibles = {}
+        file = deque([(self.pos, 0)])
+        directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
+        vus = dict()  # (q, r): cout minimal
+        occupees = {u.pos for u in toutes_unites if u.vivant and u != self}
+        while file:
+            (q, r), cout = file.popleft()
+            if cout > self.pm:
+                continue
+            if (q, r) in vus and cout >= vus[(q, r)]:
+                continue
+            vus[(q, r)] = cout
+            if (q, r) != self.pos and (q, r) not in occupees:
+                accessibles[(q, r)] = cout
+            for dq, dr in directions:
+                new_pos = (q+dq, r+dr)
+                if new_pos in occupees:
+                    file.appendleft((new_pos, cout))  # traverser une unité = 0 PM
+                else:
+                    file.append((new_pos, cout+1))   # case vide = +1 PM
         return accessibles
 
     def est_a_portee(self, autre):
@@ -120,7 +147,7 @@ class Squelette(Unite):
 
 class Spectre(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Spectre", pv=6, dmg=4, mv=3, tier=1, faction="Morts-Vivants")
+        super().__init__(equipe, pos, nom="Spectre", pv=6, dmg=4, mv=1, tier=1, comp="fantomatique", faction="Morts-Vivants")
 
 class Zombie_BASE(Unite):
     """ Pour crée les zombies zombifiés """
@@ -138,4 +165,4 @@ class Vampire(Unite):
 
 
 # Liste des classes utilisables
-CLASSES_UNITES = [Goule, Squelette, Vampire, Zombie]
+CLASSES_UNITES = [Goule, Squelette, Spectre, Vampire, Zombie]

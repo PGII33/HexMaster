@@ -129,8 +129,15 @@ class Boutique:
                     texte = f"Pas assez de PA ({prix})"
 
                 btn_rect = pygame.Rect(x + 10, y + card_h - 50, card_w - 20, 40)
-                btn = Button(btn_rect, texte, lambda c=cls, p=prix, n=nom: self.acheter_unite(c, p, n), self.font, base_color=couleur)
+                btn = Button(
+                    btn_rect,
+                    texte,
+                    lambda c=cls, p=prix, n=nom: self.acheter_unite(c, p, n),
+                    self.font,
+                    base_color=couleur
+                )
                 btn.draw(self.screen)
+                self.boutons.append(btn)
 
                 x += card_w + margin
                 col += 1
