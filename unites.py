@@ -54,7 +54,7 @@ class Unite:
             return {}
 
         if self.comp == "fantomatique":
-            return self.cases_fantomatiques(toutes_unites)
+            return co.cases_fantomatiques(self, toutes_unites)
 
         accessibles = {}
         file = deque([(self.pos, 0)])
@@ -75,30 +75,6 @@ class Unite:
                 if new_pos not in accessibles or new_cout < accessibles[new_pos]:
                     accessibles[new_pos] = new_cout
                     file.append((new_pos, new_cout))
-        return accessibles
-
-    def cases_fantomatiques(self, toutes_unites):
-        """Retourne toutes les cases accessibles en traversant les unités (traverser une unité ne coûte pas de PM, s'arrêter sur une case vide coûte 1 PM par case vide)."""
-        accessibles = {}
-        file = deque([(self.pos, 0)])
-        directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
-        vus = dict()  # (q, r): cout minimal
-        occupees = {u.pos for u in toutes_unites if u.vivant and u != self}
-        while file:
-            (q, r), cout = file.popleft()
-            if cout > self.pm:
-                continue
-            if (q, r) in vus and cout >= vus[(q, r)]:
-                continue
-            vus[(q, r)] = cout
-            if (q, r) != self.pos and (q, r) not in occupees:
-                accessibles[(q, r)] = cout
-            for dq, dr in directions:
-                new_pos = (q+dq, r+dr)
-                if new_pos in occupees:
-                    file.appendleft((new_pos, cout))  # traverser une unité = 0 PM
-                else:
-                    file.append((new_pos, cout+1))   # case vide = +1 PM
         return accessibles
 
     def est_a_portee(self, autre):
@@ -127,6 +103,13 @@ class Unite:
             elif autre.comp == "tas d'os":
                 co.tas_d_os(autre)
             self.attaque_restantes -= 1
+
+    def debut_tour(self, toutes_unites, plateau):
+        if self.comp == "nécromancie":
+            co.nécromancie(self, toutes_unites, plateau)
+        elif self.comp == "invocation":
+            co.invocation(self, toutes_unites, plateau)
+        # Ajoute ici d'autres compétences passives si besoin
 
 
 # ---------- Sous-classes d’unités ----------
@@ -162,7 +145,14 @@ class Vampire(Unite):
     def __init__(self, equipe, pos):
         super().__init__(equipe, pos, nom="Vampire", pv=12, dmg=3, mv=2, tier=2, comp="sangsue", faction="Morts-Vivants")
 
+class Liche(Unite):
+    def __init__(self, equipe, pos):
+        super().__init__(equipe, pos, nom="Liche", pv=7, dmg=1, mv=2, tier=3, comp="nécromancie", faction="Morts-Vivants")
+
+class Archliche(Unite):
+    def __init__(self, equipe, pos):
+        super().__init__(equipe, pos, nom="Archliche", pv=10, dmg=2, mv=2, tier=4, comp="invocation", faction="Morts-Vivants")
 
 
 # Liste des classes utilisables
-CLASSES_UNITES = [Goule, Squelette, Spectre, Vampire, Zombie]
+CLASSES_UNITES = [Goule, Squelette, Spectre, Vampire, Zombie, Liche, Archliche]

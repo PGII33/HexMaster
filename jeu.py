@@ -97,9 +97,21 @@ class Jeu:
                     self.ia_timer_ms = self.ia_delay_between_actions
                     self.ia_index += 1
             else:
-                self.tour = "joueur"
-                reset_actions_tour(self)
+                self.changer_tour()
                 self.ia_busy = False
                 self.ia_queue = []
                 self.ia_index = 0
                 self.ia_timer_ms = 0
+
+    def est_case_vide(self, pos, toutes_unites=None):
+        """Renvoie True si aucune unité vivante n'occupe la case pos."""
+        if toutes_unites is None:
+            toutes_unites = self.unites
+        return all(u.pos != pos or not u.vivant for u in toutes_unites)
+
+    def changer_tour(self):
+        """Passe au tour suivant et réinitialise les actions/compétences passives."""
+        self.tour = "ennemi" if self.tour == "joueur" else "joueur"
+        reset_actions_tour(self)
+        self.selection = None
+        self.deplacement_possibles = {}

@@ -7,10 +7,7 @@ from tour import reset_actions_tour
 def handle_click(jeu, mx, my):
     # clic bouton fin de tour
     if jeu.btn_fin_tour.collidepoint(mx, my):
-        jeu.tour = 'ennemi' if jeu.tour == 'joueur' else 'joueur'
-        jeu.selection = None
-        jeu.deplacement_possibles = {}
-        reset_actions_tour(jeu)
+        jeu.changer_tour()
         return
 
     # clic sur une unité ?
