@@ -126,13 +126,50 @@ class HexaMaster:
         if player2_units is None:  # Annulé
             return
         
-        # Lancement du jeu
+        # Phase de placement Joueur 1
+        from placement import PlacementPhase
+        placement1 = PlacementPhase(
+            self.screen, 
+            player1_units,
+            titre="Joueur 1 - Placement des unités",
+            player_spawn_zone=[-1, 0, 1],  # Zone verte (haut)
+            enemy_spawn_zone=[4, 5, 6]     # Zone rouge (bas)
+        )
+        player1_placed = placement1.run()
+        
+        if player1_placed is None:  # Annulé
+            return
+        
+        # Phase de placement Joueur 2
+        placement2 = PlacementPhase(
+            self.screen, 
+            player2_units,
+            titre="Joueur 2 - Placement des unités",
+            player_spawn_zone=[4, 5, 6],   # Zone rouge devient zone joueur 2
+            enemy_spawn_zone=[-1, 0, 1]    # Zone verte devient "ennemie"
+        )
+        player2_placed = placement2.run()
+        
+        if player2_placed is None:  # Annulé
+            return
+        
+        # Créer les unités avec leurs positions
+        player1_units_with_pos = []
+        for cls, pos in player1_placed:
+            player1_units_with_pos.append((cls, pos))
+        
+        player2_units_with_pos = []
+        for cls, pos in player2_placed:
+            player2_units_with_pos.append((cls, pos))
+        
+        # Lancement du jeu (pas d'IA, pas de placement automatique)
         self.jeu = Jeu(
             ia_strategy=None,  # Pas d'IA en versus
             screen=self.screen,
-            initial_player_units=player1_units,   # Juste les classes
-            initial_enemy_units=player2_units,    # Juste les classes
-            enable_placement=True
+            initial_player_units=player1_units_with_pos,
+            initial_enemy_units=player2_units_with_pos,
+            enable_placement=False,  # Déjà fait
+            versus_mode=True  # Nouveau paramètre
         )
         self.etat = "jeu"
 

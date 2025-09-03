@@ -14,13 +14,15 @@ BTN_H_RATIO = 0.06
 
 class Jeu:
     def __init__(self, ia_strategy=ia.cible_faible, screen=None,
-                 initial_player_units=None, initial_enemy_units=None, enable_placement=False):
+                 initial_player_units=None, initial_enemy_units=None, 
+                 enable_placement=False, versus_mode=False):
         self.screen = screen if screen is not None else pygame.display.set_mode((1200, 900), pygame.RESIZABLE)
         self.clock = pygame.time.Clock()
 
         # État du jeu
         self.unites = []
         self.enable_placement = enable_placement
+        self.versus_mode = versus_mode  # Nouveau : mode joueur vs joueur
         
         # Traitement des unités selon le mode
         if enable_placement and initial_player_units:
@@ -57,7 +59,9 @@ class Jeu:
 
             if initial_enemy_units:
                 for cls, pos in initial_enemy_units:
-                    self.unites.append(cls("ennemi", pos))
+                    # En mode versus, les "ennemis" sont le joueur 2
+                    equipe = "joueur2" if versus_mode else "ennemi"
+                    self.unites.append(cls(equipe, pos))
 
         self.tour = "joueur"
         self.selection = None
@@ -87,30 +91,37 @@ class Jeu:
         if event.type == pygame.VIDEORESIZE:
             self.screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
             self.recalculer_layout()
-        elif event.type == pygame.MOUSEBUTTONDOWN and self.tour == "joueur":
-            mx, my = event.pos
-            handle_click(self, mx, my)
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            # Permettre les clics pour TOUS les tours (joueur ET joueur2)
+            if self.versus_mode or self.tour == "joueur":
+                mx, my = event.pos
+                handle_click(self, mx, my)
 
     def update(self, dt_ms):
-
         # Mettre à jour les animations
         for u in self.unites:
             if u.anim:
                 if u.anim.update(dt_ms):
                     u.anim = None
 
-
         # Vérifier fin
         joueurs = [u for u in self.unites if u.equipe == "joueur" and u.vivant]
-        ennemis = [u for u in self.unites if u.equipe == "ennemi" and u.vivant]
-        if not joueurs or not ennemis:
+        
+        if self.versus_mode:
+            # En mode versus, vérifier joueur2 au lieu d'ennemi
+            adversaires = [u for u in self.unites if u.equipe == "joueur2" and u.vivant]
+        else:
+            adversaires = [u for u in self.unites if u.equipe == "ennemi" and u.vivant]
+        
+        if not joueurs or not adversaires:
             self.finished = True
             return
 
-        # Tour IA
-        if self.tour == "ennemi":
+        # Tour IA (seulement si pas en mode versus)
+        if not self.versus_mode and self.tour == "ennemi":
             if not self.ia_busy:
-                self.ia_queue = ennemis[:]
+                adversaires_courants = [u for u in self.unites if u.equipe == "ennemi" and u.vivant]
+                self.ia_queue = adversaires_courants[:]
                 self.ia_index = 0
                 self.ia_busy = True
                 self.ia_timer_ms = 0
@@ -139,7 +150,15 @@ class Jeu:
 
     def changer_tour(self):
         """Passe au tour suivant et réinitialise les actions/compétences passives."""
-        self.tour = "ennemi" if self.tour == "joueur" else "joueur"
+        if getattr(self, 'versus_mode', False):
+            # En mode versus, alterner entre "joueur" et "joueur2"
+            self.tour = "joueur2" if self.tour == "joueur" else "joueur"
+        else:
+            # Mode normal : alterner entre "joueur" et "ennemi"
+            self.tour = "ennemi" if self.tour == "joueur" else "joueur"
+        
         reset_actions_tour(self)
         self.selection = None
         self.deplacement_possibles = {}
+
+    # ...reste du code inchangé...

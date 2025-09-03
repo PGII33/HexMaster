@@ -15,7 +15,19 @@ def dessiner(jeu):
     # bandeau
     bandeau = pygame.Rect(0, 0, jeu.largeur, jeu.top_h)
     pygame.draw.rect(jeu.screen, (200,200,250), bandeau)
-    txt_tour = jeu.font_big.render(f"Tour du {jeu.tour}", True, NOIR)
+    
+    # Affichage du tour selon le mode
+    if getattr(jeu, 'versus_mode', False):
+        if jeu.tour == "joueur":
+            tour_text = "Tour du Joueur 1"
+        elif jeu.tour == "joueur2":
+            tour_text = "Tour du Joueur 2"
+        else:
+            tour_text = f"Tour du {jeu.tour}"
+    else:
+        tour_text = f"Tour du {jeu.tour}"
+    
+    txt_tour = jeu.font_big.render(tour_text, True, NOIR)
     jeu.screen.blit(txt_tour, (jeu.largeur // 2 - txt_tour.get_width() // 2,
                                 jeu.top_h // 2 - txt_tour.get_height() // 2))
 
@@ -43,9 +55,16 @@ def dessiner(jeu):
         if not u.vivant:
             continue
         x,y = hex_to_pixel(jeu, u.pos[0], u.pos[1])
-        color = VERT if u.equipe == 'joueur' else ROUGE
+        
+        # Couleurs selon l'équipe
+        if u.equipe == 'joueur':
+            color = VERT
+        elif u.equipe == 'joueur2':
+            color = (50, 50, 200)  # Bleu pour joueur 2
+        else:
+            color = ROUGE  # Rouge pour IA/ennemi
 
-        # utilise la fonction d’animation
+        # utilise la fonction d'animation
         x, y = dessiner_unite_animee(jeu, u, x, y, color)
 
         name_txt = jeu.font_small.render(u.get_nom(), True, NOIR)
@@ -53,11 +72,22 @@ def dessiner(jeu):
         if jeu.selection == u:
             pygame.draw.circle(jeu.screen, color, (x,y), int(jeu.unit_radius * 1.25), width=max(2, int(jeu.taille_hex * 0.08)))
 
+    # Indicateurs d'attaque
     if jeu.selection and jeu.selection.equipe == jeu.tour and jeu.selection.attaque_restantes > 0:
         for u in jeu.unites:
+            # Vérifier si c'est un ennemi selon le mode
+            is_enemy = False
+            if getattr(jeu, 'versus_mode', False):
+                # Mode versus : joueur vs joueur2
+                is_enemy = (jeu.selection.equipe == "joueur" and u.equipe == "joueur2") or \
+                          (jeu.selection.equipe == "joueur2" and u.equipe == "joueur")
+            else:
+                # Mode normal : joueur vs ennemi
+                is_enemy = u.equipe != jeu.selection.equipe
+            
             if (
                 u.vivant
-                and u.equipe != jeu.selection.equipe
+                and is_enemy
                 and jeu.selection.est_a_portee(u)
             ):
                 # Dessiner un cercle rouge autour de u

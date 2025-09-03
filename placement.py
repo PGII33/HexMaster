@@ -5,11 +5,25 @@ from layout import recalculer_layout, hex_to_pixel, pixel_to_hex
 import math
 
 class PlacementPhase:
-    def __init__(self, screen, selected_units):
+    def __init__(self, screen, selected_units, titre=None, player_spawn_zone=None, enemy_spawn_zone=None):
         self.screen = screen
         self.selected_units = selected_units[:]  # copie
         self.font = pygame.font.SysFont(None, 28)
         self.font_big = pygame.font.SysFont(None, 40)
+        
+        # Configuration personnalisable
+        self.titre = titre or "Placement des unités"
+        
+        # Zones de spawn personnalisables
+        if player_spawn_zone:
+            self._player_spawn_zone = player_spawn_zone
+        else:
+            self._player_spawn_zone = [-1, 0, 1]  # Par défaut : 3 lignes du haut
+        
+        if enemy_spawn_zone:
+            self._enemy_spawn_zone = enemy_spawn_zone
+        else:
+            self._enemy_spawn_zone = [4, 5, 6]  # Par défaut : 3 lignes du bas
         
         self.q_range = range(-1, 7)
         self.r_range = range(-1, 7)
@@ -69,12 +83,12 @@ class PlacementPhase:
             self.running = False
     
     def _is_player_spawn_zone(self, q, r):
-        """Vérifie si la case est dans la zone de spawn joueur (3 lignes du haut)"""
-        return r in [-1, 0, 1]
+        """Vérifie si la case est dans la zone de spawn joueur"""
+        return r in self._player_spawn_zone
     
     def _is_enemy_spawn_zone(self, q, r):
-        """Vérifie si la case est dans la zone de spawn ennemi (3 lignes du bas)"""
-        return r in [4, 5, 6]
+        """Vérifie si la case est dans la zone de spawn ennemi"""
+        return r in self._enemy_spawn_zone
     
     def _get_hex_color(self, q, r):
         """Retourne la couleur de l'hexagone selon la zone"""
@@ -286,6 +300,10 @@ class PlacementPhase:
             # Dessin
             self.screen.fill((255, 255, 255))
             
+            # Titre principal
+            titre_principal = self.font_big.render(self.titre, True, (30, 30, 60))
+            self.screen.blit(titre_principal, (20, 20))
+            
             # Grille hexagonale
             for q in self.q_range:
                 for r in self.r_range:
@@ -332,7 +350,7 @@ class PlacementPhase:
             # Instruction
             if total_available > 0:
                 instruction = self.font.render(f"Placez toutes vos unités ({total_available} restantes)", True, (200, 0, 0))
-                self.screen.blit(instruction, (20, 20))
+                self.screen.blit(instruction, (20, 60))
             
             pygame.display.flip()
         
