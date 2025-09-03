@@ -13,12 +13,12 @@ def zombification(self, cible):
         cible.pv = 8  # Stats du zombie
         cible.dmg = 4
         cible.mv = 1
-        cible.pm = 1
+        cible.pm = 0
         cible.tier = 2
         cible.prix = 10
         cible.comp = "zombification"  # Les zombies peuvent aussi zombifier
         cible.vivant = True
-        cible.a_attaque = False
+        cible.a_attaque = True
 
 # Dictionnaire des compétences (nom -> description)
 COMPETENCES = {

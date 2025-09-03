@@ -17,57 +17,103 @@ Le mode arène, qui permet d'affronter des adversaires un peu plus puissant que 
 
 ## Factions
 
-Différentes factions sont disponibles
+Différentes factions sont disponibles.
+Chaque 
 
 ### Morts-Vivants
 
 | Nom       | Tier | Compétences |
 |-----------|------|-------------|
-| Squelette | 1    |             |
+| Tas d'os  | 0    |             |
+| Squelette | 1    |  Tas d'os   |
 | Goule     | 1    |             |
-| Spectre   | 1    |             |
-| Vampire   | 2    |    Sangsue  |
+| Spectre   | 1    |Fantomatique |
+| Vampire   | 2    |   Sangsue   |
 | Zombie    | 2    |Zombification|
+| Liche     | 3    | Nécromancie |
+| Archliche | 4    | Invocation  |
 
-### Célestes
+### Religieux
 
-| Nom              | Tier | Compétences |
-|------------------|------|-------------|
-| Missionère       | 1    |             |
-| Ange             | 1    |             |
-| Esprit de Lumière| 1    |             |
-| Prêtre           | ?    |             |
-| Paladin          | ?    |             |
+| Nom              | Tier | Compétences      |
+|------------------|------|------------------|
+| Missionnaire     | 1    |                  |
+| Clerc            | 1    |     Soin         |
+| Fanatique        | 1    | Explosion sacrée |
+| Esprit Saint     | 2    |Bouclier de la foi|
+| Paladin          | 2    | Bénédiction      |
+| Ange             | 3    | Purificateur     |
+| ArchAnge         | 4    | |
 
 ### Mystiques
 
-| Nom       | Tier | Compétences |
-|-----------|------|-------------|
-| Esprit    | 1    |             |
-| Salamandre| 1    |             |
-| Fée       | 1    |             |
-| Golème    | ?    |             |
+| Nom       | Tier | Compétences    |
+|-----------|------|----------------|
+| Esprit    | 1    |                |
+| Salamandre| 1    |                |
+| Fée       | 1    |                |
+| Golem     | 2    |Armure de pierre|
+| Nymphes   | 2    |                |
+| TRUC      | 3    |                |
 
 ### Humains
 
-| Nom      | Tier | Compétences |
-|----------|------|-------------|
-| Guerrier | 1    |             |
-| Archer   | 1    |             |
-| Cavalier | 1    |             |
+| Nom         | Tier | Compétences |
+|-------------|------|-------------|
+| Guerrier    | 1    |             |
+| Archer      | 1    |             |
+| Cavalier    | 1    |             |
+|             | 2    |             |
+| Garde royal | 2    |             |
+|   Roi       | 3    |Commandement |
+
 
 ### Bêtes
 
 | Nom      | Tier | Compétences |
 |----------|------|-------------|
-| Griffon  | 1    |             |
+| Pégase   | 1    |   Vol       |
 | Cerbère  | 1    |             |
-| Sphinx   | 1    |             |
-| Pégase   | 2    |             |
-|Loup-Garou| 2    |             |
-| Dragon   | ?    |             |
+| Centaure | 1    |             |
+| Griffon  | 2    |    Vol      |
+|Loup-Garou| 2    |    Rage     |
+
+| Basilic  | 4    |Regard Mortel|
+| Dragon   | 4    |             |
+
+## Description des compétences
+
+    Armure de pierre : Dégats subis moins 2.
+    Bénédiction : Augemente l'attaque et la vie de la cible.
+    Bouclier de la foi : 2 Shield sur les unités autour de soi.
+    Explosion sacrée : Se sacrifie pour infliger ses points de vie en dégats.
+    Fantomatique : Se déplace au tavers des unites gratuitement.
+    Invocation : Invoque une unitée de tier 1 ou 2 des Morts-Vivants sur une case adjacente (chaque tour).
+    Nécromancie : Crée un squelette sur une case adjacente (chaque tour).
+    Purificateur : Regagne son attaque lorsqu'il tue un Mort-Vivant.
+    Rage : Augemente l'attaque de 1 par morts.
+    Regard Mortel : ???
+    Tas d'os : A la mort, un tas d'os d'1PV apparaît sur la cellule.
+    Sangsue : Augmente sa vie du nombre de dégâts infligés.
+    Soin : Régénère 5 points de vie.
+    Vol : Ignore la première attaque subie.
+    Zombification : Transforme l'unite ennemie morte en zombie.
 
 ## Extra
+
+### 
+
 ### Idées factions
 Kaiju
 Dinosaures
+
+
+### Idées unités
+| Vincent OP | 4    | Lancé de Claquette |
+| Micky   OP | 4    | Réincarnation      |
+| Clément OP | 4    | Paléonthologue     |
+
+### Idées Compétences
+    Lancé de Claquette : Tout les 3 tours, peut lancer une claquette n'importe où sur la carte infligeant des dégats.
+    Paléonthologue : Invoque une unité "Dinosaures" sur une case adjacente (chaque tour, tier + 1, max à 4 (tier des boss)).
+    Réincarnation : Quand meurt, se réincarne dans le corps d'une unite allié de plus bas rang disponible.
