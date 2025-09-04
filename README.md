@@ -46,14 +46,14 @@ Différentes factions sont disponibles.
 
 ### Élémentaires
 
-| Nom       | Tier | Compétences    |
-|-----------|------|----------------|
-| Esprit    | 1    |                |
-| Driade    |  1   |                |
-| Ondine    | 1    |                |
-| Golem     | 2    |Armure de pierre|
-| Nymphe    | 2    |                |
-| Ifrit     | 3    |                |
+| Nom       | Tier | Compétences       |
+|-----------|------|-------------------|
+| Esprit    | 1    |                   |
+| Driade    |  1   |                   |
+| Ondine    | 1    |                   |
+| Golem     | 2    |Armure de pierre   |
+| Nymphe    | 2    |                   |
+| Ifrit     | 3    |Combustion Différée|
 
 ### Humains
 
@@ -86,6 +86,7 @@ Différentes factions sont disponibles.
     Aura sacrée : Bonus de dégâts pour tout les alliés adjacents.
     Armure de pierre : Dégats subis moins 2.
     Bouclier de la foi : 2 Shield sur les unités autour de soi.
+    Combustion Différée : Toute unité touché meurt au bout de 3 tours.
     Commandement : Une attaque supplémentaire avec des dégats additionnels (dmg) pour la cible.
     Explosion sacrée : Se sacrifie pour infliger ses points de vie en dégats.
     Fantomatique : Se déplace au travers des unites gratuitement.
