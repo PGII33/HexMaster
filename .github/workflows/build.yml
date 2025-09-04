@@ -1,18 +1,15 @@
-name: Build EXE
+name: Build and Package EXE
 
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
   build:
-    runs-on: windows-latest  # obligatoire car on veut générer un .exe Windows
+    runs-on: windows-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -25,12 +22,13 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
-      - name: Build exe with PyInstaller
+      - name: Build exe
         run: |
           pyinstaller --onefile --noconsole main.py
 
       - name: Upload exe artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: game-exe
           path: dist/*.exe
+          retention-days: 30
