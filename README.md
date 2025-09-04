@@ -49,10 +49,10 @@ Différentes factions sont disponibles.
 | Nom       | Tier | Compétences       |
 |-----------|------|-------------------|
 | Esprit    | 1    |                   |
-| Driade    |  1   |                   |
-| Ondine    | 1    |                   |
+| Driade    | 1   |                   |
+| Gnome     | 1    |                   |
 | Golem     | 2    |Armure de pierre   |
-| Nymphe    | 2    |                   |
+| Ondine    | 2    |                   |
 | Ifrit     | 3    |Combustion Différée|
 
 ### Humains
