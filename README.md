@@ -3,17 +3,14 @@
 
 ## Mode de jeu
 
-### Tuto
-Comme le nom l'indique, il s'agit la du tutoriel. 
-C'est un 2V2, le joueur a de meilleurs unités.
-
 ### Campagne
-C'est le mode histoire du jeu, on y choisit les factions à affronter.
+C'est le mode histoire du jeu. Chaque chapitre de la campagne correspond à une faction, chaque chapitre est composé de différents niveaux. C'est en jouant la campagne que l'on débloque de nouvelles factions.
 
 ### Hexarène
 Le mode arène, qui permet d'affronter des adversaires un peu plus puissant que sois.
 
-## Héros
+### JcJ (local)
+Permet d'affronter un second joueur en local.
 
 ## Factions
 
