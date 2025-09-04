@@ -63,7 +63,7 @@ Différentes factions sont disponibles.
 | Guerrier    | 1    |              |
 | Archer      | 1    |              |
 | Cavalier    | 1    |Monture libéré|
-|             | 2    |              |
+| Bouffon     | 2    |Divertissement|
 | Garde royal | 2    |              |
 |   Roi       | 3    |Commandement  |
 
@@ -88,6 +88,7 @@ Différentes factions sont disponibles.
     Bouclier de la foi : 2 Shield sur les unités autour de soi.
     Combustion Différée : Toute unité touché meurt au bout de 3 tours.
     Commandement : Une attaque supplémentaire avec des dégats additionnels (dmg) pour la cible.
+    Divertissement : S'il lui reste une attaque, divertis les ennemis adjacents qui perdent une attaque (fin de tour).
     Explosion sacrée : Se sacrifie pour infliger ses points de vie en dégats.
     Fantomatique : Se déplace au travers des unites gratuitement.
     Invocation : Invoque une unitée de tier 1 ou 2 des Morts-Vivants sur une case adjacente (chaque tour).
