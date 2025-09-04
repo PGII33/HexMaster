@@ -55,7 +55,7 @@ Différentes factions sont disponibles.
 | Ondine    | 2    |                   |
 | Ifrit     | 3    |Combustion Différée|
 
-### Humains
+### Royauté
 
 | Nom         | Tier | Compétences  |
 |-------------|------|--------------|
