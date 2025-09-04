@@ -42,7 +42,7 @@ Différentes factions sont disponibles.
 | Esprit Saint     | 2    |Bouclier de la foi|
 | Paladin          | 2    | Bénédiction      |
 | Ange             | 3    |Lumière Vengeresse|
-| ArchAnge         | 4    |                  |
+| ArchAnge         | 4    |   Aura sacrée    |
 
 ### Élémentaires
 
@@ -81,7 +81,8 @@ Différentes factions sont disponibles.
 | Dragon   | 4    |             |
 
 ## Description des compétences
-
+    
+    Aura sacrée : Bonus de dégâts pour tout les alliés adjacents.
     Armure de pierre : Dégats subis moins 2.
     Bouclier de la foi : 2 Shield sur les unités autour de soi.
     Commandement : Une attaque supplémentaire avec des dégats additionnels (dmg) pour la cible.
