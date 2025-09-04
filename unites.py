@@ -108,13 +108,29 @@ class Unite:
             self.anim = animations.Animation("attack", 250, self, cible=autre)
             
             autre.pv -= self.dmg
+            cible_tuée = False
             if autre.pv <= 0:
-                autre.vivant = False
+                autre.mourir([])  # Utiliser la nouvelle méthode mourir
+                cible_tuée = True
+            
+            # Compétences après l'attaque
             if self.comp == "zombification":
                 co.zombification(self, autre)
-            elif autre.comp == "tas d'os":
-                co.tas_d_os(autre)
+            elif self.comp == "lumière vengeresse" and cible_tuée:
+                co.lumière_vengeresse(self, autre)
+            
             self.attaque_restantes -= 1
+
+    def mourir(self, toutes_unites):
+        """Gère la mort de l'unité et les compétences déclenchées."""
+        if self.vivant:
+            self.vivant = False
+            
+            # Compétences déclenchées à la mort
+            if self.comp == "tas d'os":
+                co.tas_d_os(self)
+            elif self.comp == "explosion sacrée":
+                co.explosion_sacrée(self, toutes_unites)
 
     def debut_tour(self, toutes_unites, plateau, q_range=None, r_range=None):
         """À appeler au début du tour de l'unité pour déclencher les compétences passives."""
@@ -122,10 +138,29 @@ class Unite:
             co.nécromancie(self, toutes_unites, plateau, q_range, r_range)
         elif self.comp == "invocation":
             co.invocation(self, toutes_unites, plateau, q_range, r_range)
+        elif self.comp == "bouclier de la foi":
+            co.bouclier_de_la_foi(self, toutes_unites)
+        elif self.comp == "aura sacrée":
+            co.aura_sacrée(self, toutes_unites)
         # Ajoute ici d'autres compétences passives si besoin
+    
+    def a_competence_active(self):
+        """Retourne True si l'unité a une compétence active utilisable."""
+        if not self.comp:
+            return False
+        return co.est_competence_active(self.comp)
+    
+    def utiliser_competence(self, cible=None, toutes_unites=None):
+        """Utilise la compétence active de l'unité."""
+        if self.a_competence_active() and self.attaque_restantes > 0:
+            success = co.utiliser_competence_active(self, self.comp, cible, toutes_unites)
+            if success:
+                self.attaque_restantes -= 1
+            return success
+        return False
 
 
-# ---------- Sous-classes d’unités ----------
+# ---------- Sous-classes d'unités ----------
 
 # Morts-Vivants
 
@@ -167,5 +202,41 @@ class Archliche(Unite):
         super().__init__(equipe, pos, nom="Archliche", pv=10, dmg=2, mv=2, tier=4, comp="invocation", faction="Morts-Vivants")
 
 
+# Religieux
+
+class Missionnaire(Unite):
+    def __init__(self, equipe, pos):
+        super().__init__(equipe, pos, nom="Missionnaire", pv=8, dmg=3, mv=2, tier=1, faction="Religieux")
+
+class Clerc(Unite):
+    def __init__(self, equipe, pos):
+        super().__init__(equipe, pos, nom="Clerc", pv=6, dmg=2, mv=1, tier=1, faction="Religieux", comp="soin")
+
+class Fanatique(Unite):
+    def __init__(self, equipe, pos):
+        super().__init__(equipe, pos, nom="Fanatique", pv=5, dmg=4, mv=2, tier=1, faction="Religieux", comp="explosion sacrée")
+
+class Esprit_Saint(Unite):
+    def __init__(self, equipe, pos):
+        super().__init__(equipe, pos, nom="Esprit Saint", pv=10, dmg=3, mv=2, tier=2, faction="Religieux", comp="bouclier de la foi")
+
+class Paladin(Unite):
+    def __init__(self, equipe, pos):
+        super().__init__(equipe, pos, nom="Paladin", pv=15, dmg=4, mv=2, tier=2, faction="Religieux", comp="bénédiction")
+
+class Ange(Unite):
+    def __init__(self, equipe, pos):
+        super().__init__(equipe, pos, nom="Ange", pv=12, dmg=5, mv=2, tier=3, faction="Religieux", comp="lumière vengeresse", portee=2)
+
+class ArchAnge(Unite):
+    def __init__(self, equipe, pos):
+        super().__init__(equipe, pos, nom="ArchAnge", pv=18, dmg=6, mv=3, tier=4, faction="Religieux", comp="aura sacrée", portee=2)
+
+
 # Liste des classes utilisables
-CLASSES_UNITES = [Goule, Squelette, Spectre, Vampire, Zombie, Liche, Archliche]
+CLASSES_UNITES = [
+    # Morts-Vivants
+    Goule, Squelette, Spectre, Vampire, Zombie, Liche, Archliche,
+    # Religieux
+    Missionnaire, Clerc, Fanatique, Esprit_Saint, Paladin, Ange, ArchAnge
+]

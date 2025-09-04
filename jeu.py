@@ -24,6 +24,12 @@ class Jeu:
         self.enable_placement = enable_placement
         self.versus_mode = versus_mode  # Nouveau : mode joueur vs joueur
         
+        # Variables pour le système de compétences actives
+        self.mode_selection_competence = False
+        self.competence_en_cours = None
+        self.cibles_possibles = []
+        self.competence_btn_rect = None
+        
         # Traitement des unités selon le mode
         if enable_placement and initial_player_units:
             # Mode avec placement : initial_player_units contient des classes

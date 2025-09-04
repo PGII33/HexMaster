@@ -1,6 +1,6 @@
 def sangsue(self):
     """Le vampire récupère autant de PV que de dégâts infligés."""
-    self.pv += self.dmg
+    self.pv = min(self.pv + self.dmg, self.pv_max)
 
 def zombification(self, cible):
     """Transforme l'unite morte en zombie sous le contrôle du joueur de l'attaquant"""
@@ -110,12 +110,127 @@ def invocation(self, toutes_unites, plateau, q_range=None, r_range=None):
             toutes_unites.append(UniteClass(self.equipe, new_pos))
             break
 
+# ========== COMPÉTENCES RELIGIEUX ==========
+
+def soin(self, cible):
+    """Soigne la cible de 5 points de vie."""
+    if cible.equipe == self.equipe and cible.vivant:
+        cible.pv = min(cible.pv + 5, cible.pv_max)
+        return True
+    return False
+
+def explosion_sacrée(self, toutes_unites):
+    """Se sacrifie pour infliger ses points de vie en dégâts aux ennemis adjacents."""
+    directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
+    q, r = self.pos
+    degats = self.pv
+    
+    # Infliger des dégâts aux unités adjacentes ennemies
+    for unite in toutes_unites:
+        if unite.equipe != self.equipe and unite.vivant:
+            unite_q, unite_r = unite.pos
+            for dq, dr in directions:
+                if (q+dq, r+dr) == (unite_q, unite_r):
+                    unite.pv -= degats
+                    if unite.pv <= 0:
+                        unite.vivant = False
+                    break
+    
+    # Se sacrifier
+    self.vivant = False
+    self.pv = 0
+
+def bouclier_de_la_foi(self, toutes_unites):
+    """2 Shield sur les unités autour de soi."""
+    directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
+    q, r = self.pos
+    
+    for unite in toutes_unites:
+        if unite.equipe == self.equipe and unite != self and unite.vivant:
+            unite_q, unite_r = unite.pos
+            for dq, dr in directions:
+                if (q+dq, r+dr) == (unite_q, unite_r):
+                    # Ajouter un bouclier temporaire
+                    if not hasattr(unite, 'shield'):
+                        unite.shield = 0
+                    unite.shield += 2
+                    break
+
+def bénédiction(self, cible):
+    """Augmente l'attaque et la défense de la cible."""
+    if cible.equipe == self.equipe and cible.vivant:
+        # Ajouter un buff permanent
+        if not hasattr(cible, 'buff_bénédiction'):
+            cible.buff_bénédiction = True
+            cible.dmg += 2
+            if not hasattr(cible, 'shield'):
+                cible.shield = 0
+            cible.shield += 1
+        return True
+    return False
+
+def lumière_vengeresse(self, cible):
+    """Regagne son attaque lorsqu'il tue un Mort-Vivant."""
+    if not cible.vivant and cible.faction == "Morts-Vivants":
+        # Regagner une attaque
+        self.attaque_restantes = min(self.attaque_restantes + 1, self.attaque_max)
+
+def aura_sacrée(self, toutes_unites):
+    """Bonus de dégâts pour tout les alliés adjacents."""
+    directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
+    q, r = self.pos
+    
+    for unite in toutes_unites:
+        if unite.equipe == self.equipe and unite != self and unite.vivant:
+            unite_q, unite_r = unite.pos
+            for dq, dr in directions:
+                if (q+dq, r+dr) == (unite_q, unite_r):
+                    # Bonus permanent tant que l'ArchAnge est vivant
+                    if not hasattr(unite, 'aura_sacrée_bonus'):
+                        unite.aura_sacrée_bonus = True
+                        unite.dmg += 3
+                    break
+
+# Fonction utilitaire pour déterminer si une compétence est active
+def est_competence_active(nom_competence):
+    """Retourne True si la compétence nécessite une cible."""
+    competences_actives = ["soin", "bénédiction"]  # Retiré "explosion sacrée" et "lumière vengeresse"
+    return nom_competence in competences_actives
+
+def peut_cibler_allie(nom_competence):
+    """Retourne True si la compétence peut cibler des alliés."""
+    competences_alliés = ["soin", "bénédiction"]
+    return nom_competence in competences_alliés
+
+def peut_cibler_ennemi(nom_competence):
+    """Retourne True si la compétence peut cibler des ennemis."""
+    competences_ennemis = []  # Retiré "explosion sacrée"
+    return nom_competence in competences_ennemis
+
+def utiliser_competence_active(unite, nom_competence, cible, toutes_unites=None):
+    """Utilise une compétence active sur une cible."""
+    if nom_competence == "soin":
+        return soin(unite, cible)
+    elif nom_competence == "bénédiction":
+        return bénédiction(unite, cible)
+    return False
+
+
 # Dictionnaire des compétences (nom -> description)
 COMPETENCES = {
+    # Morts-Vivants
     "sangsue": "Augmente sa vie du nombre de dégâts infligés.",
     "zombification": "Transforme l'unite ennemie tuée en zombie",
     "tas d'os": "À la mort, un tas d'os d'1PV apparaît sur la cellule.",
     "fantomatique": "Se déplace au travers des unites gratuitement.",
     "nécromancie": "Crée un squelette sur une case adjacente (chaque tour).",
     "invocation": "Invoque une unité de tier 1 ou 2 des Morts-Vivants sur une case adjacente (chaque tour).",
+    
+    # Religieux
+    "soin": "Soigne un allié de 5 points de vie.",
+    "explosion sacrée": "Se sacrifie pour infliger ses points de vie en dégâts aux ennemis adjacents (à la mort).",
+    "bouclier de la foi": "2 Shield sur les unités alliées autour de soi (chaque tour).",
+    "bénédiction": "Augmente l'attaque et donne 1 shield à un allié.",
+    "lumière vengeresse": "Regagne son attaque lorsqu'il tue un Mort-Vivant (passif).",
+    "aura sacrée": "Bonus de dégâts pour tout les alliés adjacents (chaque tour).",
 }

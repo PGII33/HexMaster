@@ -75,13 +75,11 @@ Différentes factions sont disponibles.
 | Griffon  | 2    |    Vol      |
 |Loup-Garou| 2    |    Rage     |
 
-| Basilic  | 4    |Regard Mortel|
-| Dragon   | 4    |             |
-
 ## Description des compétences
     
     Aura sacrée : Bonus de dégâts pour tout les alliés adjacents.
     Armure de pierre : Dégats subis moins 2.
+    Benediction : Augemente l'attaque et la vie de la cible.
     Bouclier de la foi : 2 Shield sur les unités autour de soi.
     Combustion Différée : Toute unité touché meurt au bout de 3 tours.
     Commandement : Une attaque supplémentaire avec des dégats additionnels (dmg) pour la cible.
@@ -89,12 +87,10 @@ Différentes factions sont disponibles.
     Explosion sacrée : Se sacrifie pour infliger ses points de vie en dégats.
     Fantomatique : Se déplace au travers des unites gratuitement.
     Invocation : Invoque une unitée de tier 1 ou 2 des Morts-Vivants sur une case adjacente (chaque tour).
-    Lumière Vengeresse : Augemente l'attaque et la vie de la cible.
+    Lumière Vengeresse : Regagne son attaque lorsqu'il tue un Mort-Vivant.
     Monture libéré : Descend de son cheval pour se battre en guerrier (le cheval devient indépendant).
     Nécromancie : Crée un squelette sur une case adjacente (chaque tour).
-    Purificateur : Regagne son attaque lorsqu'il tue un Mort-Vivant.
     Rage : Augemente l'attaque de 1 par morts.
-    Regard Mortel : ???
     Tas d'os : À la mort, un tas d'os d'1PV apparaît sur la cellule.
     Sangsue : Augmente sa vie du nombre de dégâts infligés.
     Soin : Régénère 5 points de vie.
@@ -119,12 +115,17 @@ Salamandre
 Sphinx 
 Cyclopes 
 
+| Basilic  | 4    |Regard Mortel|
+| Dragon   | 4    |             |
+
+
 | Vincent OP | 4    | Lancé de Claquette |
 | Micky   OP | 4    | Réincarnation      |
 | Clément OP | 4    | Paléonthologue     |
 | Mathis     | 4    |                    |
 
 ### Idées Compétences
+    Regard Mortel : ???
     Lancé de Claquette : Tout les 3 tours, peut lancer une claquette n'importe où sur la carte infligeant des dégats.
     Paléonthologue : Invoque une unité "Dinosaures" sur une case adjacente (chaque tour, tier + 1, max à 4 (tier des boss)).
     Réincarnation : Quand meurt, se réincarne dans le corps d'une unite allié de plus bas rang disponible (max rang 3).
