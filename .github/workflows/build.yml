@@ -24,11 +24,15 @@ jobs:
 
       - name: Build exe
         run: |
-          pyinstaller --onefile --noconsole main.py
+          pyinstaller main.spec
+
+      - name: Copy save file
+        run: |
+          Copy-Item "sauvegarde.json" "dist/"
 
       - name: Upload exe artifact
         uses: actions/upload-artifact@v4
         with:
           name: game-exe
-          path: dist/*.exe
+          path: dist/*
           retention-days: 30
