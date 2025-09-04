@@ -44,16 +44,16 @@ Différentes factions sont disponibles.
 | Ange             | 3    | Purificateur     |
 | ArchAnge         | 4    |                  |
 
-### Mystiques
+### Élémentaires
 
 | Nom       | Tier | Compétences    |
 |-----------|------|----------------|
 | Esprit    | 1    |                |
-| Salamandre| 1    |                |
-| Fée       | 1    |                |
+| Driade    |  1   |                |
+| Ondine    | 1    |                |
 | Golem     | 2    |Armure de pierre|
 | Nymphe    | 2    |                |
-| TRUC      | 3    |                |
+| Ifrit     | 3    |                |
 
 ### Humains
 
@@ -108,7 +108,15 @@ Kaiju
 Dinosaures
 
 
-### Idées unités
+### Idées unitée
+
+Géants 
+Phoenix 
+Salamandre 
+
+Sphinx 
+Cyclopes 
+
 | Vincent OP | 4    | Lancé de Claquette |
 | Micky   OP | 4    | Réincarnation      |
 | Clément OP | 4    | Paléonthologue     |
