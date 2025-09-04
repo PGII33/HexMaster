@@ -41,7 +41,7 @@ Différentes factions sont disponibles.
 | Fanatique        | 1    | Explosion sacrée |
 | Esprit Saint     | 2    |Bouclier de la foi|
 | Paladin          | 2    | Bénédiction      |
-| Ange             | 3    | Purificateur     |
+| Ange             | 3    |Lumière Vengeresse|
 | ArchAnge         | 4    |                  |
 
 ### Élémentaires
@@ -83,12 +83,12 @@ Différentes factions sont disponibles.
 ## Description des compétences
 
     Armure de pierre : Dégats subis moins 2.
-    Bénédiction : Augemente l'attaque et la vie de la cible.
     Bouclier de la foi : 2 Shield sur les unités autour de soi.
     Commandement : Une attaque supplémentaire avec des dégats additionnels (dmg) pour la cible.
     Explosion sacrée : Se sacrifie pour infliger ses points de vie en dégats.
     Fantomatique : Se déplace au travers des unites gratuitement.
     Invocation : Invoque une unitée de tier 1 ou 2 des Morts-Vivants sur une case adjacente (chaque tour).
+    Lumière Vengeresse : Augemente l'attaque et la vie de la cible.
     Nécromancie : Crée un squelette sur une case adjacente (chaque tour).
     Purificateur : Regagne son attaque lorsqu'il tue un Mort-Vivant.
     Rage : Augemente l'attaque de 1 par morts.
