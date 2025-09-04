@@ -46,7 +46,7 @@ Différentes factions sont disponibles.
 | Nom       | Tier | Compétences       |
 |-----------|------|-------------------|
 | Esprit    | 1    |                   |
-| Driade    | 1   |                   |
+| Driade    | 1    |                   |
 | Gnome     | 1    |                   |
 | Golem     | 2    |Armure de pierre   |
 | Ondine    | 2    |                   |

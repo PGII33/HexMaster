@@ -23,6 +23,7 @@ class UnitSelector:
         self.cancelled = False
         self.scroll_y = 0
         self.scroll_speed = 40
+        self.max_scroll = 0  # Ajouter cette ligne
         
         # Pour stocker les boutons dynamiques
         self.unit_buttons = []
@@ -281,7 +282,7 @@ class UnitSelector:
                 y += card_h + margin
             else:
                 x += card_w + margin
-        max_scroll = max(0, total_height - (screen_h - start_y - 40))
+        self.max_scroll = max(0, total_height - (screen_h - start_y - 40))
         
         # Réinitialiser les boutons d'unités
         self.unit_buttons = []
@@ -370,8 +371,6 @@ class UnitSelector:
                 col = 0
                 x = margin
                 y += card_h + margin
-        
-        return max_scroll
     
     def ajouter_unite(self, cls):
         """Ajoute une unité à la sélection"""
@@ -382,8 +381,6 @@ class UnitSelector:
     def run(self):
         """Lance le sélecteur d'unités"""
         while self.running:
-            max_scroll = 0
-            
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -403,13 +400,13 @@ class UnitSelector:
                 
                 elif event.type == pygame.MOUSEWHEEL:
                     self.scroll_y -= event.y * self.scroll_speed
-                    self.scroll_y = max(0, min(self.scroll_y, max_scroll))
+                    self.scroll_y = max(0, min(self.scroll_y, self.max_scroll))
             
             # Affichage selon le mode
             if self.mode == "campagne":
                 self.afficher_campagne()
             else:
-                max_scroll = self.afficher_selection()
+                self.afficher_selection()
             
             # Boutons
             self.retour_btn.draw(self.screen)
