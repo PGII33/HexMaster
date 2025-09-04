@@ -84,7 +84,7 @@ def nécromancie(self, toutes_unites, plateau, q_range=None, r_range=None):
 
 def invocation(self, toutes_unites, plateau, q_range=None, r_range=None):
     """Invoque une unité Morts-Vivants de tier 1 ou 2 sur une case adjacente vide à chaque tour."""
-    from unites import Goule, Squelette, Spectre, Zombie
+    from unites import Goule, Squelette, Spectre, Zombie, Vampire
     import random
     
     # Limites par défaut si non spécifiées
@@ -95,7 +95,7 @@ def invocation(self, toutes_unites, plateau, q_range=None, r_range=None):
     
     directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
     q, r = self.pos
-    candidates = [Goule, Squelette, Spectre, Zombie]
+    candidates = [Goule, Squelette, Spectre, Zombie, Vampire]
     random.shuffle(candidates)
     for dq, dr in directions:
         new_pos = (q+dq, r+dr)
