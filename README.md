@@ -3,17 +3,14 @@
 
 ## Mode de jeu
 
-### Tuto
-Comme le nom l'indique, il s'agit la du tutoriel. 
-C'est un 2V2, le joueur a de meilleurs unités.
-
 ### Campagne
-C'est le mode histoire du jeu, on y choisit les factions à affronter.
+C'est le mode histoire du jeu. Chaque chapitre de la campagne correspond à une faction, chaque chapitre est composé de différents niveaux. C'est en jouant la campagne que l'on débloque de nouvelles factions.
 
 ### Hexarène
 Le mode arène, qui permet d'affronter des adversaires un peu plus puissant que sois.
 
-## Héros
+### JcJ (local)
+Permet d'affronter un second joueur en local.
 
 ## Factions
 
@@ -41,30 +38,31 @@ Différentes factions sont disponibles.
 | Fanatique        | 1    | Explosion sacrée |
 | Esprit Saint     | 2    |Bouclier de la foi|
 | Paladin          | 2    | Bénédiction      |
-| Ange             | 3    | Purificateur     |
-| ArchAnge         | 4    |                  |
+| Ange             | 3    |Lumière Vengeresse|
+| ArchAnge         | 4    |   Aura sacrée    |
 
-### Mystiques
+### Élémentaires
 
-| Nom       | Tier | Compétences    |
-|-----------|------|----------------|
-| Esprit    | 1    |                |
-| Salamandre| 1    |                |
-| Fée       | 1    |                |
-| Golem     | 2    |Armure de pierre|
-| Nymphe    | 2    |                |
-| TRUC      | 3    |                |
+| Nom       | Tier | Compétences       |
+|-----------|------|-------------------|
+| Esprit    | 1    |                   |
+| Driade    | 1   |                   |
+| Gnome     | 1    |                   |
+| Golem     | 2    |Armure de pierre   |
+| Ondine    | 2    |                   |
+| Ifrit     | 3    |Combustion Différée|
 
-### Humains
+### Royauté
 
-| Nom         | Tier | Compétences |
-|-------------|------|-------------|
-| Guerrier    | 1    |             |
-| Archer      | 1    |             |
-| Cavalier    | 1    |             |
-|             | 2    |             |
-| Garde royal | 2    |             |
-|   Roi       | 3    |Commandement |
+| Nom         | Tier | Compétences  |
+|-------------|------|--------------|
+| Cheval      | 0    |              |
+| Guerrier    | 1    |              |
+| Archer      | 1    |              |
+| Cavalier    | 1    |Monture libéré|
+| Bouffon     | 2    |Divertissement|
+| Garde royal | 2    |              |
+|   Roi       | 3    |Commandement  |
 
 
 ### Bêtes
@@ -81,14 +79,18 @@ Différentes factions sont disponibles.
 | Dragon   | 4    |             |
 
 ## Description des compétences
-
+    
+    Aura sacrée : Bonus de dégâts pour tout les alliés adjacents.
     Armure de pierre : Dégats subis moins 2.
-    Bénédiction : Augemente l'attaque et la vie de la cible.
     Bouclier de la foi : 2 Shield sur les unités autour de soi.
+    Combustion Différée : Toute unité touché meurt au bout de 3 tours.
     Commandement : Une attaque supplémentaire avec des dégats additionnels (dmg) pour la cible.
+    Divertissement : S'il lui reste une attaque, divertis les ennemis adjacents qui perdent une attaque (fin de tour).
     Explosion sacrée : Se sacrifie pour infliger ses points de vie en dégats.
     Fantomatique : Se déplace au travers des unites gratuitement.
     Invocation : Invoque une unitée de tier 1 ou 2 des Morts-Vivants sur une case adjacente (chaque tour).
+    Lumière Vengeresse : Augemente l'attaque et la vie de la cible.
+    Monture libéré : Descend de son cheval pour se battre en guerrier (le cheval devient indépendant).
     Nécromancie : Crée un squelette sur une case adjacente (chaque tour).
     Purificateur : Regagne son attaque lorsqu'il tue un Mort-Vivant.
     Rage : Augemente l'attaque de 1 par morts.
@@ -108,7 +110,15 @@ Kaiju
 Dinosaures
 
 
-### Idées unités
+### Idées unitée
+
+Géants 
+Phoenix 
+Salamandre 
+
+Sphinx 
+Cyclopes 
+
 | Vincent OP | 4    | Lancé de Claquette |
 | Micky   OP | 4    | Réincarnation      |
 | Clément OP | 4    | Paléonthologue     |
