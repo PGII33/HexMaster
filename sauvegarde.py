@@ -27,11 +27,14 @@ def charger():
                 data["campagne_progression"] = {
                     "La grande église": {"niveaux_completes": [], "disponible": True}
                 }
+            # Vérifier que la Goule est débloquée par défaut
+            if "unites" in data and "Goule" not in data["unites"]:
+                data["unites"].append("Goule")
             return data
     except (FileNotFoundError, json.JSONDecodeError):
         return {
             "pa": 100,
-            "unites": [],
+            "unites": ["Goule"],  # Goule débloquée par défaut
             "cp": 5,  # CP de départ
             "campagne_progression": {
                 "La grande église": {"niveaux_completes": [], "disponible": True}
