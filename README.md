@@ -57,14 +57,15 @@ Différentes factions sont disponibles.
 
 ### Humains
 
-| Nom         | Tier | Compétences |
-|-------------|------|-------------|
-| Guerrier    | 1    |             |
-| Archer      | 1    |             |
-| Cavalier    | 1    |             |
-|             | 2    |             |
-| Garde royal | 2    |             |
-|   Roi       | 3    |Commandement |
+| Nom         | Tier | Compétences  |
+|-------------|------|--------------|
+| Cheval      | 0    |              |
+| Guerrier    | 1    |              |
+| Archer      | 1    |              |
+| Cavalier    | 1    |Monture libéré|
+|             | 2    |              |
+| Garde royal | 2    |              |
+|   Roi       | 3    |Commandement  |
 
 
 ### Bêtes
@@ -90,6 +91,7 @@ Différentes factions sont disponibles.
     Fantomatique : Se déplace au travers des unites gratuitement.
     Invocation : Invoque une unitée de tier 1 ou 2 des Morts-Vivants sur une case adjacente (chaque tour).
     Lumière Vengeresse : Augemente l'attaque et la vie de la cible.
+    Monture libéré : Descend de son cheval pour se battre en guerrier (le cheval devient indépendant).
     Nécromancie : Crée un squelette sur une case adjacente (chaque tour).
     Purificateur : Regagne son attaque lorsqu'il tue un Mort-Vivant.
     Rage : Augemente l'attaque de 1 par morts.
