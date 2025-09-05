@@ -107,17 +107,24 @@ class Unite:
             # Animation
             self.anim = animations.Animation("attack", 250, self, cible=autre)
             
-            autre.pv -= self.dmg
-            cible_tuée = False
-            if autre.pv <= 0:
-                autre.mourir([])  # Utiliser la nouvelle méthode mourir
-                cible_tuée = True
-            
-            # Compétences après l'attaque
-            if self.comp == "zombification":
-                co.zombification(self, autre)
-            elif self.comp == "lumière vengeresse" and cible_tuée:
-                co.lumière_vengeresse(self, autre)
+            # Gestion spéciale pour explosion sacrée
+            if self.comp == "explosion sacrée":
+                # Le Fanatique inflige ses PV en dégâts et se sacrifie
+                co.explosion_sacrée(self, [], autre)  # Passer la cible
+                # Ne pas faire l'attaque normale, l'explosion sacrée remplace tout
+            else:
+                # Attaque normale
+                autre.pv -= self.dmg
+                cible_tuée = False
+                if autre.pv <= 0:
+                    autre.mourir([])  # Utiliser la nouvelle méthode mourir
+                    cible_tuée = True
+                
+                # Compétences après l'attaque normale
+                if self.comp == "zombification":
+                    co.zombification(self, autre)
+                elif self.comp == "lumière vengeresse" and cible_tuée:
+                    co.lumière_vengeresse(self, autre)
             
             self.attaque_restantes -= 1
 
@@ -126,11 +133,9 @@ class Unite:
         if self.vivant:
             self.vivant = False
             
-            # Compétences déclenchées à la mort
+            # Compétences déclenchées à la mort (sauf explosion sacrée qui est gérée dans attaquer)
             if self.comp == "tas d'os":
                 co.tas_d_os(self)
-            elif self.comp == "explosion sacrée":
-                co.explosion_sacrée(self, toutes_unites)
 
     def debut_tour(self, toutes_unites, plateau, q_range=None, r_range=None):
         """À appeler au début du tour de l'unité pour déclencher les compétences passives."""
@@ -214,7 +219,7 @@ class Clerc(Unite):
 
 class Fanatique(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Fanatique", pv=5, dmg=4, mv=2, tier=1, faction="Religieux", comp="explosion sacrée")
+        super().__init__(equipe, pos, nom="Fanatique", pv=8, dmg=0, mv=2, tier=1, faction="Religieux", comp="explosion sacrée")
 
 class Esprit_Saint(Unite):
     def __init__(self, equipe, pos):

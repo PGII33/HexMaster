@@ -119,11 +119,11 @@ def soin(self, cible):
         return True
     return False
 
-def explosion_sacrée(self, toutes_unites):
-    """Se sacrifie pour infliger ses points de vie en dégâts aux ennemis adjacents."""
+def explosion_sacrée(self, toutes_unites, cible_attaquee=None):
+    """Se sacrifie en attaquant pour infliger ses points de vie en dégâts à la cible et aux ennemis adjacents."""
     directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
     q, r = self.pos
-    degats = self.pv
+    degats = self.pv  # Utilise ses PV actuels comme dégâts
     
     # Infliger des dégâts aux unités adjacentes ennemies
     for unite in toutes_unites:
@@ -133,8 +133,14 @@ def explosion_sacrée(self, toutes_unites):
                 if (q+dq, r+dr) == (unite_q, unite_r):
                     unite.pv -= degats
                     if unite.pv <= 0:
-                        unite.vivant = False
+                        unite.mourir(toutes_unites)
                     break
+    
+    # Infliger aussi des dégâts à la cible directe si c'est un ennemi
+    if cible_attaquee and cible_attaquee.equipe != self.equipe and cible_attaquee.vivant:
+        cible_attaquee.pv -= degats
+        if cible_attaquee.pv <= 0:
+            cible_attaquee.mourir(toutes_unites)
     
     # Se sacrifier
     self.vivant = False
@@ -228,7 +234,7 @@ COMPETENCES = {
     
     # Religieux
     "soin": "Soigne un allié de 5 points de vie.",
-    "explosion sacrée": "Se sacrifie pour infliger ses points de vie en dégâts aux ennemis adjacents (à la mort).",
+    "explosion sacrée": "Se sacrifie en attaquant pour infliger ses points de vie en dégâts à la cible et aux ennemis adjacents.",
     "bouclier de la foi": "2 Shield sur les unités alliées autour de soi (chaque tour).",
     "bénédiction": "Augmente l'attaque et donne 1 shield à un allié.",
     "lumière vengeresse": "Regagne son attaque lorsqu'il tue un Mort-Vivant (passif).",
