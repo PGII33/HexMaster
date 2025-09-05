@@ -504,9 +504,9 @@ class LevelBuilder:
                 nom_classe = str(classe)
             print(f"  - {nom_classe}")
         
-        # Lancer le jeu
+        # Lancer le jeu avec IA tactique avancée pour les tests
         jeu = Jeu(
-            ia_strategy=ia.cible_faible,
+            ia_strategy=ia.ia_tactique_avancee,  # Utiliser l'IA améliorée pour les tests
             screen=self.screen,
             initial_player_units=unites_joueur,
             initial_enemy_units=self.niveau_config.unites_ennemis,

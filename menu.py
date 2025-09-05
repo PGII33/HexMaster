@@ -202,7 +202,7 @@ class HexaMaster:
         # Créer le jeu
         import ia
         self.jeu = Jeu(
-            ia_strategy=ia.cible_faible,
+            ia_strategy=ia.ia_tactique_avancee,  # IA améliorée pour la campagne
             screen=self.screen,
             initial_player_units=player_units,
             initial_enemy_units=config.unites_ennemis,
@@ -234,7 +234,7 @@ class HexaMaster:
         ia_units = ia_selector.select_units()
         
         self.jeu = Jeu(
-            ia_strategy=ia.cible_faible,
+            ia_strategy=ia.ia_tactique_avancee,  # IA améliorée pour HexArène
             screen=self.screen,
             initial_player_units=player_units,
             initial_enemy_units=ia_units,
@@ -258,7 +258,7 @@ class HexaMaster:
         ia_units = ia_selector.select_units()
         
         self.jeu = Jeu(
-            ia_strategy=ia.cible_faible,
+            ia_strategy=ia.ia_tactique_avancee,  # IA améliorée pour le mode mixte
             screen=self.screen,
             initial_player_units=player_units,
             initial_enemy_units=ia_units,

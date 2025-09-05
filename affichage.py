@@ -74,12 +74,12 @@ def dessiner(jeu):
         x, y = dessiner_unite_animee(jeu, u, x, y, color)
 
         # Affichage du bouclier si présent
-        if hasattr(u, 'shield') and u.shield > 0:
+        if hasattr(u, 'bouclier') and u.bouclier > 0:
             # Dessiner un cercle bleu autour de l'unité pour le bouclier
             pygame.draw.circle(jeu.screen, BLEU_BOUCLIER, (x, y), jeu.unit_radius + 8, 4)
             # Afficher le nombre de points de bouclier
-            shield_txt = jeu.font_small.render(f"{u.shield}", True, BLEU_BOUCLIER)
-            jeu.screen.blit(shield_txt, (x + jeu.unit_radius + 5, y - jeu.unit_radius - 5))
+            bouclier_txt = jeu.font_small.render(f"{u.bouclier}", True, BLEU_BOUCLIER)
+            jeu.screen.blit(bouclier_txt, (x + jeu.unit_radius + 5, y - jeu.unit_radius - 5))
 
         # Indicateur de cible possible pour compétence
         if (hasattr(jeu, 'mode_selection_competence') and jeu.mode_selection_competence and 
@@ -130,8 +130,8 @@ def dessiner(jeu):
         ]
         
         # Ajouter l'affichage du bouclier dans le panneau
-        if hasattr(u, 'shield') and u.shield > 0:
-            lignes.append(f"Bouclier: {u.shield}")
+        if hasattr(u, 'bouclier') and u.bouclier > 0:
+            lignes.append(f"Bouclier: {u.bouclier}")
         
         if u.comp:
             lignes.append(f"Compétence: {u.comp}")

@@ -97,6 +97,25 @@ class Unite:
         return distance <= self.portee
 
     # ---------- Combat ----------
+    def subir_degats(self, degats):
+        """Subit des dégâts en tenant compte du bouclier."""
+        if not hasattr(self, 'bouclier'):
+            self.bouclier = 0
+        
+        # Le bouclier absorbe d'abord les dégâts
+        if self.bouclier > 0:
+            if degats <= self.bouclier:
+                # Le bouclier absorbe tous les dégâts
+                self.bouclier -= degats
+                return
+            else:
+                # Le bouclier absorbe une partie, le reste va aux PV
+                degats -= self.bouclier
+                self.bouclier = 0
+        
+        # Les dégâts restants vont aux PV
+        self.pv -= degats
+    
     def attaquer(self, autre):
         """Applique l'animation et les dégâts séparément."""
         if self.attaque_restantes > 0 and self.est_a_portee(autre) and autre.vivant:
@@ -114,7 +133,7 @@ class Unite:
                 # Ne pas faire l'attaque normale, l'explosion sacrée remplace tout
             else:
                 # Attaque normale
-                autre.pv -= self.dmg
+                autre.subir_degats(self.dmg)
                 cible_tuée = False
                 if autre.pv <= 0:
                     autre.mourir([])  # Utiliser la nouvelle méthode mourir

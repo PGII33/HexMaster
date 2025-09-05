@@ -131,14 +131,14 @@ def explosion_sacrée(self, toutes_unites, cible_attaquee=None):
             unite_q, unite_r = unite.pos
             for dq, dr in directions:
                 if (q+dq, r+dr) == (unite_q, unite_r):
-                    unite.pv -= degats
+                    unite.subir_degats(degats)
                     if unite.pv <= 0:
                         unite.mourir(toutes_unites)
                     break
     
     # Infliger aussi des dégâts à la cible directe si c'est un ennemi
     if cible_attaquee and cible_attaquee.equipe != self.equipe and cible_attaquee.vivant:
-        cible_attaquee.pv -= degats
+        cible_attaquee.subir_degats(degats)
         if cible_attaquee.pv <= 0:
             cible_attaquee.mourir(toutes_unites)
     
@@ -147,7 +147,7 @@ def explosion_sacrée(self, toutes_unites, cible_attaquee=None):
     self.pv = 0
 
 def bouclier_de_la_foi(self, toutes_unites):
-    """2 Shield sur les unités autour de soi."""
+    """2 Bouclier sur les unités autour de soi."""
     directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
     q, r = self.pos
     
@@ -157,9 +157,9 @@ def bouclier_de_la_foi(self, toutes_unites):
             for dq, dr in directions:
                 if (q+dq, r+dr) == (unite_q, unite_r):
                     # Ajouter un bouclier temporaire
-                    if not hasattr(unite, 'shield'):
-                        unite.shield = 0
-                    unite.shield += 2
+                    if not hasattr(unite, 'bouclier'):
+                        unite.bouclier = 0
+                    unite.bouclier += 2
                     break
 
 def bénédiction(self, cible):
@@ -169,9 +169,9 @@ def bénédiction(self, cible):
         if not hasattr(cible, 'buff_bénédiction'):
             cible.buff_bénédiction = True
             cible.dmg += 2
-            if not hasattr(cible, 'shield'):
-                cible.shield = 0
-            cible.shield += 1
+            if not hasattr(cible, 'bouclier'):
+                cible.bouclier = 0
+            cible.bouclier += 1
         return True
     return False
 
@@ -235,8 +235,8 @@ COMPETENCES = {
     # Religieux
     "soin": "Soigne un allié de 5 points de vie.",
     "explosion sacrée": "Se sacrifie en attaquant pour infliger ses points de vie en dégâts à la cible et aux ennemis adjacents.",
-    "bouclier de la foi": "2 Shield sur les unités alliées autour de soi (chaque tour).",
-    "bénédiction": "Augmente l'attaque et donne 1 shield à un allié.",
+    "bouclier de la foi": "2 Bouclier sur les unités alliées autour de soi (chaque tour).",
+    "bénédiction": "Augmente l'attaque et donne 1 bouclier à un allié.",
     "lumière vengeresse": "Regagne son attaque lorsqu'il tue un Mort-Vivant (passif).",
     "aura sacrée": "Bonus de dégâts pour tout les alliés adjacents (chaque tour).",
 }

@@ -80,7 +80,7 @@ Différentes factions sont disponibles.
     Aura sacrée : Bonus de dégâts pour tout les alliés adjacents.
     Armure de pierre : Dégats subis moins 2.
     Benediction : Augemente l'attaque et la vie de la cible.
-    Bouclier de la foi : 2 Shield sur les unités autour de soi.
+    Bouclier de la foi : 2 Bouclier sur les unités autour de soi.
     Combustion Différée : Toute unité touché meurt au bout de 3 tours.
     Commandement : Une attaque supplémentaire avec des dégats additionnels (dmg) pour la cible.
     Divertissement : S'il lui reste une attaque, divertis les ennemis adjacents qui perdent une attaque (fin de tour).
