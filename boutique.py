@@ -14,6 +14,9 @@ class Boutique:
         self.boutons = []
         self.scroll_y = 0
         self.scroll_speed = 40
+        # Système de déblocage secret pour Tier 4
+        self.secret_clicks = 0
+        self.secret_click_rect = None
 
     def _grid_specs(self):
         screen_w, screen_h = self.screen.get_size()
@@ -41,6 +44,10 @@ class Boutique:
         if nom in self.data["unites"]:
             return
         
+        # Vérifier si l'unité est achetable (pas "Bloqué")
+        if prix == "Bloqué":
+            return
+        
         # Vérifier si assez de PA
         if self.data["pa"] < prix:
             return
@@ -54,6 +61,25 @@ class Boutique:
         
         # Recréer les boutons pour mettre à jour l'affichage
         self.creer_boutons()
+
+    def debloquer_tier4_secret(self):
+        """Débloque toutes les unités Tier 4 (système secret)"""
+        from unites import CLASSES_UNITES
+        
+        tier4_units = []
+        for classe in CLASSES_UNITES:
+            # Créer une instance temporaire pour vérifier le tier
+            temp_unit = classe(0, (0, 0))
+            if temp_unit.tier == 4 and temp_unit.nom not in self.data["unites"]:
+                self.data["unites"].append(temp_unit.nom)
+                tier4_units.append(temp_unit.nom)
+        
+        if tier4_units:
+            print(f"🎉 Déblocage secret ! Unités Tier 4 débloquées: {', '.join(tier4_units)}")
+            sauvegarde.sauvegarder(self.data)
+            self.creer_boutons()
+        else:
+            print("🔒 Toutes les unités Tier 4 sont déjà débloquées!")
 
     def retour_menu(self):
         self.running = False
@@ -154,6 +180,9 @@ class Boutique:
                 if deja_achete:
                     couleur = (150,150,150)
                     texte = "Déjà acheté"
+                elif prix == "Bloqué":
+                    couleur = (100,100,100)
+                    texte = "Non achetable"
                 elif self.data["pa"] >= prix:
                     couleur = (100,200,100)
                     texte = f"Acheter ({prix} PA)"
@@ -182,6 +211,8 @@ class Boutique:
             self.boutons[0].draw(self.screen)  # bouton retour
 
             solde = self.font.render(f"Points d'âmes : {self.data['pa']}", True, (0,0,0))
+            solde_rect = pygame.Rect(self.screen.get_width() - solde.get_width() - 20, 20, solde.get_width(), solde.get_height())
+            self.secret_click_rect = solde_rect  # Stocker pour les clics
             self.screen.blit(solde, (self.screen.get_width() - solde.get_width() - 20, 20))
 
             for event in pygame.event.get():
@@ -193,8 +224,18 @@ class Boutique:
                     self.screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
                     self.creer_boutons()
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    for b in self.boutons:
-                        b.handle_event(event)
+                    # Vérifier si clic sur "Points d'âmes" pour déblocage secret
+                    if self.secret_click_rect and self.secret_click_rect.collidepoint(event.pos):
+                        self.secret_clicks += 1
+                        print(f"🔍 Clic secret {self.secret_clicks}/5")
+                        
+                        if self.secret_clicks >= 5:
+                            self.debloquer_tier4_secret()
+                            self.secret_clicks = 0  # Reset compteur
+                    else:
+                        # Gérer les clics normaux sur les boutons
+                        for b in self.boutons:
+                            b.handle_event(event)
                 elif event.type == pygame.MOUSEWHEEL:
                     self.scroll_y -= event.y * self.scroll_speed
                     self.scroll_y = max(0, min(self.scroll_y, max_scroll))

@@ -17,8 +17,20 @@ class Unite:
         self.portee = portee
         self.attaque_max = attaque_max
         self.attaque_restantes = attaque_max
-        # prix par défaut = tier * 5 ; si prix < 0 => "Bloqué"
-        self.prix = prix if prix is not None else (tier * 5)
+        # prix selon le nouveau système : Tier 1=20, Tier 2=80, Tier 3=200, Tier 4=non achetable
+        if prix is not None:
+            self.prix = prix
+        else:
+            if tier == 1:
+                self.prix = 20
+            elif tier == 2:
+                self.prix = 80
+            elif tier == 3:
+                self.prix = 200
+            elif tier == 4:
+                self.prix = -1  # Non achetable (bloqué)
+            else:
+                self.prix = tier * 5  # Fallback pour autres tiers
         # comp doit être le nom de la compétence (string) ou None/""
         self.comp = comp or ""
         self.vivant = True
