@@ -13,7 +13,7 @@ class LevelBuilder:
         self.ui = UIManager(screen)
         
         # État du level builder
-        self.etat = "main_menu"  # main_menu, config_generale, restrictions_config, enemy_selection, enemy_placement, rewards_config
+        self.etat = "main_menu"  # main_menu, config_generale, restrictions_config, enemy_selection, enemy_placement, rewards_config, selection_unite_deblocage
         self.running = True
         self.cancelled = False
         
@@ -101,15 +101,42 @@ class LevelBuilder:
         
         elif self.etat == "rewards_config":
             # Boutons pour modifier les CP de récompense
-            self.ui.add_increment_buttons(360, 115,
+            self.ui.add_increment_buttons(550, 120,
                                         lambda: self.modifier_cp_recompense(1),
                                         lambda: self.modifier_cp_recompense(-1))
+            
+            # Boutons pour gérer les unités débloquées
+            self.ui.add_button((550, 170, 100, 30), "Ajouter", self.ajouter_unite_debloquee, self.ui.font_small)
+            self.ui.add_button((660, 170, 100, 30), "Retirer", self.retirer_unite_debloquee, self.ui.font_small)
+            self.ui.add_button((770, 170, 100, 30), "Effacer", self.effacer_unites_debloquees, self.ui.font_small)
             
             # Navigation
             actions = [
                 ("Retour", self.retour_placement),
                 ("Sauvegarder", self.sauvegarder_niveau),
                 ("Tester Niveau", self.tester_niveau)
+            ]
+            self.ui.add_navigation_buttons(h, actions)
+        
+        elif self.etat == "selection_unite_deblocage":
+            # Boutons pour chaque unité disponible
+            if hasattr(self, 'unites_disponibles_pour_selection'):
+                y_start = 150
+                for i, unite in enumerate(self.unites_disponibles_pour_selection):
+                    y_pos = y_start + (i * 35)
+                    # Limiter l'affichage pour éviter de sortir de l'écran
+                    if y_pos > self.screen.get_height() - 100:
+                        break
+                    
+                    # Bouton pour cette unité
+                    button_text = f"{unite['nom']} ({unite['faction']}) - T{unite['tier']}"
+                    self.ui.add_button((50, y_pos, 600, 30), button_text, 
+                                     lambda u=unite: self.selectionner_unite_deblocage(u), 
+                                     self.ui.font_small)
+            
+            # Navigation
+            actions = [
+                ("Annuler", self.annuler_selection_unite)
             ]
             self.ui.add_navigation_buttons(h, actions)
     
@@ -156,6 +183,106 @@ class LevelBuilder:
         """Modifie les CP de récompense"""
         new_value = self.niveau_config.recompense_cp + delta
         self.niveau_config.recompense_cp = max(0, min(10, new_value))
+    
+    def ajouter_unite_debloquee(self):
+        """Lance l'interface de sélection d'unité à débloquer"""
+        from unites import CLASSES_UNITES
+        
+        # Obtenir les unités déjà débloquées
+        unites_deja_debloquees = set(self.niveau_config.unites_debloquees)
+        
+        # Créer la liste des unités disponibles
+        unites_disponibles = []
+        for classe_unite in CLASSES_UNITES:
+            nom_classe = classe_unite.__name__
+            if nom_classe not in unites_deja_debloquees:
+                instance_temp = classe_unite(equipe=0, pos=(0, 0))
+                unites_disponibles.append({
+                    'classe': nom_classe,
+                    'nom': instance_temp.nom,
+                    'faction': instance_temp.faction,
+                    'tier': instance_temp.tier,
+                    'prix': instance_temp.prix if hasattr(instance_temp, 'prix') else 0
+                })
+        
+        if not unites_disponibles:
+            print("Toutes les unités sont déjà dans les récompenses")
+            return
+        
+        # Trier par faction puis par tier
+        unites_disponibles.sort(key=lambda x: (x['faction'], x['tier']))
+        
+        # Passer en mode sélection d'unité
+        self.unites_disponibles_pour_selection = unites_disponibles
+        self.etat_precedent = self.etat
+        self.etat = "selection_unite_deblocage"
+        self.creer_boutons()
+    
+    def lancer_selecteur_unite_deblocage(self, unites_disponibles):
+        """Méthode obsolète - remplacée par la logique cyclique dans ajouter_unite_debloquee"""
+        pass
+    
+    def _afficher_prochaine_unite_disponible(self, x, y):
+        """Affiche quelle unité sera ajoutée au prochain clic"""
+        from unites import CLASSES_UNITES
+        
+        # Obtenir les unités déjà débloquées
+        unites_deja_debloquees = set(self.niveau_config.unites_debloquees)
+        
+        # Créer la liste des unités disponibles
+        unites_disponibles = []
+        for classe_unite in CLASSES_UNITES:
+            nom_classe = classe_unite.__name__
+            if nom_classe not in unites_deja_debloquees:
+                instance_temp = classe_unite(equipe=0, pos=(0, 0))
+                unites_disponibles.append({
+                    'classe': nom_classe,
+                    'nom': instance_temp.nom,
+                    'faction': instance_temp.faction,
+                    'tier': instance_temp.tier
+                })
+        
+        if not unites_disponibles:
+            self.ui.draw_text("Prochaine: (toutes débloquées)", x, y, font=self.ui.font_small, color=(100, 100, 100))
+            return
+        
+        # Trier par faction puis par tier
+        unites_disponibles.sort(key=lambda x: (x['faction'], x['tier']))
+        
+        # Obtenir l'index actuel
+        if not hasattr(self, '_index_unite_selection'):
+            self._index_unite_selection = 0
+        
+    def retirer_unite_debloquee(self):
+        """Retire la dernière unité des récompenses de déblocage"""
+        if self.niveau_config.unites_debloquees:
+            unite_retiree = self.niveau_config.unites_debloquees.pop()
+            print(f"Unité retirée des récompenses: {unite_retiree}")
+        else:
+            print("Aucune unité à retirer")
+    
+    def effacer_unites_debloquees(self):
+        """Efface toutes les unités des récompenses de déblocage"""
+        if self.niveau_config.unites_debloquees:
+            nb_unites = len(self.niveau_config.unites_debloquees)
+            self.niveau_config.unites_debloquees.clear()
+            print(f"Toutes les unités débloquées ont été retirées ({nb_unites} unités)")
+        else:
+            print("Aucune unité à effacer")
+    
+    def selectionner_unite_deblocage(self, unite_data):
+        """Sélectionne une unité spécifique pour déblocage"""
+        self.niveau_config.unites_debloquees.append(unite_data['classe'])
+        print(f"Unité ajoutée: {unite_data['nom']} ({unite_data['faction']}) - Tier {unite_data['tier']}")
+        
+        # Retourner à l'état précédent (ou rewards_config par défaut)
+        self.etat = getattr(self, 'etat_precedent', 'rewards_config')
+        self.creer_boutons()
+    
+    def annuler_selection_unite(self):
+        """Annule la sélection d'unité et retourne à l'état précédent"""
+        self.etat = getattr(self, 'etat_precedent', 'rewards_config')
+        self.creer_boutons()
     
     # ------ Actions principales ------
     def nouveau_niveau(self):
@@ -256,36 +383,147 @@ class LevelBuilder:
             print(f"Erreur lors de la sauvegarde: {e}")
     
     def tester_niveau(self):
-        """Lance le niveau pour le tester"""
+        """Lance le niveau pour le tester avec toutes les contraintes"""
+        # Valider le niveau avant le test
+        valide, erreurs = self.niveau_config.valider()
+        if not valide:
+            print("Erreur: Le niveau n'est pas valide:")
+            for erreur in erreurs:
+                print(f"- {erreur}")
+            return
+        
         if not self.niveau_config.unites_ennemis:
             print("Erreur: Aucun ennemi placé")
             return
         
+        print(f"Lancement du test du niveau: {self.niveau_config.nom}")
+        print(f"Type de restriction: {self.niveau_config.type_restriction.value}")
+        
+        # Si le type de restriction impose des unités spécifiques, les utiliser directement
+        if self.niveau_config.type_restriction == TypeRestriction.UNITES_IMPOSEES:
+            if not self.niveau_config.unites_imposees:
+                print("Erreur: Aucune unité imposée définie")
+                return
+            
+            # Lancer directement le jeu avec les unités imposées
+            self._lancer_jeu_test(self.niveau_config.unites_imposees)
+            
+        else:
+            # Utiliser le sélecteur d'unités avec toutes les contraintes
+            self._lancer_selecteur_test()
+    
+    def _lancer_selecteur_test(self):
+        """Lance le sélecteur d'unités pour le test avec les contraintes du niveau"""
+        from unit_selector import UnitSelector
+        
+        print("Ouverture du sélecteur d'unités pour le test...")
+        print(f"Contraintes actives:")
+        print(f"  - Type: {self.niveau_config.type_restriction.value}")
+        print(f"  - CP disponible: {self.niveau_config.cp_disponible}")
+        print(f"  - Unités max: {self.niveau_config.max_unites}")
+        if self.niveau_config.faction_imposee:
+            print(f"  - Faction imposée: {self.niveau_config.faction_imposee}")
+        if self.niveau_config.faction_unique_requise:
+            print(f"  - Faction unique requise: Oui")
+        
+        # Créer un inventaire de test (toutes les unités disponibles)
+        inventaire_test = self._creer_inventaire_test()
+        
+        # Déterminer le mode selon le type de restriction
+        mode_selector = self._get_mode_for_restriction()
+        
+        try:
+            # Lancer le sélecteur avec les contraintes du niveau
+            unit_selector = UnitSelector(
+                screen=self.screen,
+                mode=mode_selector,
+                inventaire_joueur=inventaire_test,
+                type_restriction=self.niveau_config.type_restriction,
+                unites_imposees=self.niveau_config.unites_imposees,
+                factions_definies=self.niveau_config.factions_autorisees,
+                faction_unique_requise=self.niveau_config.faction_unique_requise,
+                cp_disponible=self.niveau_config.cp_disponible,
+                max_unites=self.niveau_config.max_unites,
+                faction_imposee=self.niveau_config.faction_imposee,
+                # Paramètres spécifiques selon le mode
+                max_units=self.niveau_config.max_unites,
+                cp_max=self.niveau_config.cp_disponible,
+                faction_unique=self.niveau_config.faction_unique_requise
+            )
+            
+            # Lancer la sélection
+            unites_selectionnees = unit_selector.run()
+            
+            if unites_selectionnees and not unit_selector.cancelled:
+                print(f"Unités sélectionnées pour le test: {len(unites_selectionnees)}")
+                self._lancer_jeu_test(unites_selectionnees)
+            else:
+                print("Test annulé: Aucune unité sélectionnée")
+                
+        except Exception as e:
+            print(f"Erreur lors du lancement du sélecteur: {e}")
+            print("Utilisation d'unités par défaut pour le test...")
+            # Fallback avec des unités par défaut (juste les classes)
+            unites_defaut = [
+                unites.Squelette,
+                unites.Goule
+            ]
+            self._lancer_jeu_test(unites_defaut)
+    
+    def _get_mode_for_restriction(self):
+        """Retourne le mode de sélecteur approprié selon le type de restriction"""
+        if self.niveau_config.type_restriction == TypeRestriction.FACTION_LIBRE:
+            return "campagne_libre"
+        elif self.niveau_config.type_restriction == TypeRestriction.FACTION_UNIQUE:
+            return "campagne_faction"
+        elif self.niveau_config.type_restriction == TypeRestriction.FACTIONS_DEFINIES:
+            return "campagne_definies"
+        else:  # TypeRestriction.UNITES_IMPOSEES
+            return "campagne"  # Mode prédéfini pour unités imposées
+    
+    def _creer_inventaire_test(self):
+        """Crée un inventaire de test avec toutes les unités disponibles"""
+        from unites import CLASSES_UNITES
+        
+        inventaire_test = []
+        for classe_unite in CLASSES_UNITES:
+            # Ajouter plusieurs exemplaires de chaque unité pour le test
+            for _ in range(3):  # 3 exemplaires de chaque
+                inventaire_test.append(classe_unite.__name__)
+        
+        print(f"Inventaire de test créé: {len(inventaire_test)} unités disponibles")
+        return inventaire_test
+    
+    def _lancer_jeu_test(self, unites_joueur):
+        """Lance le jeu de test avec les unités spécifiées"""
         from jeu import Jeu
         import ia
         
-        # Créer quelques unités de test pour le joueur selon le type de restriction
-        if self.niveau_config.type_restriction == TypeRestriction.UNITES_IMPOSEES:
-            test_player_units = self.niveau_config.unites_imposees
-        else:
-            test_player_units = [
-                (unites.Squelette, (0, 0)),
-                (unites.Goule, (1, 0)),
-            ]
+        print(f"Lancement du jeu de test avec {len(unites_joueur)} unités joueur")
+        
+        # Afficher les unités du joueur
+        print("Unités du joueur:")
+        for classe in unites_joueur:
+            if hasattr(classe, '__name__'):
+                nom_classe = classe.__name__
+            else:
+                nom_classe = str(classe)
+            print(f"  - {nom_classe}")
         
         # Lancer le jeu
         jeu = Jeu(
             ia_strategy=ia.cible_faible,
             screen=self.screen,
-            initial_player_units=test_player_units,
+            initial_player_units=unites_joueur,
             initial_enemy_units=self.niveau_config.unites_ennemis,
             enable_placement=not (self.niveau_config.type_restriction == TypeRestriction.UNITES_IMPOSEES and 
                                  self.niveau_config.placement_impose)
         )
         
-        # Retourner le jeu pour que le menu principal puisse le lancer
+        # Stocker le jeu pour que le menu principal puisse le lancer
         self.test_game = jeu
         self.running = False
+        print("Jeu de test préparé - fermeture du level builder")
     
     # ------ Affichage ------
     def afficher_main_menu(self):
@@ -400,8 +638,31 @@ class LevelBuilder:
         
         # CP gagnés
         self.ui.draw_text("CP gagnés à la victoire:", 50, y)
-        self.ui.draw_text(str(self.niveau_config.recompense_cp), 310, y)
-        y += 60
+        self.ui.draw_text(str(self.niveau_config.recompense_cp), 350, y)
+        y += 50
+        
+        # Unités débloquées
+        self.ui.draw_text("Unités débloquées:", 50, y, color=(50, 50, 150))
+        y += 30
+        
+        if self.niveau_config.unites_debloquees:
+            for i, nom_classe in enumerate(self.niveau_config.unites_debloquees):
+                # Créer une instance temporaire pour obtenir le nom d'affichage
+                try:
+                    from unites import CLASSES_UNITES
+                    classe = next(c for c in CLASSES_UNITES if c.__name__ == nom_classe)
+                    instance_temp = classe(equipe=0, pos=(0, 0))
+                    self.ui.draw_text(f"• {instance_temp.nom} ({instance_temp.faction})", 70, y, font=self.ui.font_small)
+                    y += 25
+                except:
+                    self.ui.draw_text(f"• {nom_classe} (erreur)", 70, y, font=self.ui.font_small, color=(200, 0, 0))
+                    y += 25
+        else:
+            self.ui.draw_text("Aucune unité débloquée", 70, y, font=self.ui.font_small, color=(100, 100, 100))
+            y += 25
+        
+        # Afficher la prochaine unité qui sera ajoutée
+        y += 20
         
         # Résumé du niveau
         self.ui.draw_text("Résumé du niveau:", 50, y, color=(50, 50, 150))
@@ -416,11 +677,49 @@ class LevelBuilder:
             f"CP joueur: {self.niveau_config.cp_disponible}",
             f"Unités max: {self.niveau_config.max_unites}",
             f"Récompense CP: {self.niveau_config.recompense_cp}",
+            f"Unités débloquées: {len(self.niveau_config.unites_debloquees)}",
         ]
         
         for line in resume_lines:
             self.ui.draw_text(line, 70, y, font=self.ui.font_small)
             y += 25
+        
+        self.ui.draw_buttons()
+    
+    def afficher_selection_unite_deblocage(self):
+        """Affiche l'interface de sélection d'unité pour déblocage"""
+        self.screen.fill((255, 255, 255))
+        self.ui.draw_title("Sélection d'Unité à Débloquer", 50)
+        
+        # Instructions
+        self.ui.draw_text("Choisissez l'unité à ajouter aux récompenses:", 50, 120, color=(50, 50, 150))
+        
+        # Afficher les unités disponibles
+        if hasattr(self, 'unites_disponibles_pour_selection'):
+            y = 150
+            faction_actuelle = None
+            
+            for unite in self.unites_disponibles_pour_selection:
+                # Afficher un séparateur de faction
+                if unite['faction'] != faction_actuelle:
+                    if faction_actuelle is not None:
+                        y += 10  # Espacement entre factions
+                    self.ui.draw_text(f"--- {unite['faction']} ---", 70, y, color=(100, 100, 100))
+                    faction_actuelle = unite['faction']
+                    y += 30
+                
+                # Les boutons sont créés dans creer_boutons(), ici on fait juste l'espacement
+                y += 35
+                
+                # Limiter l'affichage
+                if y > self.screen.get_height() - 100:
+                    nb_restantes = len([u for u in self.unites_disponibles_pour_selection 
+                                      if self.unites_disponibles_pour_selection.index(u) > 
+                                      self.unites_disponibles_pour_selection.index(unite)])
+                    if nb_restantes > 0:
+                        self.ui.draw_text(f"... et {nb_restantes} autres unités", 70, y, 
+                                        color=(100, 100, 100), font=self.ui.font_small)
+                    break
         
         self.ui.draw_buttons()
     
@@ -460,6 +759,8 @@ class LevelBuilder:
                 self.afficher_enemy_selection()
             elif self.etat == "rewards_config":
                 self.afficher_rewards_config()
+            elif self.etat == "selection_unite_deblocage":
+                self.afficher_selection_unite_deblocage()
             
             pygame.display.flip()
         
