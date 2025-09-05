@@ -1,0 +1,63 @@
+{
+  "nom": "L'autel maudit",
+  "description": "Confrontez-vous au mal ancien",
+  "unites_ennemis": [
+    [
+      "Archliche",
+      [
+        5,
+        5
+      ]
+    ],
+    [
+      "Vampire",
+      [
+        6,
+        5
+      ]
+    ],
+    [
+      "Liche",
+      [
+        5,
+        6
+      ]
+    ]
+  ],
+  "contraintes_joueur": {
+    "max_units": 3,
+    "cp_disponible": 8,
+    "faction_unique": true,
+    "faction_requise": "Morts-Vivants"
+  },
+  "recompenses": {
+    "cp": 2,
+    "unites_debloquees": [
+      "Liche"
+    ],
+    "autres": []
+  },
+  "unites_predefinies": [
+    [
+      "Vampire",
+      [
+        0,
+        0
+      ]
+    ],
+    [
+      "Zombie",
+      [
+        1,
+        0
+      ]
+    ],
+    [
+      "Liche",
+      [
+        0,
+        1
+      ]
+    ]
+  ]
+}

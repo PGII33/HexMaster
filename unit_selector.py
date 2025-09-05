@@ -75,6 +75,35 @@ class UnitSelector:
                 "unites_disponibles": self._get_owned_units(),
                 "background": (250, 250, 240)
             }
+        
+        elif self.mode == "builder_enemy":
+            return {
+                "titre": "Level Builder - Sélection des Ennemis",
+                "max_units": 999,  # Pas de limite
+                "use_cp": False,   # Pas de contrainte CP
+                "cp_disponible": 999,
+                "faction_unique": False,  # Toutes factions autorisées
+                "unites_disponibles": self._get_all_units(),  # Toutes les unités
+                "background": (250, 230, 230)  # Rouge clair pour les ennemis
+            }
+        
+        elif self.mode == "campagne_libre":
+            contraintes = kwargs.get("contraintes", {})
+            return {
+                "titre": "Campagne - Sélection des unités",
+                "max_units": contraintes.get("max_units", 14),
+                "use_cp": True,
+                "cp_disponible": contraintes.get("cp_disponible", 5),
+                "faction_unique": contraintes.get("faction_unique", True),
+                "faction_requise": contraintes.get("faction_requise", None),
+                "unites_disponibles": self._get_faction_units(contraintes.get("faction_requise")),
+                "background": (230, 250, 240)
+            }
+    
+    def _get_all_units(self):
+        """Retourne toutes les classes d'unités disponibles dans le jeu"""
+        # Retourner toutes les unités du jeu, pas seulement celles possédées
+        return unites.CLASSES_UNITES + [unites.Zombie]
     
     def _get_owned_units(self):
         """Retourne les classes d'unités possédées par le joueur"""
@@ -433,6 +462,22 @@ class UnitSelector:
                 col = 0
                 x = margin
                 y += card_h + margin
+    
+    def _get_faction_units(self, faction_requise=None):
+        """Retourne les unités d'une faction spécifique ou toutes si aucune faction"""
+        if faction_requise is None:
+            return self._get_owned_units()
+        
+        # Filtrer par faction
+        owned_units = self._get_owned_units()
+        faction_units = []
+        
+        for cls in owned_units:
+            tmp = cls("joueur", (0, 0))
+            if tmp.faction == faction_requise:
+                faction_units.append(cls)
+        
+        return faction_units
     
     def ajouter_unite(self, cls):
         """Ajoute une unité à la sélection"""

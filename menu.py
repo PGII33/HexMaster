@@ -1,5 +1,6 @@
 import pygame
 import sys
+import os
 import ia
 import unites
 from jeu import Jeu
@@ -37,11 +38,11 @@ class HexaMaster:
         
         # Menu principal
         self.boutons_menu = [
-            Button((center_x-140, h//2-130, 280, 60), "Jouer", self.open_playmenu, self.font_med),
-            Button((center_x-140, h//2-50, 280, 60), "Inventaire", self.open_inventaire, self.font_med),
-            Button((center_x-140, h//2+30, 280, 60), "Boutique", self.open_boutique, self.font_med),
-            Button((center_x-140, h//2+110, 280, 60), "Missions", self.open_missions_placeholder, self.font_med),
-            Button((center_x-140, h//2+190, 280, 60), "Quitter", lambda: sys.exit(), self.font_med),
+            Button((center_x-140, h//2-150, 280, 60), "Jouer", self.open_playmenu, self.font_med),
+            Button((center_x-140, h//2-80, 280, 60), "Level Builder", self.open_level_builder, self.font_med),
+            Button((center_x-140, h//2-10, 280, 60), "Inventaire", self.open_inventaire, self.font_med),
+            Button((center_x-140, h//2+60, 280, 60), "Boutique", self.open_boutique, self.font_med),
+            Button((center_x-140, h//2+130, 280, 60), "Quitter", lambda: sys.exit(), self.font_med),
         ]
 
         # Menu Jouer principal
@@ -113,6 +114,17 @@ class HexaMaster:
     def open_missions_placeholder(self):
         self.etat = "missions"
 
+    def open_level_builder(self):
+        """Lance le level builder"""
+        from level_builder import LevelBuilder
+        builder = LevelBuilder(self.screen)
+        test_game = builder.run()
+        
+        if test_game:
+            # Si un jeu de test a été créé, le lancer
+            self.jeu = test_game
+            self.etat = "jeu"
+
     def start_chapitre_placeholder(self):
         # Placeholder pour les futurs chapitres
         print("Chapitre x - À implémenter")
@@ -128,6 +140,16 @@ class HexaMaster:
 
     def start_campagne(self):
         """Lance le mode campagne"""
+        # Créer la structure de campagne si elle n'existe pas
+        if not os.path.exists("Campagne"):
+            print("Création de la structure de campagne...")
+            try:
+                from create_campaign_levels import create_campaign_structure
+                create_campaign_structure()
+            except ImportError:
+                print("Erreur: Impossible de créer la structure de campagne")
+                return
+        
         campagne = Campagne(self.screen)
         niveau_info = campagne.run()
         
@@ -137,19 +159,29 @@ class HexaMaster:
         chapitre, numero = niveau_info
         niveau_data = get_niveau_data(chapitre, numero)
         
-        # Sélection des unités (prédéfinies en campagne)
-        selector = UnitSelector(self.screen, "campagne", 
-                              unites_predefinies=niveau_data["unites_joueur"])
-        player_units = selector.run()
+        if niveau_data is None:
+            print("Erreur: Niveau non trouvé")
+            return
         
-        if player_units is None:  # Annulé
+        # Vérifier si c'est un niveau avec unités prédéfinies
+        if niveau_data.get("unites_joueur"):
+            # Mode prédéfini (comme avant)
+            selector = UnitSelector(self.screen, "campagne", 
+                                  unites_predefinies=niveau_data["unites_joueur"])
+            player_units = selector.run()
+            
+            if player_units is None:  # Annulé
+                return
+        else:
+            print("Mode sélection libre pas encore implémenté")
             return
         
         self.jeu = Jeu(
             ia_strategy=ia.cible_faible,
             screen=self.screen,
             initial_player_units=player_units,
-            initial_enemy_units=niveau_data["unites_ennemis"]
+            initial_enemy_units=niveau_data["unites_ennemis"],
+            enable_placement=False
         )
         self.etat = "jeu"
 
@@ -307,7 +339,8 @@ class HexaMaster:
                 elif self.etat in ["missions"]:
                     for b in self.boutons_retour_placeholder: b.handle_event(event)
                 elif self.etat == "jeu":
-                    self.jeu.handle_event(event)
+                    if self.jeu:
+                        self.jeu.handle_event(event)
 
             if self.etat == "menu":
                 self.afficher_menu()
@@ -322,7 +355,14 @@ class HexaMaster:
             elif self.etat in ["missions"]:
                 self.afficher_placeholder()
             elif self.etat == "jeu":
-                self.jeu.run_step()
+                if self.jeu:
+                    # Vérifier si le jeu est terminé
+                    if hasattr(self.jeu, 'finished') and self.jeu.finished:
+                        self.etat = "menu"
+                        self.jeu = None
+                    else:
+                        self.jeu.update(dt)
+                        self.jeu.dessiner()
 
             pygame.display.flip()
 

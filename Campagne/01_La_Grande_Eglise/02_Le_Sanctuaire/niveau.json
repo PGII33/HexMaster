@@ -1,0 +1,63 @@
+{
+  "nom": "Le sanctuaire",
+  "description": "Pénétrez dans le sanctuaire",
+  "unites_ennemis": [
+    [
+      "Vampire",
+      [
+        5,
+        5
+      ]
+    ],
+    [
+      "Goule",
+      [
+        6,
+        5
+      ]
+    ],
+    [
+      "Spectre",
+      [
+        5,
+        6
+      ]
+    ]
+  ],
+  "contraintes_joueur": {
+    "max_units": 3,
+    "cp_disponible": 5,
+    "faction_unique": true,
+    "faction_requise": "Morts-Vivants"
+  },
+  "recompenses": {
+    "cp": 1,
+    "unites_debloquees": [
+      "Zombie"
+    ],
+    "autres": []
+  },
+  "unites_predefinies": [
+    [
+      "Squelette",
+      [
+        0,
+        0
+      ]
+    ],
+    [
+      "Goule",
+      [
+        1,
+        0
+      ]
+    ],
+    [
+      "Spectre",
+      [
+        0,
+        1
+      ]
+    ]
+  ]
+}
