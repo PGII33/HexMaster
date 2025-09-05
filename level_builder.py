@@ -217,11 +217,6 @@ class LevelBuilder:
         self.etat_precedent = self.etat
         self.etat = "selection_unite_deblocage"
         self.creer_boutons()
-    
-    def lancer_selecteur_unite_deblocage(self, unites_disponibles):
-        """Méthode obsolète - remplacée par la logique cyclique dans ajouter_unite_debloquee"""
-        pass
-    
     def _afficher_prochaine_unite_disponible(self, x, y):
         """Affiche quelle unité sera ajoutée au prochain clic"""
         from unites import CLASSES_UNITES
@@ -414,7 +409,6 @@ class LevelBuilder:
     
     def _lancer_selecteur_test(self):
         """Lance le sélecteur d'unités pour le test avec les contraintes du niveau"""
-        from unit_selector import UnitSelector
         
         print("Ouverture du sélecteur d'unités pour le test...")
         print(f"Contraintes actives:")
