@@ -52,7 +52,7 @@ Différentes factions sont disponibles.
 | Ondine    | 2    |                   |
 | Ifrit     | 3    |Combustion Différée|
 
-### Royauté
+### Royaume
 
 | Nom         | Tier | Compétences  |
 |-------------|------|--------------|
