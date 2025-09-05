@@ -312,7 +312,7 @@ class UnitSelector:
             rect = pygame.Rect(x, y, card_w, card_h)
             
             # Couleur de fond selon la disponibilité
-            if can_add:
+            if can_add or count_selected > 0:
                 bg_color = (220, 220, 220)
             else:
                 bg_color = (180, 180, 180)
@@ -341,29 +341,91 @@ class UnitSelector:
                 count_txt = self.font.render(f"x{count_selected}", True, (200, 0, 0))
                 self.screen.blit(count_txt, (rect.right - 40, rect.y + 10))
             
-            # Bouton d'ajout (seulement si visible à l'écran)
+            # Boutons d'ajout/suppression (seulement si visible à l'écran)
             btn_y = y + card_h - 50
             if btn_y >= start_y - 50 and btn_y <= screen_h - 100:  # Vérifier si visible
-                btn_rect = pygame.Rect(x + 10, btn_y, card_w - 20, 40)
                 
-                if can_add:
-                    btn_color = (100, 200, 100)
-                    btn_text = "Ajouter"
-                    # Créer un bouton fonctionnel
-                    btn = Button(btn_rect, btn_text, lambda c=cls: self.ajouter_unite(c), self.font, base_color=btn_color)
-                    self.unit_buttons.append(btn)
-                else:
-                    btn_color = (200, 100, 100)
-                    if not can_add and self.config.get("use_cp"):
-                        btn_text = "CP insuffisant"
-                    elif len(self.selected_units) >= self.config["max_units"]:
-                        btn_text = "Max atteint"
+                # Si l'unité est déjà sélectionnée, afficher les deux boutons côte à côte
+                if count_selected > 0:
+                    # Bouton Retirer (à gauche)
+                    btn_retirer_rect = pygame.Rect(x + 10, btn_y, (card_w - 30) // 2, 40)
+                    btn_retirer = Button(btn_retirer_rect, "Retirer", lambda c=cls: self.retirer_unite(c), self.font, base_color=(200, 100, 100))
+                    self.unit_buttons.append(btn_retirer)
+                    btn_retirer.draw(self.screen)
+                    
+                    # Bouton Ajouter (à droite) - si on peut encore en ajouter
+                    if can_add:
+                        btn_ajouter_rect = pygame.Rect(x + 10 + (card_w - 30) // 2 + 10, btn_y, (card_w - 30) // 2, 40)
+                        btn_ajouter = Button(btn_ajouter_rect, "Ajouter", lambda c=cls: self.ajouter_unite(c), self.font, base_color=(100, 200, 100))
+                        self.unit_buttons.append(btn_ajouter)
+                        btn_ajouter.draw(self.screen)
                     else:
-                        btn_text = "Faction différente"
-                    # Bouton non-fonctionnel (juste pour l'affichage)
-                    btn = Button(btn_rect, btn_text, lambda: None, self.font, base_color=btn_color)
+                        # Bouton grisé avec message d'erreur (à droite)
+                        btn_ajouter_rect = pygame.Rect(x + 10 + (card_w - 30) // 2 + 10, btn_y, (card_w - 30) // 2, 40)
+                        
+                        # Déterminer le message d'erreur approprié
+                        if len(self.selected_units) >= self.config["max_units"]:
+                            btn_text = "Max atteint"
+                        elif self.config.get("use_cp", False):
+                            tmp = cls("joueur", (0,0))
+                            cost = tmp.tier
+                            current_cost = self._calculate_cp_cost(self.selected_units)
+                            if current_cost + cost > self.config["cp_disponible"]:
+                                btn_text = "CP insuffisant"
+                            else:
+                                btn_text = "Faction différente"
+                        elif self.config.get("faction_unique", False) and self.selected_units:
+                            current_faction = self._get_faction(self.selected_units[0])
+                            if self._get_faction(cls) != current_faction:
+                                btn_text = "Faction différente"
+                            else:
+                                btn_text = "Non disponible"
+                        else:
+                            btn_text = "Non disponible"
+                        
+                        btn_grise = Button(btn_ajouter_rect, btn_text, lambda: None, self.font, base_color=(150, 150, 150))
+                        btn_grise.draw(self.screen)
                 
-                btn.draw(self.screen)
+                # Si l'unité n'est pas encore sélectionnée
+                else:
+                    # Bouton d'ajout (pleine largeur)
+                    if can_add:
+                        btn_rect = pygame.Rect(x + 10, btn_y, card_w - 20, 40)
+                        btn_color = (100, 200, 100)
+                        btn_text = "Ajouter"
+                        # Créer un bouton fonctionnel
+                        btn = Button(btn_rect, btn_text, lambda c=cls: self.ajouter_unite(c), self.font, base_color=btn_color)
+                        self.unit_buttons.append(btn)
+                        btn.draw(self.screen)
+                    
+                    # Bouton grisé avec message d'erreur (pleine largeur)
+                    else:
+                        btn_rect = pygame.Rect(x + 10, btn_y, card_w - 20, 40)
+                        btn_color = (150, 150, 150)
+                        
+                        # Déterminer le message d'erreur approprié
+                        if len(self.selected_units) >= self.config["max_units"]:
+                            btn_text = "Max atteint"
+                        elif self.config.get("use_cp", False):
+                            tmp = cls("joueur", (0,0))
+                            cost = tmp.tier
+                            current_cost = self._calculate_cp_cost(self.selected_units)
+                            if current_cost + cost > self.config["cp_disponible"]:
+                                btn_text = "CP insuffisant"
+                            else:
+                                btn_text = "Faction différente"
+                        elif self.config.get("faction_unique", False) and self.selected_units:
+                            current_faction = self._get_faction(self.selected_units[0])
+                            if self._get_faction(cls) != current_faction:
+                                btn_text = "Faction différente"
+                            else:
+                                btn_text = "Non disponible"
+                        else:
+                            btn_text = "Non disponible"
+                        
+                        # Bouton non-fonctionnel (juste pour l'affichage)
+                        btn = Button(btn_rect, btn_text, lambda: None, self.font, base_color=btn_color)
+                        btn.draw(self.screen)
             
             x += card_w + margin
             col += 1
@@ -377,6 +439,12 @@ class UnitSelector:
         if self._can_add_unit(cls):
             self.selected_units.append(cls)
             print(f"Unité ajoutée: {cls('joueur', (0,0)).get_nom()}")  # Debug
+    
+    def retirer_unite(self, cls):
+        """Retire une unité de la sélection"""
+        if cls in self.selected_units:
+            self.selected_units.remove(cls)
+            print(f"Unité retirée: {cls('joueur', (0,0)).get_nom()}")  # Debug
     
     def run(self):
         """Lance le sélecteur d'unités"""
