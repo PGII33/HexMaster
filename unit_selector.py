@@ -88,17 +88,45 @@ class UnitSelector:
             }
         
         elif self.mode == "campagne_libre":
-            contraintes = kwargs.get("contraintes", {})
             return {
-                "titre": "Campagne - Sélection des unités",
-                "max_units": contraintes.get("max_units", 14),
+                "titre": "Campagne - Sélection Libre",
+                "max_units": kwargs.get("max_units", 14),
                 "use_cp": True,
-                "cp_disponible": contraintes.get("cp_disponible", 5),
-                "faction_unique": contraintes.get("faction_unique", True),
-                "faction_requise": contraintes.get("faction_requise", None),
-                "unites_disponibles": self._get_faction_units(contraintes.get("faction_requise")),
+                "cp_disponible": kwargs.get("cp_max", 5),
+                "faction_unique": False,
+                "faction_imposee": kwargs.get("faction_imposee", ""),
+                "unites_disponibles": self._get_units_for_faction_imposee(kwargs.get("faction_imposee", "")),
                 "background": (230, 250, 240)
             }
+        
+        elif self.mode == "campagne_faction":
+            return {
+                "titre": "Campagne - Faction Unique",
+                "max_units": kwargs.get("max_units", 14),
+                "use_cp": True,
+                "cp_disponible": kwargs.get("cp_max", 5),
+                "faction_unique": True,
+                "faction_imposee": kwargs.get("faction_imposee", ""),
+                "unites_disponibles": self._get_units_for_faction_imposee(kwargs.get("faction_imposee", "")),
+                "background": (230, 250, 240)
+            }
+        
+        elif self.mode == "campagne_definies":
+            return {
+                "titre": "Campagne - Factions Définies",
+                "max_units": kwargs.get("max_units", 14),
+                "use_cp": True,
+                "cp_disponible": kwargs.get("cp_max", 5),
+                "faction_unique": kwargs.get("faction_unique", False),
+                "faction_imposee": kwargs.get("faction_imposee", ""),
+                "factions_autorisees": kwargs.get("factions_autorisees", []),
+                "unites_disponibles": self._get_units_combined_restrictions(
+                    kwargs.get("factions_autorisees", []),
+                    kwargs.get("faction_imposee", "")
+                ),
+                "background": (230, 250, 240)
+            }
+        
     
     def _get_all_units(self):
         """Retourne toutes les classes d'unités disponibles dans le jeu"""
@@ -118,6 +146,47 @@ class UnitSelector:
                     break
         
         return available_classes
+    
+    def _get_faction_filtered_units(self, factions_autorisees):
+        """Retourne les unités possédées filtrées par factions autorisées"""
+        if not factions_autorisees:
+            return self._get_owned_units()
+        
+        owned_units = self._get_owned_units()
+        filtered_units = []
+        
+        for cls in owned_units:
+            tmp_instance = cls("joueur", (0,0))
+            if tmp_instance.faction in factions_autorisees:
+                filtered_units.append(cls)
+        
+        return filtered_units
+    
+    def _get_units_for_faction_imposee(self, faction_imposee):
+        """Retourne les unités selon la faction imposée"""
+        if not faction_imposee:
+            # Aucune faction imposée, retourner toutes les unités possédées
+            return self._get_owned_units()
+        
+        # Faction imposée, filtrer par cette faction uniquement
+        owned_units = self._get_owned_units()
+        filtered_units = []
+        
+        for cls in owned_units:
+            tmp_instance = cls("joueur", (0,0))
+            if tmp_instance.faction == faction_imposee:
+                filtered_units.append(cls)
+        
+        return filtered_units
+    
+    def _get_units_combined_restrictions(self, factions_autorisees, faction_imposee):
+        """Retourne les unités avec les restrictions combinées (factions autorisées ET faction imposée)"""
+        if faction_imposee:
+            # Si une faction est imposée, elle prend la priorité
+            return self._get_units_for_faction_imposee(faction_imposee)
+        
+        # Sinon, utiliser les factions autorisées
+        return self._get_faction_filtered_units(factions_autorisees)
     
     def _calculate_cp_cost(self, unit_list):
         """Calcule le coût en CP d'une liste d'unités"""
@@ -153,6 +222,11 @@ class UnitSelector:
             current_faction = self._get_faction(self.selected_units[0])
             if self._get_faction(cls) != current_faction:
                 return False
+        
+        # Vérifier la faction imposée
+        faction_imposee = config.get("faction_imposee", "")
+        if faction_imposee and self._get_faction(cls) != faction_imposee:
+            return False
         
         return True
     
@@ -543,5 +617,7 @@ class UnitSelector:
             return None
         elif self.mode == "campagne":
             return self.config["unites_predefinies"]
+        elif self.mode in ["campagne_libre", "campagne_faction", "campagne_definies"]:
+            return self.selected_units
         else:
             return self.selected_units

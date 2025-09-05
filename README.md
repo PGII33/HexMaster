@@ -62,7 +62,7 @@ Différentes factions sont disponibles.
 | Cavalier    | 1    |Monture libéré|
 | Bouffon     | 2    |Divertissement|
 | Garde royal | 2    |              |
-|   Roi       | 3    |Commandement  |
+| Roi         | 3    |Commandement  |
 
 
 ### Bêtes
@@ -113,7 +113,8 @@ Phoenix
 Salamandre 
 
 Sphinx 
-Cyclopes 
+Cyclopes
+Lamia
 
 | Basilic  | 4    |Regard Mortel|
 | Dragon   | 4    |             |

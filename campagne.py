@@ -1,17 +1,15 @@
 import pygame
 import sys
 import os
-import json
-from utils import Button
-import unites
+from niveau_structure import charger_niveau, NiveauConfig, TypeRestriction
+from ui_commons import UIManager, ProgressionManager
+import sauvegarde
 
 class Campagne:
     def __init__(self, screen):
         self.screen = screen
         if screen is not None:
-            self.font = pygame.font.SysFont(None, 28)
-            self.title_font = pygame.font.SysFont(None, 36)
-            self.small_font = pygame.font.SysFont(None, 20)
+            self.ui = UIManager(screen)
         
         # État actuel
         self.chapitre_actuel = None
@@ -62,80 +60,52 @@ class Campagne:
                 
                 niveau_file = os.path.join(level_path, "niveau.json")
                 if os.path.exists(niveau_file):
-                    try:
-                        with open(niveau_file, 'r', encoding='utf-8') as f:
-                            niveau_data = json.load(f)
-                        
-                        # Convertir les noms d'unités en classes
-                        niveau_data["unites_ennemis"] = self._convert_unit_names_to_classes(niveau_data["unites_ennemis"])
-                        if "unites_predefinies" in niveau_data:
-                            niveau_data["unites_predefinies"] = self._convert_unit_names_to_classes(niveau_data["unites_predefinies"])
-                        
+                    config = charger_niveau(niveau_file)
+                    if config:
                         # Extraire le numéro de niveau
                         if "_" in level_folder:
                             level_num = int(level_folder.split("_")[0])
                         else:
                             level_num = len(chapitres[chapter_name]["niveaux"]) + 1
                         
-                        chapitres[chapter_name]["niveaux"][level_num] = niveau_data
-                        
-                    except Exception as e:
-                        print(f"Erreur lors du chargement de {niveau_file}: {e}")
+                        chapitres[chapter_name]["niveaux"][level_num] = config
         
         return chapitres
-    
-    def _convert_unit_names_to_classes(self, unit_list):
-        """Convertit les noms d'unités en classes d'unités"""
-        converted = []
-        for unit_name, pos in unit_list:
-            # Trouver la classe correspondante
-            for cls in unites.CLASSES_UNITES:
-                if cls.__name__ == unit_name:
-                    converted.append((cls, pos))
-                    break
-            else:
-                print(f"Unité inconnue: {unit_name}")
-        return converted
     
     def creer_boutons(self):
         """Crée les boutons selon l'état actuel"""
         if self.screen is None:
             return
-            
+        
+        self.ui.clear_buttons()
         w, h = self.screen.get_size()
         
         if self.etat == "selection_chapitre":
-            self.boutons = []
             y = 150
             for i, chapitre_nom in enumerate(self.chapitres.keys()):
-                btn = Button(
+                self.ui.add_button(
                     (w//2 - 200, y + i * 70, 400, 50),
                     chapitre_nom,
-                    lambda nom=chapitre_nom: self.selectionner_chapitre(nom),
-                    self.font
+                    lambda nom=chapitre_nom: self.selectionner_chapitre(nom)
                 )
-                self.boutons.append(btn)
             
             # Bouton retour
-            self.boutons.append(Button((20, h-70, 150, 50), "Retour", self.retour, self.font))
+            self.ui.add_button((20, h-70, 150, 50), "Retour", self.retour)
         
         elif self.etat == "selection_niveau":
-            self.boutons = []
             y = 150
             niveaux = self.chapitres[self.chapitre_actuel]["niveaux"]
             
             for niveau_num in sorted(niveaux.keys()):
-                niveau = niveaux[niveau_num]
-                btn = Button(
+                config = niveaux[niveau_num]
+                self.ui.add_button(
                     (w//2 - 200, y + (niveau_num - 1) * 70, 400, 50),
-                    f"Niveau {niveau_num}: {niveau['nom']}",
-                    lambda num=niveau_num: self.selectionner_niveau(num),
-                    self.font
+                    f"Niveau {niveau_num}: {config.nom}",
+                    lambda num=niveau_num: self.selectionner_niveau(num)
                 )
-                self.boutons.append(btn)
             
             # Boutons navigation
-            self.boutons.append(Button((20, h-70, 150, 50), "Retour", self.retour_chapitres, self.font))
+            self.ui.add_button((20, h-70, 150, 50), "Retour", self.retour_chapitres)
     
     def selectionner_chapitre(self, nom):
         """Sélectionne un chapitre"""
@@ -172,11 +142,11 @@ class Campagne:
                 
                 elif event.type == pygame.VIDEORESIZE:
                     self.screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
+                    self.ui.screen = self.screen
                     self.creer_boutons()
                 
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    for btn in self.boutons:
-                        btn.handle_event(event)
+                    self.ui.handle_button_events(event)
             
             self.afficher()
             pygame.display.flip()
@@ -198,28 +168,22 @@ class Campagne:
         elif self.etat == "selection_niveau":
             self.afficher_selection_niveau()
         
-        for btn in self.boutons:
-            btn.draw(self.screen)
+        self.ui.draw_buttons()
     
     def afficher_selection_chapitre(self):
         """Affiche la sélection des chapitres"""
-        title = self.title_font.render("Campagne - Sélection du Chapitre", True, (50, 50, 150))
-        self.screen.blit(title, (self.screen.get_width()//2 - title.get_width()//2, 50))
-        
-        info = self.font.render("Choisissez un chapitre à jouer", True, (100, 100, 100))
-        self.screen.blit(info, (self.screen.get_width()//2 - info.get_width()//2, 100))
+        self.ui.draw_title("Campagne - Sélection du Chapitre", 50)
+        self.ui.draw_text("Choisissez un chapitre à jouer", 
+                         self.screen.get_width()//2 - 120, 100, color=(100, 100, 100))
     
     def afficher_selection_niveau(self):
         """Affiche la sélection des niveaux"""
-        title = self.title_font.render(f"Chapitre: {self.chapitre_actuel}", True, (50, 50, 150))
-        self.screen.blit(title, (self.screen.get_width()//2 - title.get_width()//2, 50))
-        
-        info = self.font.render("Choisissez un niveau à jouer", True, (100, 100, 100))
-        self.screen.blit(info, (self.screen.get_width()//2 - info.get_width()//2, 100))
+        self.ui.draw_title(f"Chapitre: {self.chapitre_actuel}", 50)
+        self.ui.draw_text("Choisissez un niveau à jouer", 
+                         self.screen.get_width()//2 - 120, 100, color=(100, 100, 100))
 
-def get_niveau_data(chapitre, numero):
-    """Fonction utilitaire pour récupérer les données d'un niveau"""
-    # Charger directement depuis les fichiers sans créer d'interface
+def get_niveau_data(chapitre: str, numero: int) -> dict:
+    """Fonction utilitaire pour récupérer les données d'un niveau au format attendu par le jeu"""
     campaign_path = "Campagne"
     
     if not os.path.exists(campaign_path):
@@ -255,33 +219,69 @@ def get_niveau_data(chapitre, numero):
             if level_num == numero:
                 niveau_file = os.path.join(level_path, "niveau.json")
                 if os.path.exists(niveau_file):
-                    try:
-                        with open(niveau_file, 'r', encoding='utf-8') as f:
-                            niveau_data = json.load(f)
-                        
-                        # Convertir les noms d'unités en classes
-                        def convert_units(unit_list):
-                            converted = []
-                            for unit_name, pos in unit_list:
-                                for cls in unites.CLASSES_UNITES:
-                                    if cls.__name__ == unit_name:
-                                        converted.append((cls, pos))
-                                        break
-                            return converted
-                        
-                        unites_ennemis = convert_units(niveau_data["unites_ennemis"])
-                        unites_joueur = []
-                        if "unites_predefinies" in niveau_data:
-                            unites_joueur = convert_units(niveau_data["unites_predefinies"])
-                        
+                    config = charger_niveau(niveau_file)
+                    if config:
                         # Format attendu par le jeu
                         return {
-                            "unites_joueur": unites_joueur,
-                            "unites_ennemis": unites_ennemis
+                            "config": config,
+                            "unites_joueur": config.unites_imposees if config.type_restriction == TypeRestriction.UNITES_IMPOSEES else [],
+                            "unites_ennemis": config.unites_ennemis
                         }
-                        
-                    except Exception as e:
-                        print(f"Erreur lors du chargement du niveau: {e}")
-                        return None
     
     return None
+
+
+def appliquer_recompenses_niveau(chapitre: str, numero: int):
+    """Applique les récompenses d'un niveau complété"""
+    # Charger la configuration du niveau
+    config = None
+    campaign_path = "Campagne"
+    
+    if os.path.exists(campaign_path):
+        # Trouver le niveau comme dans get_niveau_data
+        for folder in os.listdir(campaign_path):
+            folder_path = os.path.join(campaign_path, folder)
+            if os.path.isdir(folder_path):
+                if "_" in folder:
+                    chapter_name = folder.split("_", 1)[1].replace("_", " ")
+                else:
+                    chapter_name = folder
+                
+                if chapter_name == chapitre:
+                    chapter_path = folder_path
+                    for level_folder in os.listdir(chapter_path):
+                        level_path = os.path.join(chapter_path, level_folder)
+                        if os.path.isdir(level_path):
+                            if "_" in level_folder:
+                                level_num = int(level_folder.split("_")[0])
+                                if level_num == numero:
+                                    niveau_file = os.path.join(level_path, "niveau.json")
+                                    if os.path.exists(niveau_file):
+                                        config = charger_niveau(niveau_file)
+                                    break
+                    break
+    
+    if not config:
+        return
+    
+    # Charger la sauvegarde et appliquer les récompenses
+    sauvegarde_data = sauvegarde.charger()
+    
+    # Vérifier si le niveau n'a pas déjà été complété (pour éviter les récompenses multiples)
+    if not config.completable_plusieurs_fois:
+        if ProgressionManager.est_niveau_complete(sauvegarde_data, chapitre, numero):
+            return  # Niveau déjà complété, pas de récompense
+    
+    # Marquer comme complété
+    ProgressionManager.marquer_niveau_complete(sauvegarde_data, chapitre, numero)
+    
+    # Appliquer les récompenses
+    ProgressionManager.appliquer_recompenses(sauvegarde_data, config)
+    
+    # Sauvegarder
+    sauvegarde.sauvegarder(sauvegarde_data)
+    
+    print(f"Récompenses appliquées pour {chapitre} niveau {numero}:")
+    print(f"- +{config.recompense_cp} CP")
+    if config.unites_debloquees:
+        print(f"- Unités débloquées: {', '.join(config.unites_debloquees)}")

@@ -1,15 +1,16 @@
 {
-  "nom": "Premier Combat",
-  "description": "Votre premier combat contre les morts-vivants !",
-  "chapitre": "Tutoriel",
-  "numero": 1,
+  "nom": "Test 2",
+  "description": "r",
+  "chapitre": "00_Tutoriel",
+  "numero": 0,
   "type_restriction": "faction_libre",
   "unites_imposees": [],
   "placement_impose": false,
   "factions_autorisees": [],
   "faction_unique_requise": false,
+  "faction_imposee": "",
   "cp_disponible": 5,
-  "max_unites": 6,
+  "max_unites": 14,
   "unites_ennemis": [
     [
       "Goule",
@@ -19,10 +20,17 @@
       ]
     ],
     [
-      "Squelette",
+      "Goule",
       [
         3,
-        5
+        4
+      ]
+    ],
+    [
+      "Goule",
+      [
+        4,
+        4
       ]
     ]
   ],

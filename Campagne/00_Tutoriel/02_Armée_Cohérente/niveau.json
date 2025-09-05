@@ -1,0 +1,50 @@
+{
+  "nom": "Armée Cohérente",
+  "description": "Utilisez une seule faction pour ce combat",
+  "chapitre": "Tutoriel",
+  "numero": 2,
+  "type_restriction": "faction_unique",
+  "unites_imposees": [],
+  "placement_impose": false,
+  "factions_autorisees": [],
+  "faction_unique_requise": true,
+  "cp_disponible": 7,
+  "max_unites": 12,
+  "unites_ennemis": [
+    [
+      "Clerc",
+      [
+        1,
+        4
+      ]
+    ],
+    [
+      "Missionnaire",
+      [
+        2,
+        5
+      ]
+    ],
+    [
+      "Clerc",
+      [
+        3,
+        4
+      ]
+    ],
+    [
+      "Missionnaire",
+      [
+        4,
+        6
+      ]
+    ]
+  ],
+  "difficulte_ennemis": "normale",
+  "recompense_cp": 2,
+  "unites_debloquees": [
+    "Paladin"
+  ],
+  "recompenses_autres": [],
+  "completable_plusieurs_fois": false
+}

@@ -9,6 +9,13 @@ from affichage import dessiner
 from input_mod import handle_click
 from tour import reset_actions_tour
 
+def _get_unit_class_by_name(name: str):
+    """Convertit un nom de classe d'unité en vraie classe"""
+    for cls in unites.CLASSES_UNITES:
+        if cls("joueur", (0, 0)).get_nom() == name:
+            return cls
+    raise ValueError(f"Classe d'unité '{name}' non trouvée")
+
 # Constantes (importées si besoin depuis menu)
 BTN_H_RATIO = 0.06
 
@@ -53,8 +60,20 @@ class Jeu:
                     for q in range(-1, 7):
                         enemy_positions.append((q, r))
                 
-                for i, cls in enumerate(initial_enemy_units):
+                for i, enemy_data in enumerate(initial_enemy_units):
                     if i < len(enemy_positions):
+                        # Gestion des deux formats : classe directe ou (nom_classe, position)
+                        if isinstance(enemy_data, tuple) and len(enemy_data) == 2:
+                            # Format (nom_classe, position) - convertir le nom en classe
+                            enemy_name, _ = enemy_data  # Position ignorée en mode placement
+                            if isinstance(enemy_name, str):
+                                cls = _get_unit_class_by_name(enemy_name)
+                            else:
+                                cls = enemy_name  # C'est déjà une classe
+                        else:
+                            # Format classe directe (ancien système)
+                            cls = enemy_data
+                        
                         self.unites.append(cls("ennemi", enemy_positions[i]))
         
         else:
@@ -64,7 +83,19 @@ class Jeu:
                     self.unites.append(cls("joueur", pos))
 
             if initial_enemy_units:
-                for cls, pos in initial_enemy_units:
+                for enemy_data in initial_enemy_units:
+                    # Gestion des deux formats : (classe, position) ou (nom_classe, position)
+                    if isinstance(enemy_data, tuple) and len(enemy_data) == 2:
+                        cls_or_name, pos = enemy_data
+                        if isinstance(cls_or_name, str):
+                            cls = _get_unit_class_by_name(cls_or_name)
+                        else:
+                            cls = cls_or_name  # C'est déjà une classe
+                    else:
+                        # Format ancien - cls directe
+                        cls = enemy_data
+                        pos = (5, 5)  # Position par défaut
+                    
                     # En mode versus, les "ennemis" sont le joueur 2
                     equipe = "joueur2" if versus_mode else "ennemi"
                     self.unites.append(cls(equipe, pos))

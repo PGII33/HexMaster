@@ -47,18 +47,10 @@ class HexaMaster:
 
         # Menu Jouer principal
         self.boutons_playmenu = [
-            Button((center_x-140, h//2-100, 280, 50), "Campagne", self.open_campagne_menu, self.font_med),
+            Button((center_x-140, h//2-100, 280, 50), "Campagne", self.start_campagne, self.font_med),
             Button((center_x-140, h//2-40, 280, 50), "HexArène", self.open_hexarene_menu, self.font_med),
             Button((center_x-140, h//2+20, 280, 50), "JcJ", self.open_jcj_menu, self.font_med),
             Button((20, h-70, 150, 50), "Retour", self.back_to_menu, self.font_med),
-        ]
-
-        # Sous-menu Campagne
-        self.boutons_campagne_menu = [
-            Button((center_x-140, h//2-100, 280, 50), "Tutoriel", self.start_tuto, self.font_med),
-            Button((center_x-140, h//2-40, 280, 50), "La grande église", self.start_campagne, self.font_med),
-            Button((center_x-140, h//2+20, 280, 50), "Chapitre x", self.start_chapitre_placeholder, self.font_med),
-            Button((20, h-70, 150, 50), "Retour", self.back_to_playmenu, self.font_med),
         ]
 
         # Sous-menu HexArène
@@ -91,9 +83,6 @@ class HexaMaster:
     def open_playmenu(self):
         self.etat = "playmenu"
 
-    def open_campagne_menu(self):
-        self.etat = "campagne_menu"
-
     def open_hexarene_menu(self):
         self.etat = "hexarene_menu"
 
@@ -125,10 +114,6 @@ class HexaMaster:
             self.jeu = test_game
             self.etat = "jeu"
 
-    def start_chapitre_placeholder(self):
-        # Placeholder pour les futurs chapitres
-        print("Chapitre x - À implémenter")
-
     def start_en_ligne_placeholder(self):
         # Placeholder pour le mode en ligne
         print("Mode en ligne - À implémenter")
@@ -144,10 +129,11 @@ class HexaMaster:
         if not os.path.exists("Campagne"):
             print("Création de la structure de campagne...")
             try:
-                from create_campaign_levels import create_campaign_structure
-                create_campaign_structure()
-            except ImportError:
-                print("Erreur: Impossible de créer la structure de campagne")
+                from create_demo_levels import creer_niveaux_demo
+                creer_niveaux_demo()
+                print("Structure de campagne créée avec succès")
+            except Exception as e:
+                print(f"Erreur: Impossible de créer la structure de campagne - {e}")
                 return
         
         campagne = Campagne(self.screen)
@@ -163,27 +149,69 @@ class HexaMaster:
             print("Erreur: Niveau non trouvé")
             return
         
-        # Vérifier si c'est un niveau avec unités prédéfinies
-        if niveau_data.get("unites_joueur"):
-            # Mode prédéfini (comme avant)
-            selector = UnitSelector(self.screen, "campagne", 
-                                  unites_predefinies=niveau_data["unites_joueur"])
+        config = niveau_data["config"]
+        player_units = None
+        enable_placement = True
+        
+        # Gestion selon le type de restriction
+        if config.type_restriction.value == "unites_imposees":
+            # Unités prédéfinies
+            player_units = config.unites_imposees
+            enable_placement = not config.placement_impose
+            
+        elif config.type_restriction.value == "faction_libre":
+            # Sélection libre avec contraintes CP/max_unités
+            selector = UnitSelector(self.screen, "campagne_libre", 
+                                  cp_max=config.cp_disponible,
+                                  max_units=config.max_unites,
+                                  faction_imposee=config.faction_imposee)
             player_units = selector.run()
             
             if player_units is None:  # Annulé
                 return
-        else:
-            print("Mode sélection libre pas encore implémenté")
+                
+        elif config.type_restriction.value == "faction_unique":
+            # Sélection avec contrainte faction unique
+            selector = UnitSelector(self.screen, "campagne_faction",
+                                  cp_max=config.cp_disponible,
+                                  max_units=config.max_unites,
+                                  faction_unique=True,
+                                  faction_imposee=config.faction_imposee)
+            player_units = selector.run()
+            
+            if player_units is None:  # Annulé
+                return
+                
+        elif config.type_restriction.value == "factions_definies":
+            # Sélection avec factions limitées
+            selector = UnitSelector(self.screen, "campagne_definies",
+                                  cp_max=config.cp_disponible,
+                                  max_units=config.max_unites,
+                                  factions_autorisees=config.factions_autorisees,
+                                  faction_unique=config.faction_unique_requise,
+                                  faction_imposee=config.faction_imposee)
+            player_units = selector.run()
+            
+            if player_units is None:  # Annulé
+                return
+        
+        if player_units is None:
+            print("Erreur: Aucune unité sélectionnée")
             return
         
+        # Créer le jeu
+        import ia
         self.jeu = Jeu(
             ia_strategy=ia.cible_faible,
             screen=self.screen,
             initial_player_units=player_units,
-            initial_enemy_units=niveau_data["unites_ennemis"],
-            enable_placement=False
+            initial_enemy_units=config.unites_ennemis,
+            enable_placement=enable_placement,
+            versus_mode=False
         )
         self.etat = "jeu"
+        
+        # TODO: Appliquer les récompenses à la fin du niveau
 
     def start_hexarene_faction(self):
         """Lance le mode HexArène avec contrainte de faction"""
