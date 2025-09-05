@@ -44,3 +44,68 @@ def charger():
 def sauvegarder(data):
     with open(FICHIER_SAVE, "w") as f:
         json.dump(data, f, indent=2)
+
+
+def appliquer_recompenses_niveau(niveau_config, chapitre_nom, numero_niveau):
+    """Applique les récompenses d'un niveau et marque sa complétion."""
+    if not niveau_config:
+        return
+    
+    data = charger()
+    
+    # Marquer le niveau comme complété
+    if chapitre_nom not in data["campagne_progression"]:
+        data["campagne_progression"][chapitre_nom] = {
+            "niveaux_completes": [],
+            "disponible": True
+        }
+    
+    if numero_niveau not in data["campagne_progression"][chapitre_nom]["niveaux_completes"]:
+        data["campagne_progression"][chapitre_nom]["niveaux_completes"].append(numero_niveau)
+    
+    # Appliquer les récompenses CP
+    if hasattr(niveau_config, 'recompense_cp') and niveau_config.recompense_cp > 0:
+        data["cp"] = data.get("cp", 5) + niveau_config.recompense_cp
+        print(f"Récompense: +{niveau_config.recompense_cp} CP (Total: {data['cp']})")
+    
+    # Appliquer les récompenses PA
+    if hasattr(niveau_config, 'recompense_pa') and niveau_config.recompense_pa > 0:
+        data["pa"] = data.get("pa", 100) + niveau_config.recompense_pa
+        print(f"Récompense: +{niveau_config.recompense_pa} PA (Total: {data['pa']})")
+    
+    # Débloquer les unités récompenses
+    if hasattr(niveau_config, 'unites_debloquees') and niveau_config.unites_debloquees:
+        if "unites" not in data:
+            data["unites"] = ["Goule"]
+        
+        nouvelles_unites = []
+        for unite_nom in niveau_config.unites_debloquees:
+            if unite_nom not in data["unites"]:
+                data["unites"].append(unite_nom)
+                nouvelles_unites.append(unite_nom)
+        
+        if nouvelles_unites:
+            print(f"Nouvelles unités débloquées: {', '.join(nouvelles_unites)}")
+    
+    # Sauvegarder les changements
+    sauvegarder(data)
+    print(f"Niveau {chapitre_nom} - {numero_niveau} complété et sauvegardé!")
+
+
+def niveau_est_complete(chapitre_nom, numero_niveau):
+    """Vérifie si un niveau est déjà complété."""
+    data = charger()
+    
+    if chapitre_nom not in data.get("campagne_progression", {}):
+        return False
+    
+    return numero_niveau in data["campagne_progression"][chapitre_nom].get("niveaux_completes", [])
+
+
+def obtenir_progression_chapitre(chapitre_nom):
+    """Retourne la progression d'un chapitre."""
+    data = charger()
+    return data.get("campagne_progression", {}).get(chapitre_nom, {
+        "niveaux_completes": [],
+        "disponible": False
+    })

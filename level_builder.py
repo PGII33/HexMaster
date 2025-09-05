@@ -511,7 +511,8 @@ class LevelBuilder:
             initial_player_units=unites_joueur,
             initial_enemy_units=self.niveau_config.unites_ennemis,
             enable_placement=not (self.niveau_config.type_restriction == TypeRestriction.UNITES_IMPOSEES and 
-                                 self.niveau_config.placement_impose)
+                                 self.niveau_config.placement_impose),
+            niveau_config=self.niveau_config  # Passer la config pour tests
         )
         
         # Stocker le jeu pour que le menu principal puisse le lancer

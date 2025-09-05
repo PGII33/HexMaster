@@ -45,6 +45,7 @@ class NiveauConfig:
         
         # Récompenses
         self.recompense_cp: int = 1
+        self.recompense_pa: int = 0  # Récompense en PA
         self.unites_debloquees: List[str] = []  # Noms des classes d'unités
         self.recompenses_autres: List[Dict[str, Any]] = []  # Autres récompenses éventuelles
         
@@ -118,6 +119,7 @@ class NiveauConfig:
             ],
             "difficulte_ennemis": self.difficulte_ennemis,
             "recompense_cp": self.recompense_cp,
+            "recompense_pa": self.recompense_pa,
             "unites_debloquees": self.unites_debloquees,
             "recompenses_autres": self.recompenses_autres,
             "completable_plusieurs_fois": self.completable_plusieurs_fois
@@ -155,6 +157,7 @@ class NiveauConfig:
         
         config.difficulte_ennemis = data.get("difficulte_ennemis", "normale")
         config.recompense_cp = data.get("recompense_cp", 1)
+        config.recompense_pa = data.get("recompense_pa", 0)
         config.unites_debloquees = data.get("unites_debloquees", [])
         config.recompenses_autres = data.get("recompenses_autres", [])
         config.completable_plusieurs_fois = data.get("completable_plusieurs_fois", False)

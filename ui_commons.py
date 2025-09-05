@@ -236,7 +236,34 @@ class ProgressionManager:
         return numero in sauvegarde_data["campagne_progression"][chapitre].get("niveaux_completes", [])
     
     @staticmethod
-    def appliquer_recompenses(sauvegarde_data: dict, config_niveau):
+    def appliquer_recompenses_niveau(sauvegarde_data: dict, niveau_config) -> bool:
+        """Applique les récompenses d'un niveau et retourne True si des récompenses ont été appliquées."""
+        if not niveau_config:
+            return False
+        
+        recompenses_appliquees = False
+        
+        # Appliquer les récompenses CP
+        if hasattr(niveau_config, 'cp_recompense') and niveau_config.cp_recompense > 0:
+            sauvegarde_data["cp"] = sauvegarde_data.get("cp", 5) + niveau_config.cp_recompense
+            recompenses_appliquees = True
+        
+        # Appliquer les récompenses PA
+        if hasattr(niveau_config, 'pa_recompense') and niveau_config.pa_recompense > 0:
+            sauvegarde_data["pa"] = sauvegarde_data.get("pa", 100) + niveau_config.pa_recompense
+            recompenses_appliquees = True
+        
+        # Débloquer les unités récompenses
+        if hasattr(niveau_config, 'unites_debloquees') and niveau_config.unites_debloquees:
+            if "unites" not in sauvegarde_data:
+                sauvegarde_data["unites"] = ["Goule"]
+            
+            for unite_nom in niveau_config.unites_debloquees:
+                if unite_nom not in sauvegarde_data["unites"]:
+                    sauvegarde_data["unites"].append(unite_nom)
+                    recompenses_appliquees = True
+        
+        return recompenses_appliquees
         """Applique les récompenses d'un niveau à la sauvegarde"""
         # CP
         if "cp" not in sauvegarde_data:

@@ -207,11 +207,10 @@ class HexaMaster:
             initial_player_units=player_units,
             initial_enemy_units=config.unites_ennemis,
             enable_placement=enable_placement,
-            versus_mode=False
+            versus_mode=False,
+            niveau_config=config  # Passer la configuration du niveau
         )
         self.etat = "jeu"
-        
-        # TODO: Appliquer les récompenses à la fin du niveau
 
     def start_hexarene_faction(self):
         """Lance le mode HexArène avec contrainte de faction"""
@@ -386,6 +385,15 @@ class HexaMaster:
                 if self.jeu:
                     # Vérifier si le jeu est terminé
                     if hasattr(self.jeu, 'finished') and self.jeu.finished:
+                        # Si c'est une victoire en campagne, appliquer les récompenses
+                        if (hasattr(self.jeu, 'player_victory') and self.jeu.player_victory and
+                            hasattr(self.jeu, 'niveau_config') and self.jeu.niveau_config):
+                            # Appliquer les récompenses du niveau
+                            niveau_config = self.jeu.niveau_config
+                            if hasattr(niveau_config, 'chapitre') and hasattr(niveau_config, 'numero'):
+                                from sauvegarde import appliquer_recompenses_niveau
+                                appliquer_recompenses_niveau(niveau_config, niveau_config.chapitre, niveau_config.numero)
+                        
                         self.etat = "menu"
                         self.jeu = None
                     else:

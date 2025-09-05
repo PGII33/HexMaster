@@ -22,7 +22,7 @@ BTN_H_RATIO = 0.06
 class Jeu:
     def __init__(self, ia_strategy=ia.cible_faible, screen=None,
                  initial_player_units=None, initial_enemy_units=None, 
-                 enable_placement=False, versus_mode=False):
+                 enable_placement=False, versus_mode=False, niveau_config=None):
         self.screen = screen if screen is not None else pygame.display.set_mode((1200, 900), pygame.RESIZABLE)
         self.clock = pygame.time.Clock()
 
@@ -115,6 +115,8 @@ class Jeu:
         self.ia_delay_between_actions = 250
 
         self.finished = False
+        self.player_victory = False  # Nouveau: pour distinguer victoire/défaite
+        self.niveau_config = niveau_config  # Nouveau: pour appliquer les récompenses
 
         recalculer_layout(self)
 
@@ -152,6 +154,9 @@ class Jeu:
         
         if not joueurs or not adversaires:
             self.finished = True
+            # Déterminer si c'est une victoire du joueur
+            if joueurs and not adversaires:  # Joueur a des unités vivantes, adversaires non
+                self.player_victory = True
             return
 
         # Tour IA (seulement si pas en mode versus)
