@@ -237,7 +237,8 @@ class HexaMaster:
             screen=self.screen,
             initial_player_units=player_units,
             initial_enemy_units=ia_units,
-            enable_placement=True
+            enable_placement=True,
+            mode_hexarene=True  # Activer le mode hexarene
         )
         self.etat = "jeu"
 
@@ -261,7 +262,8 @@ class HexaMaster:
             screen=self.screen,
             initial_player_units=player_units,
             initial_enemy_units=ia_units,
-            enable_placement=True
+            enable_placement=True,
+            mode_hexarene=True  # Activer le mode hexarene aussi pour le mode libre
         )
         self.etat = "jeu"
 

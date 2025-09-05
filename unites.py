@@ -2,6 +2,19 @@ from collections import deque
 import animations
 import competences as co
 
+# Callback global pour gérer les kills (sera défini par le jeu si besoin)
+_kill_callback = None
+
+def set_kill_callback(callback):
+    """Définit le callback à appeler quand une unité est tuée."""
+    global _kill_callback
+    _kill_callback = callback
+
+def clear_kill_callback():
+    """Supprime le callback de kill."""
+    global _kill_callback
+    _kill_callback = None
+
 class Unite:
     def __init__(self, equipe, pos, pv, dmg, mv, tier, nom, faction, prix=None, comp=None, portee=1, pv_max=None, attaque_max=1):
         self.equipe = equipe
@@ -160,13 +173,22 @@ class Unite:
             self.attaque_restantes -= 1
 
     def mourir(self, toutes_unites):
-        """Gère la mort de l'unité et les compétences déclenchées."""
+        """Gère la mort de l'unité et les compétences déclenchées.
+        Retourne True si l'unité était vivante et est maintenant morte."""
         if self.vivant:
             self.vivant = False
+            
+            # Appeler le callback de kill si défini (pour le mode hexarene)
+            global _kill_callback
+            if _kill_callback:
+                _kill_callback(self)
             
             # Compétences déclenchées à la mort (sauf explosion sacrée qui est gérée dans attaquer)
             if self.comp == "tas d'os":
                 co.tas_d_os(self)
+            
+            return True  # Unité effectivement tuée
+        return False  # Unité déjà morte
 
     def debut_tour(self, toutes_unites, plateau, q_range=None, r_range=None):
         """À appeler au début du tour de l'unité pour déclencher les compétences passives."""

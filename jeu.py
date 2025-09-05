@@ -22,9 +22,14 @@ BTN_H_RATIO = 0.06
 class Jeu:
     def __init__(self, ia_strategy=ia.cible_faible, screen=None,
                  initial_player_units=None, initial_enemy_units=None, 
-                 enable_placement=False, versus_mode=False, niveau_config=None):
+                 enable_placement=False, versus_mode=False, niveau_config=None, 
+                 mode_hexarene=False):
         self.screen = screen if screen is not None else pygame.display.set_mode((1200, 900), pygame.RESIZABLE)
         self.clock = pygame.time.Clock()
+
+        # Mode et configuration
+        self.mode_hexarene = mode_hexarene
+        self.niveau_config = niveau_config
 
         # État du jeu
         self.unites = []
@@ -53,33 +58,41 @@ class Jeu:
                 self.finished = True
                 return
             
-            # Placement automatique des ennemis en zone rouge
+            # Placement automatique des ennemis selon leurs positions définies
             if initial_enemy_units:
-                enemy_positions = []
-                for r in [4, 5, 6]:  # Zone ennemie
-                    for q in range(-1, 7):
-                        enemy_positions.append((q, r))
-                
                 for i, enemy_data in enumerate(initial_enemy_units):
-                    if i < len(enemy_positions):
-                        # Gestion des deux formats : classe directe ou (nom_classe, position)
-                        if isinstance(enemy_data, tuple) and len(enemy_data) == 2:
-                            # Format (nom_classe, position) - convertir le nom en classe
-                            enemy_name, _ = enemy_data  # Position ignorée en mode placement
-                            if isinstance(enemy_name, str):
-                                cls = _get_unit_class_by_name(enemy_name)
-                            else:
-                                cls = enemy_name  # C'est déjà une classe
+                    # Gestion des deux formats : classe directe ou (nom_classe, position)
+                    if isinstance(enemy_data, tuple) and len(enemy_data) == 2:
+                        # Format (nom_classe, position) ou (classe, position)
+                        enemy_name_or_class, enemy_position = enemy_data
+                        if isinstance(enemy_name_or_class, str):
+                            cls = _get_unit_class_by_name(enemy_name_or_class)
                         else:
-                            # Format classe directe (ancien système)
-                            cls = enemy_data
+                            cls = enemy_name_or_class  # C'est déjà une classe
                         
-                        self.unites.append(cls("ennemi", enemy_positions[i]))
+                        # Utiliser la position définie, pas une position automatique
+                        # Convertir la liste en tuple si nécessaire (problème JSON)
+                        if isinstance(enemy_position, list):
+                            enemy_position = tuple(enemy_position)
+                        self.unites.append(cls("ennemi", enemy_position))
+                    else:
+                        # Format classe directe (ancien système) - utiliser position par défaut
+                        cls = enemy_data
+                        # Fallback: placer en zone rouge si pas de position spécifiée
+                        fallback_positions = []
+                        for r in [4, 5, 6]:  # Zone ennemie
+                            for q in range(-1, 7):
+                                fallback_positions.append((q, r))
+                        pos = fallback_positions[i] if i < len(fallback_positions) else (5, 5)
+                        self.unites.append(cls("ennemi", pos))
         
         else:
             # Mode sans placement : initial_player_units contient [(classe, position), ...]
             if initial_player_units:
                 for cls, pos in initial_player_units:
+                    # Convertir la liste en tuple si nécessaire (problème JSON)
+                    if isinstance(pos, list):
+                        pos = tuple(pos)
                     self.unites.append(cls("joueur", pos))
 
             if initial_enemy_units:
@@ -91,6 +104,10 @@ class Jeu:
                             cls = _get_unit_class_by_name(cls_or_name)
                         else:
                             cls = cls_or_name  # C'est déjà une classe
+                        
+                        # Convertir la liste en tuple si nécessaire (problème JSON)
+                        if isinstance(pos, list):
+                            pos = tuple(pos)
                     else:
                         # Format ancien - cls directe
                         cls = enemy_data
@@ -118,7 +135,25 @@ class Jeu:
         self.player_victory = False  # Nouveau: pour distinguer victoire/défaite
         self.niveau_config = niveau_config  # Nouveau: pour appliquer les récompenses
 
+        # Configuration du callback de kill pour le mode hexarene
+        if self.mode_hexarene:
+            import unites
+            unites.set_kill_callback(self.on_enemy_killed)
+
         recalculer_layout(self)
+
+    def on_enemy_killed(self, killed_unit):
+        """Appelé quand une unité ennemie est tuée. Gère les gains de PA en mode hexarene."""
+        if self.mode_hexarene and killed_unit.equipe == "ennemi":
+            import sauvegarde
+            data = sauvegarde.charger()
+            
+            # Gagner des PA égaux au tier de l'unité tuée
+            pa_gagne = killed_unit.tier
+            data["pa"] = data.get("pa", 100) + pa_gagne
+            
+            sauvegarde.sauvegarder(data)
+            print(f"💰 +{pa_gagne} PA pour avoir tué {killed_unit.nom} (Tier {killed_unit.tier})")
 
     def recalculer_layout(self):
         recalculer_layout(self)
@@ -157,6 +192,11 @@ class Jeu:
             # Déterminer si c'est une victoire du joueur
             if joueurs and not adversaires:  # Joueur a des unités vivantes, adversaires non
                 self.player_victory = True
+            
+            # Nettoyer le callback en mode hexarene
+            if self.mode_hexarene:
+                import unites
+                unites.clear_kill_callback()
             return
 
         # Tour IA (seulement si pas en mode versus)

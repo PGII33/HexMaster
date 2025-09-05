@@ -105,10 +105,15 @@ class LevelBuilder:
                                         lambda: self.modifier_cp_recompense(1),
                                         lambda: self.modifier_cp_recompense(-1))
             
+            # Boutons pour modifier les PA de récompense
+            self.ui.add_increment_buttons(550, 170,
+                                        lambda: self.modifier_pa_recompense(10),
+                                        lambda: self.modifier_pa_recompense(-10))
+            
             # Boutons pour gérer les unités débloquées
-            self.ui.add_button((550, 170, 100, 30), "Ajouter", self.ajouter_unite_debloquee, self.ui.font_small)
-            self.ui.add_button((660, 170, 100, 30), "Retirer", self.retirer_unite_debloquee, self.ui.font_small)
-            self.ui.add_button((770, 170, 100, 30), "Effacer", self.effacer_unites_debloquees, self.ui.font_small)
+            self.ui.add_button((550, 220, 100, 30), "Ajouter", self.ajouter_unite_debloquee, self.ui.font_small)
+            self.ui.add_button((660, 220, 100, 30), "Retirer", self.retirer_unite_debloquee, self.ui.font_small)
+            self.ui.add_button((770, 220, 100, 30), "Effacer", self.effacer_unites_debloquees, self.ui.font_small)
             
             # Navigation
             actions = [
@@ -183,6 +188,11 @@ class LevelBuilder:
         """Modifie les CP de récompense"""
         new_value = self.niveau_config.recompense_cp + delta
         self.niveau_config.recompense_cp = max(0, min(10, new_value))
+    
+    def modifier_pa_recompense(self, delta):
+        """Modifie les PA de récompense"""
+        new_value = self.niveau_config.recompense_pa + delta
+        self.niveau_config.recompense_pa = max(0, min(500, new_value))  # Max 500 PA
     
     def ajouter_unite_debloquee(self):
         """Lance l'interface de sélection d'unité à débloquer"""
@@ -636,6 +646,11 @@ class LevelBuilder:
         self.ui.draw_text(str(self.niveau_config.recompense_cp), 350, y)
         y += 50
         
+        # PA gagnés
+        self.ui.draw_text("PA gagnés à la victoire:", 50, y)
+        self.ui.draw_text(str(self.niveau_config.recompense_pa), 350, y)
+        y += 50
+        
         # Unités débloquées
         self.ui.draw_text("Unités débloquées:", 50, y, color=(50, 50, 150))
         y += 30
@@ -672,6 +687,7 @@ class LevelBuilder:
             f"CP joueur: {self.niveau_config.cp_disponible}",
             f"Unités max: {self.niveau_config.max_unites}",
             f"Récompense CP: {self.niveau_config.recompense_cp}",
+            f"Récompense PA: {self.niveau_config.recompense_pa}",
             f"Unités débloquées: {len(self.niveau_config.unites_debloquees)}",
         ]
         
