@@ -368,7 +368,7 @@ class Ange(Unite):
 
 class ArchAnge(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="ArchAnge", pv=18, dmg=6, mv=3, tier=4, faction="Religieux", comp="aura sacrée", portee=2)
+        super().__init__(equipe, pos, nom="ArchAnge", pv=20, dmg=12, mv=3, tier=4, faction="Religieux", comp="aura sacrée", portee=2)
 
 
 # Liste des classes utilisables
