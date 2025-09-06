@@ -321,11 +321,11 @@ class Spectre(Unite):
 class Zombie_BASE(Unite):
     """ Pour crée les zombies zombifiés """
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Zombie", pv=12, dmg=2, mv=2, tier=2, faction="Morts-Vivants")
+        super().__init__(equipe, pos, nom="Zombie", pv=13, dmg=2, mv=2, tier=2, faction="Morts-Vivants")
 
 class Zombie(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Zombie", pv=12, dmg=2, mv=2, tier=2, comp="zombification", faction="Morts-Vivants")
+        super().__init__(equipe, pos, nom="Zombie", pv=13, dmg=2, mv=2, tier=2, comp="zombification", faction="Morts-Vivants")
 
 class Vampire(Unite):
     def __init__(self, equipe, pos):
@@ -368,7 +368,7 @@ class Ange(Unite):
 
 class ArchAnge(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="ArchAnge", pv=20, dmg=12, mv=3, tier=4, faction="Religieux", comp="aura sacrée", portee=2)
+        super().__init__(equipe, pos, nom="ArchAnge", pv=20, dmg=13, mv=3, tier=4, faction="Religieux", comp="aura sacrée", portee=2)
 
 
 # Liste des classes utilisables
