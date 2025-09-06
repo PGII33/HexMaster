@@ -41,11 +41,14 @@ class UIManager:
         if len(actions) > 0:
             self.add_button((20, y_bottom - 70, 150, 50), actions[0][0], actions[0][1])
         
-        # Autres boutons centrés
+        # Autres boutons centrés avec largeur adaptative
         for i, (text, action) in enumerate(actions[1:], 1):
-            x = w // 2 - 100
+            # Calculer la largeur nécessaire selon la longueur du texte
+            text_width = len(text) * 12  # Approximation : 12px par caractère
+            button_width = max(200, text_width + 40)  # Minimum 200px, avec padding
+            x = w // 2 - button_width // 2  # Centrer le bouton
             y = y_bottom - 150 + (i - 1) * 60
-            self.add_button((x, y, 200, 40), text, action)
+            self.add_button((x, y, button_width, 40), text, action)
     
     def add_increment_buttons(self, x: int, y: int, increment_func: Callable, 
                             decrement_func: Callable) -> Tuple[Button, Button]:

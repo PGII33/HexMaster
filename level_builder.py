@@ -61,7 +61,10 @@ class LevelBuilder:
             self.ui.add_navigation_buttons(h, actions)
         
         elif self.etat == "restrictions_config":
-            # Boutons pour modifier les valeurs (seulement si applicable)
+            # Bouton pour changer le type de restriction (toujours disponible)
+            self.ui.add_button((550, 120, 120, 30), "Changer", self.changer_type_restriction, self.ui.font_small)
+            
+            # Boutons pour modifier les valeurs (seulement si les unités ne sont pas imposées)
             if self.niveau_config.type_restriction != TypeRestriction.UNITES_IMPOSEES:
                 # CP disponible (ligne y=170)
                 self.ui.add_increment_buttons(550, 170, 
@@ -73,11 +76,7 @@ class LevelBuilder:
                                             lambda: self.modifier_max_units(1),
                                             lambda: self.modifier_max_units(-1))
             
-            # Bouton pour changer le type de restriction (ligne y=120)
-            self.ui.add_button((550, 120, 120, 30), "Changer", self.changer_type_restriction, self.ui.font_small)
-            
-            # Boutons pour les options de faction (calcul dynamique basé sur les positions réelles)
-            # La position y dépend du type de restriction et des éléments affichés
+            # Calcul dynamique des positions pour les boutons de faction
             base_y = 170  # Position après "Type de restriction"
             
             if self.niveau_config.type_restriction != TypeRestriction.UNITES_IMPOSEES:
@@ -304,6 +303,8 @@ class LevelBuilder:
         current_index = types.index(self.niveau_config.type_restriction)
         next_index = (current_index + 1) % len(types)
         self.niveau_config.type_restriction = types[next_index]
+        # Recréer les boutons pour refléter le nouveau type de restriction
+        self.creer_boutons()
     
     def modifier_cp_recompense(self, delta):
         """Modifie les CP de récompense"""
@@ -922,39 +923,44 @@ class LevelBuilder:
         self.ui.draw_text("1. Sélectionnez les unités ennemies", 50, 120, color=(100, 100, 100))
         self.ui.draw_text("2. Placez-les sur la carte", 50, 140, color=(100, 100, 100))
         
-        # Afficher les unités sélectionnées
+        # Organiser l'affichage en deux colonnes pour éviter la superposition
+        w = self.screen.get_width()
+        col1_x = 50  # Colonne gauche : unités sélectionnées
+        col2_x = w // 2 + 50  # Colonne droite : placement actuel
+        start_y = 220
+        
+        # Afficher les unités sélectionnées (colonne gauche)
         if self.enemy_units_selected:
-            self.ui.draw_text(f"Unités sélectionnées: {len(self.enemy_units_selected)}", 50, 220, color=(0, 150, 0))
+            self.ui.draw_text(f"Unités sélectionnées: {len(self.enemy_units_selected)}", col1_x, start_y, color=(0, 150, 0))
             
-            y = 250
-            for i, cls in enumerate(self.enemy_units_selected[:10]):  # Limiter l'affichage
+            y = start_y + 30
+            for i, cls in enumerate(self.enemy_units_selected[:12]):  # Afficher plus d'unités
                 tmp = cls("ennemi", (0, 0))
                 unit_text = f"- {tmp.get_nom()} ({tmp.faction})"
-                self.ui.draw_text(unit_text, 70, y, font=self.ui.font_small)
+                self.ui.draw_text(unit_text, col1_x + 20, y, font=self.ui.font_small)
                 y += 25
             
-            if len(self.enemy_units_selected) > 10:
-                self.ui.draw_text(f"... et {len(self.enemy_units_selected) - 10} autres", 70, y, 
+            if len(self.enemy_units_selected) > 12:
+                self.ui.draw_text(f"... et {len(self.enemy_units_selected) - 12} autres", col1_x + 20, y, 
                                 font=self.ui.font_small, color=(100, 100, 100))
         else:
-            self.ui.draw_text("Aucune unité sélectionnée", 50, 220, color=(200, 0, 0))
+            self.ui.draw_text("Aucune unité sélectionnée", col1_x, start_y, color=(200, 0, 0))
         
-        # Afficher le placement actuel si on est en mode modification
+        # Afficher le placement actuel (colonne droite) si on est en mode modification
         if (hasattr(self, 'niveau_selectionne') and self.niveau_selectionne and 
             self.niveau_config.unites_ennemis):
             
-            y_placement = 400
-            self.ui.draw_text("Placement actuel:", 50, y_placement, color=(0, 0, 150))
-            y_placement += 30
+            self.ui.draw_text("Placement actuel:", col2_x, start_y, color=(0, 0, 150))
+            y_placement = start_y + 30
             
-            for i, (unit_class, position) in enumerate(self.niveau_config.unites_ennemis[:8]):  # Limiter l'affichage
+            for i, (unit_class, position) in enumerate(self.niveau_config.unites_ennemis[:12]):  # Afficher plus d'unités
                 tmp = unit_class("ennemi", position)
                 placement_text = f"- {tmp.get_nom()} à {position}"
-                self.ui.draw_text(placement_text, 70, y_placement, font=self.ui.font_small, color=(50, 50, 150))
+                self.ui.draw_text(placement_text, col2_x + 20, y_placement, font=self.ui.font_small, color=(50, 50, 150))
                 y_placement += 25
             
-            if len(self.niveau_config.unites_ennemis) > 8:
-                self.ui.draw_text(f"... et {len(self.niveau_config.unites_ennemis) - 8} autres", 70, y_placement, 
+            if len(self.niveau_config.unites_ennemis) > 12:
+                self.ui.draw_text(f"... et {len(self.niveau_config.unites_ennemis) - 12} autres", col2_x + 20, y_placement, 
                                 font=self.ui.font_small, color=(100, 100, 100))
         
         self.ui.draw_buttons()
