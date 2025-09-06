@@ -1,0 +1,43 @@
+{
+  "nom": "Empty Name",
+  "description": "Rien",
+  "chapitre": "01_Religieux",
+  "numero": 1,
+  "type_restriction": "faction_unique",
+  "unites_imposees": [],
+  "placement_impose": false,
+  "factions_autorisees": [],
+  "faction_unique_requise": false,
+  "faction_imposee": "",
+  "cp_disponible": 3,
+  "max_unites": 3,
+  "unites_ennemis": [
+    [
+      "Fanatique",
+      [
+        -1,
+        5
+      ]
+    ],
+    [
+      "Fanatique",
+      [
+        6,
+        5
+      ]
+    ],
+    [
+      "Missionnaire",
+      [
+        2,
+        4
+      ]
+    ]
+  ],
+  "difficulte_ennemis": "normale",
+  "recompense_cp": 1,
+  "recompense_pa": 20,
+  "unites_debloquees": [],
+  "recompenses_autres": [],
+  "completable_plusieurs_fois": false
+}

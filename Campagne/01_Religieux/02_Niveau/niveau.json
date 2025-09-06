@@ -1,0 +1,64 @@
+{
+  "nom": "Empty Name",
+  "description": "",
+  "chapitre": "01_Religieux",
+  "numero": 2,
+  "type_restriction": "faction_unique",
+  "unites_imposees": [],
+  "placement_impose": false,
+  "factions_autorisees": [],
+  "faction_unique_requise": false,
+  "faction_imposee": "",
+  "cp_disponible": 5,
+  "max_unites": 5,
+  "unites_ennemis": [
+    [
+      "Fanatique",
+      [
+        -1,
+        4
+      ]
+    ],
+    [
+      "Fanatique",
+      [
+        0,
+        4
+      ]
+    ],
+    [
+      "Fanatique",
+      [
+        6,
+        4
+      ]
+    ],
+    [
+      "Esprit_Saint",
+      [
+        2,
+        5
+      ]
+    ],
+    [
+      "Clerc",
+      [
+        3,
+        5
+      ]
+    ],
+    [
+      "Missionnaire",
+      [
+        3,
+        4
+      ]
+    ]
+  ],
+  "difficulte_ennemis": "normale",
+  "recompense_cp": 1,
+  "recompense_pa": 20,
+  "unites_debloquees": [],
+  "recompenses_autres": [],
+  "completable_plusieurs_fois": false
+}

@@ -1,0 +1,78 @@
+{
+  "nom": "Empty Name",
+  "description": "",
+  "chapitre": "01_Religieux",
+  "numero": 5,
+  "type_restriction": "faction_unique",
+  "unites_imposees": [],
+  "placement_impose": false,
+  "factions_autorisees": [],
+  "faction_unique_requise": false,
+  "faction_imposee": "",
+  "cp_disponible": 14,
+  "max_unites": 10,
+  "unites_ennemis": [
+    [
+      "Fanatique",
+      [
+        2,
+        4
+      ]
+    ],
+    [
+      "Fanatique",
+      [
+        3,
+        4
+      ]
+    ],
+    [
+      "Fanatique",
+      [
+        4,
+        4
+      ]
+    ],
+    [
+      "Esprit_Saint",
+      [
+        3,
+        6
+      ]
+    ],
+    [
+      "Esprit_Saint",
+      [
+        1,
+        6
+      ]
+    ],
+    [
+      "Ange",
+      [
+        2,
+        6
+      ]
+    ],
+    [
+      "Paladin",
+      [
+        2,
+        5
+      ]
+    ],
+    [
+      "Paladin",
+      [
+        3,
+        5
+      ]
+    ]
+  ],
+  "difficulte_ennemis": "normale",
+  "recompense_cp": 1,
+  "recompense_pa": 200,
+  "unites_debloquees": [],
+  "recompenses_autres": [],
+  "completable_plusieurs_fois": false
+}
