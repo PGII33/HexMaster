@@ -218,10 +218,62 @@ class Jeu:
                 if self.ia_timer_ms <= 0:
                     e = self.ia_queue[self.ia_index]
                     joueurs_courants = [u for u in self.unites if u.equipe == "joueur" and u.vivant]
+                    
+                    # Mémoriser l'état avant l'action IA
+                    attaques_avant = e.attaque_restantes if hasattr(e, 'attaque_restantes') else 0
+                    position_avant = e.pos
+                    ennemis_vivants_avant = len([u for u in self.unites if u.equipe != e.equipe and u.vivant])
+                    
+                    # Protection contre les boucles infinies : compteur de tentatives
+                    if not hasattr(e, '_ia_tentatives_tour'):
+                        e._ia_tentatives_tour = 0
+                    
+                    e._ia_tentatives_tour += 1
+                    
                     if self.ia_strategy:
                         self.ia_strategy(e, joueurs_courants, self.unites)
+                    
+                    # Vérifier l'état après l'action IA
+                    attaques_apres = e.attaque_restantes if hasattr(e, 'attaque_restantes') else 0
+                    position_apres = e.pos
+                    ennemis_vivants_apres = len([u for u in self.unites if u.equipe != e.equipe and u.vivant])
+                    
+                    # Conditions pour continuer :
+                    # 1. L'unité a encore des attaques
+                    # 2. Elle en avait avant (peut encore agir)
+                    # 3. Elle est vivante
+                    # 4. Pas trop de tentatives (protection contre boucles infinies)
+                    peut_continuer = (attaques_apres > 0 and 
+                                    attaques_avant > 0 and 
+                                    e.vivant and 
+                                    e._ia_tentatives_tour < 10)  # Max 10 actions par tour
+                    
+                    if peut_continuer:
+                        # Détecter si l'IA a fait quelque chose :
+                        # 1. A utilisé une attaque (même si regagnée par un passif)
+                        # 2. A bougé
+                        # 3. A tué un ennemi (important pour lumière vengeresse !)
+                        action_effectuee = (attaques_apres < attaques_avant or  # Attaque utilisée nette
+                                          position_apres != position_avant or   # A bougé
+                                          ennemis_vivants_apres < ennemis_vivants_avant)  # A tué quelqu'un
+                        
+                        if action_effectuee:
+                            # Rester sur la même unité pour qu'elle continue à agir
+                            if hasattr(e, '_derniere_position'):
+                                e._derniere_position = e.pos  # Mettre à jour la position
+                            print(f"IA continue: {type(e).__name__} a {attaques_apres} attaque(s) restante(s)")
+                            pass  # Ne pas incrémenter ia_index
+                        else:
+                            # L'IA n'a rien fait, passer à l'unité suivante pour éviter la boucle
+                            print(f"IA bloquée sur {type(e).__name__} - passage à l'unité suivante")
+                            e._ia_tentatives_tour = 0  # Reset pour le prochain tour
+                            self.ia_index += 1
+                    else:
+                        # Passer à l'unité suivante
+                        e._ia_tentatives_tour = 0  # Reset pour le prochain tour
+                        self.ia_index += 1
+                    
                     self.ia_timer_ms = self.ia_delay_between_actions
-                    self.ia_index += 1
             else:
                 self.changer_tour()
                 self.ia_busy = False

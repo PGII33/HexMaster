@@ -432,6 +432,15 @@ def _evaluer_cible(unite, ennemi, unites, allies):
         if ennemi.comp in competences_dangereuses:
             score += 15
     
+    # BONUS SPÉCIAL: Lumière vengeresse contre les morts-vivants
+    if (hasattr(unite, 'comp') and unite.comp == "lumière vengeresse" and 
+        hasattr(ennemi, 'faction') and ennemi.faction == "Morts-Vivants"):
+        # Gros bonus pour cibler les morts-vivants car cela donne une attaque supplémentaire
+        score += 30
+        # Bonus encore plus gros si on peut les tuer d'un coup (attaque gratuite)
+        if ennemi.pv <= unite.dmg:
+            score += 50
+    
     return max(0, score)
 
 
