@@ -172,8 +172,11 @@ class Unite:
         # Les dégâts restants vont aux PV
         self.pv -= degats
     
-    def attaquer(self, autre):
+    def attaquer(self, autre, toutes_unites=None):
         """Applique l'animation et les dégâts séparément."""
+        if toutes_unites is None:
+            toutes_unites = []
+            
         if self.attaque_restantes > 0 and self.est_a_portee(autre) and autre.vivant:
             self.attaque_restantes -= 1
 
@@ -185,8 +188,8 @@ class Unite:
             
             # Gestion spéciale pour explosion sacrée
             if self.comp == "explosion sacrée":
-                # Le Fanatique inflige ses PV en dégâts et se sacrifie
-                co.explosion_sacrée(self, [], autre)  # Passer la cible
+                # Le Fanatique inflige ses PV en dégâts et se sacrifie après l'animation
+                co.explosion_sacrée(self, toutes_unites, autre)  # Passer toutes les unités et la cible
                 # Ne pas faire l'attaque normale, l'explosion sacrée remplace tout
             else:
                 # Attaque normale
@@ -200,7 +203,7 @@ class Unite:
                 if self.comp == "lumière vengeresse" and cible_tuée:
                     co.lumière_vengeresse(self, autre)
                 
-                if self.comp == "zombification":
+                if self.comp == "zombification" and cible_tuée:
                     co.zombification(self, autre)
 
     def mourir(self, toutes_unites):
@@ -305,7 +308,7 @@ class Tas_D_Os(Unite):
 
 class Goule(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Goule", pv=10, dmg=2, mv=1, tier=1, faction="Morts-Vivants")
+        super().__init__(equipe, pos, nom="Goule", pv=20, dmg=2, mv=1, tier=1, faction="Morts-Vivants")
 
 class Squelette(Unite):
     def __init__(self, equipe, pos):
@@ -313,39 +316,39 @@ class Squelette(Unite):
 
 class Spectre(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Spectre", pv=6, dmg=4, mv=1, tier=1, comp="fantomatique", faction="Morts-Vivants")
+        super().__init__(equipe, pos, nom="Spectre", pv=5, dmg=4, mv=1, tier=1, comp="fantomatique", faction="Morts-Vivants")
 
 class Zombie_BASE(Unite):
     """ Pour crée les zombies zombifiés """
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Zombie", pv=8, dmg=4, mv=1, tier=2, faction="Morts-Vivants")
+        super().__init__(equipe, pos, nom="Zombie", pv=12, dmg=2, mv=2, tier=2, faction="Morts-Vivants")
 
 class Zombie(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Zombie", pv=8, dmg=4, mv=1, tier=2, comp="zombification", faction="Morts-Vivants")
+        super().__init__(equipe, pos, nom="Zombie", pv=12, dmg=2, mv=2, tier=2, comp="zombification", faction="Morts-Vivants")
 
 class Vampire(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Vampire", pv=12, dmg=3, mv=2, tier=2, comp="sangsue", faction="Morts-Vivants")
+        super().__init__(equipe, pos, nom="Vampire", pv=15, dmg=3, mv=2, tier=2, comp="sangsue", faction="Morts-Vivants")
 
 class Liche(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Liche", pv=7, dmg=1, mv=2, tier=3, comp="nécromancie", faction="Morts-Vivants")
+        super().__init__(equipe, pos, nom="Liche", pv=9, dmg=1, mv=2, tier=3, comp="nécromancie", faction="Morts-Vivants")
 
 class Archliche(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Archliche", pv=10, dmg=2, mv=2, tier=4, comp="invocation", faction="Morts-Vivants")
+        super().__init__(equipe, pos, nom="Archliche", pv=18, dmg=1, mv=2, tier=4, comp="invocation", faction="Morts-Vivants")
 
 
 # Religieux
 
 class Missionnaire(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Missionnaire", pv=8, dmg=3, mv=2, tier=1, faction="Religieux")
+        super().__init__(equipe, pos, nom="Missionnaire", pv=8, dmg=2, mv=2, tier=1, faction="Religieux")
 
 class Clerc(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Clerc", pv=6, dmg=2, mv=1, tier=1, faction="Religieux", comp="soin")
+        super().__init__(equipe, pos, nom="Clerc", pv=5, dmg=0, mv=1, tier=1, faction="Religieux", comp="soin", attaque_max=0)
 
 class Fanatique(Unite):
     def __init__(self, equipe, pos):
@@ -353,15 +356,15 @@ class Fanatique(Unite):
 
 class Esprit_Saint(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Esprit Saint", pv=10, dmg=3, mv=2, tier=2, faction="Religieux", comp="bouclier de la foi")
+        super().__init__(equipe, pos, nom="Esprit Saint", pv=8, dmg=1, mv=2, tier=2, faction="Religieux", comp="bouclier de la foi")
 
 class Paladin(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Paladin", pv=15, dmg=4, mv=2, tier=2, faction="Religieux", comp="bénédiction")
+        super().__init__(equipe, pos, nom="Paladin", pv=13, dmg=3, mv=2, tier=2, faction="Religieux", comp="bénédiction")
 
 class Ange(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Ange", pv=12, dmg=5, mv=2, tier=3, faction="Religieux", comp="lumière vengeresse", portee=2)
+        super().__init__(equipe, pos, nom="Ange", pv=12, dmg=8, mv=2, tier=3, faction="Religieux", comp="lumière vengeresse", portee=2)
 
 class ArchAnge(Unite):
     def __init__(self, equipe, pos):

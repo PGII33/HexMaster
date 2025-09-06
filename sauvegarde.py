@@ -53,14 +53,23 @@ def appliquer_recompenses_niveau(niveau_config, chapitre_nom, numero_niveau):
     
     data = charger()
     
-    # Marquer le niveau comme complété
+    # Vérifier si le niveau est déjà complété
     if chapitre_nom not in data["campagne_progression"]:
         data["campagne_progression"][chapitre_nom] = {
             "niveaux_completes": [],
             "disponible": True
         }
     
-    if numero_niveau not in data["campagne_progression"][chapitre_nom]["niveaux_completes"]:
+    niveau_deja_complete = numero_niveau in data["campagne_progression"][chapitre_nom]["niveaux_completes"]
+    
+    # Si le niveau ne peut pas être complété plusieurs fois et qu'il est déjà complété, pas de récompense
+    if hasattr(niveau_config, 'completable_plusieurs_fois') and not niveau_config.completable_plusieurs_fois:
+        if niveau_deja_complete:
+            print(f"Niveau {chapitre_nom} - {numero_niveau} déjà complété, pas de récompense supplémentaire.")
+            return
+    
+    # Marquer le niveau comme complété (même si déjà complété pour les niveaux répétables)
+    if not niveau_deja_complete:
         data["campagne_progression"][chapitre_nom]["niveaux_completes"].append(numero_niveau)
     
     # Appliquer les récompenses CP
@@ -73,8 +82,8 @@ def appliquer_recompenses_niveau(niveau_config, chapitre_nom, numero_niveau):
         data["pa"] = data.get("pa", 100) + niveau_config.recompense_pa
         print(f"Récompense: +{niveau_config.recompense_pa} PA (Total: {data['pa']})")
     
-    # Débloquer les unités récompenses
-    if hasattr(niveau_config, 'unites_debloquees') and niveau_config.unites_debloquees:
+    # Débloquer les unités récompenses (seulement si pas déjà complété)
+    if hasattr(niveau_config, 'unites_debloquees') and niveau_config.unites_debloquees and not niveau_deja_complete:
         if "unites" not in data:
             data["unites"] = ["Goule"]
         
@@ -89,7 +98,10 @@ def appliquer_recompenses_niveau(niveau_config, chapitre_nom, numero_niveau):
     
     # Sauvegarder les changements
     sauvegarder(data)
-    print(f"Niveau {chapitre_nom} - {numero_niveau} complété et sauvegardé!")
+    if niveau_deja_complete and hasattr(niveau_config, 'completable_plusieurs_fois') and niveau_config.completable_plusieurs_fois:
+        print(f"Niveau {chapitre_nom} - {numero_niveau} complété à nouveau!")
+    else:
+        print(f"Niveau {chapitre_nom} - {numero_niveau} complété et sauvegardé!")
 
 
 def niveau_est_complete(chapitre_nom, numero_niveau):

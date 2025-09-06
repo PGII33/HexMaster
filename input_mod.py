@@ -66,7 +66,7 @@ def handle_click(jeu, mx, my):
                     and jeu.selection.est_a_portee(u)
                 ):
                     # Attaquer l'unité adverse
-                    jeu.selection.attaquer(u)
+                    jeu.selection.attaquer(u, jeu.unites)
                     # Met à jour les cases accessibles après l'attaque
                     jeu.deplacement_possibles = jeu.selection.cases_accessibles(jeu.unites, jeu.q_range, jeu.r_range)
                 else:

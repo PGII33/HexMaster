@@ -232,7 +232,7 @@ def cible_faible(unite, ennemis, unites):
                 unite.pos = best_pos
                 unite.pm -= cout
             # Une seule attaque
-            unite.attaquer(cible)
+            unite.attaquer(cible, unites)
             if action_effectuee is None:
                 return "attaque"
             else:
@@ -258,7 +258,7 @@ def cible_faible(unite, ennemis, unites):
             if pos != unite.pos:
                 unite.pos = pos
                 unite.pm -= cout
-            unite.attaquer(enn)
+            unite.attaquer(enn, unites)
             if action_effectuee is None:
                 return "attaque"
             else:
@@ -371,7 +371,7 @@ def _strategie_attaque_adaptative(unite, ennemis, unites, allies):
             if meilleure_pos != unite.pos:
                 unite.pos = meilleure_pos
                 unite.pm -= cout
-            unite.attaquer(cible_prioritaire)
+            unite.attaquer(cible_prioritaire, unites)
             return "attaque_tactique"
     
     # Attaque d'opportunité sur n'importe quelle cible
@@ -388,7 +388,7 @@ def _strategie_attaque_adaptative(unite, ennemis, unites, allies):
                 if meilleure_pos != unite.pos:
                     unite.pos = meilleure_pos
                     unite.pm -= cout
-                unite.attaquer(cible)
+                unite.attaquer(cible, unites)
                 return "attaque_opportunite"
     
     # Mouvement tactique

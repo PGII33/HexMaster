@@ -158,6 +158,7 @@ class HexaMaster:
             selector = UnitSelector(self.screen, "campagne_libre", 
                                   cp_max=config.cp_disponible,
                                   max_units=config.max_unites,
+                                  faction_unique=config.faction_unique_requise,
                                   faction_imposee=config.faction_imposee)
             player_units = selector.run()
             

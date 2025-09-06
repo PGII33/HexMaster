@@ -177,6 +177,11 @@ class Jeu:
             if u.anim:
                 if u.anim.update(dt_ms):
                     u.anim = None
+                    # Vérifier si c'est une explosion sacrée qui doit mourir après l'animation
+                    if hasattr(u, 'explosion_sacree_pending') and u.explosion_sacree_pending:
+                        u.explosion_sacree_pending = False
+                        u.vivant = False
+                        u.pv = 0
 
         # Vérifier fin
         joueurs = [u for u in self.unites if u.equipe == "joueur" and u.vivant]

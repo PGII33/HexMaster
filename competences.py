@@ -121,31 +121,17 @@ def soin(self, cible):
     return False
 
 def explosion_sacrée(self, toutes_unites, cible_attaquee=None):
-    """Se sacrifie en attaquant pour infliger ses points de vie en dégâts à la cible et aux ennemis adjacents."""
-    directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
-    q, r = self.pos
+    """Se sacrifie en attaquant pour infliger ses points de vie en dégâts à la cible uniquement."""
     degats = self.pv  # Utilise ses PV actuels comme dégâts
     
-    # Infliger des dégâts aux unités adjacentes ennemies
-    for unite in toutes_unites:
-        if unite.equipe != self.equipe and unite.vivant:
-            unite_q, unite_r = unite.pos
-            for dq, dr in directions:
-                if (q+dq, r+dr) == (unite_q, unite_r):
-                    unite.subir_degats(degats)
-                    if unite.pv <= 0:
-                        unite.mourir(toutes_unites)
-                    break
-    
-    # Infliger aussi des dégâts à la cible directe si c'est un ennemi
+    # Infliger des dégâts uniquement à la cible directe si c'est un ennemi
     if cible_attaquee and cible_attaquee.equipe != self.equipe and cible_attaquee.vivant:
         cible_attaquee.subir_degats(degats)
         if cible_attaquee.pv <= 0:
             cible_attaquee.mourir(toutes_unites)
     
-    # Se sacrifier
-    self.vivant = False
-    self.pv = 0
+    # Marquer pour mourir après l'animation (ne pas mourir immédiatement)
+    self.explosion_sacree_pending = True
 
 def bouclier_de_la_foi(self, toutes_unites):
     """2 Bouclier sur les unités autour de soi."""
@@ -160,7 +146,7 @@ def bouclier_de_la_foi(self, toutes_unites):
                     # Ajouter un bouclier temporaire
                     if not hasattr(unite, 'bouclier'):
                         unite.bouclier = 0
-                    unite.bouclier += 2
+                    unite.bouclier += 1
                     break
 
 def bénédiction(self, cible):
