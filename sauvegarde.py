@@ -33,7 +33,7 @@ def charger():
             return data
     except (FileNotFoundError, json.JSONDecodeError):
         return {
-            "pa": 100,
+            "pa": 0,
             "unites": ["Goule"],  # Goule débloquée par défaut
             "cp": 5,  # CP de départ
             "campagne_progression": {
