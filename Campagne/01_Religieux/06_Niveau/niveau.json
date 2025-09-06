@@ -79,7 +79,9 @@
   "difficulte_ennemis": "normale",
   "recompense_cp": 1,
   "recompense_pa": 0,
-  "unites_debloquees": [],
+  "unites_debloquees": [
+    "Missionnaire"
+  ],
   "recompenses_autres": [],
   "completable_plusieurs_fois": false
 }
