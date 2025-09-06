@@ -19,6 +19,7 @@ def tas_d_os(self):
     if not self.vivant:
         self.__class__ = Tas_D_Os
         self.__init__(self.equipe, self.pos)
+        self.vivant = False  # Important: garder l'état mort après transformation
 
 def cases_fantomatiques(unite, toutes_unites, q_range=None, r_range=None):
     """Retourne toutes les cases accessibles en traversant les unités (traverser une unité ne coûte pas de PM, s'arrêter sur une case vide coûte 1 PM par case vide)."""
@@ -179,7 +180,7 @@ def lumière_vengeresse(self, cible):
     """Regagne son attaque lorsqu'il tue un Mort-Vivant."""
     if not cible.vivant and cible.faction == "Morts-Vivants":
         # Regagner une attaque
-        self.attaque_restantes = min(self.attaque_restantes + 1, self.attaque_max)
+        self.attaque_restantes += 1
 
 def aura_sacrée(self, toutes_unites):
     """Bonus de dégâts pour tout les alliés adjacents."""

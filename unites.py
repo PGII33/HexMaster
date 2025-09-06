@@ -46,6 +46,12 @@ class Unite:
                 self.prix = tier * 5  # Fallback pour autres tiers
         # comp doit être le nom de la compétence (string) ou None/""
         self.comp = comp or ""
+        
+        # Système de cooldown pour les compétences actives
+        self.cooldown_actuel = 0  # Tours restants avant de pouvoir réutiliser la compétence
+        self.cooldown_max = self._get_cooldown_competence()  # Cooldown maximum de la compétence
+        self.competence_utilisee_ce_tour = False  # Flag pour éviter la réduction immédiate
+        
         self.vivant = True
         self.anim = None
 
@@ -58,6 +64,31 @@ class Unite:
     def get_prix(self): return "Bloqué" if self.prix < 0 else self.prix
     def get_name(self): return self.nom
     def get_faction(self): return self.faction
+
+    def _get_cooldown_competence(self):
+        """Retourne le cooldown maximum pour la compétence de cette unité."""
+        if not self.comp:
+            return 0
+        
+        # Définition des cooldowns par compétence (en tours d'attente)
+        cooldowns = {
+            # Compétences actives - 0 = utilisable chaque tour, 1 = un tour d'attente, etc.
+            "soin": 0,  # Utilisable chaque tour
+            "bénédiction": 1,  # Un tour d'attente entre utilisations
+            # Compétences qui ne doivent pas avoir de cooldown (passives ou spéciales)
+            "sangsue": 0,
+            "zombification": 0,
+            "lumière vengeresse": 0,
+            "explosion sacrée": 0,  # Usage unique (mort)
+            "bouclier de la foi": 0,  # Passive au début du tour
+            "aura sacrée": 0,  # Passive au début du tour
+            "nécromancie": 0,  # Passive au début du tour
+            "invocation": 0,  # Passive au début du tour
+            "tas d'os": 0,  # Passive à la mort
+            "fantomatique": 0,  # Passive de déplacement
+        }
+        
+        return cooldowns.get(self.comp, 0)  # Par défaut : 0 tour de cooldown (utilisable chaque tour)
     def get_competence(self): return self.comp
     def get_portee(self): return self.portee
     def get_pv_max(self): return self.pv_max
@@ -144,7 +175,8 @@ class Unite:
     def attaquer(self, autre):
         """Applique l'animation et les dégâts séparément."""
         if self.attaque_restantes > 0 and self.est_a_portee(autre) and autre.vivant:
-            # Compétences avant l'attaque
+            self.attaque_restantes -= 1
+
             if self.comp == "sangsue":
                 co.sangsue(self)
 
@@ -161,16 +193,15 @@ class Unite:
                 autre.subir_degats(self.dmg)
                 cible_tuée = False
                 if autre.pv <= 0:
-                    autre.mourir([])  # Utiliser la nouvelle méthode mourir
-                    cible_tuée = True
+                    result = autre.mourir([])  # Utiliser la nouvelle méthode mourir
+                    cible_tuée = result  # True si l'unité était vivante et est maintenant morte
                 
-                # Compétences après l'attaque normale
+                # Compétences après l'attaque normale (quand on sait si la cible est tuée)
+                if self.comp == "lumière vengeresse" and cible_tuée:
+                    co.lumière_vengeresse(self, autre)
+                
                 if self.comp == "zombification":
                     co.zombification(self, autre)
-                elif self.comp == "lumière vengeresse" and cible_tuée:
-                    co.lumière_vengeresse(self, autre)
-            
-            self.attaque_restantes -= 1
 
     def mourir(self, toutes_unites):
         """Gère la mort de l'unité et les compétences déclenchées.
@@ -192,6 +223,16 @@ class Unite:
 
     def debut_tour(self, toutes_unites, plateau, q_range=None, r_range=None):
         """À appeler au début du tour de l'unité pour déclencher les compétences passives."""
+        
+        # Réduction du cooldown des compétences actives
+        # Ne réduit pas si la compétence a été utilisée ce tour
+        if self.cooldown_actuel > 0 and not self.competence_utilisee_ce_tour:
+            self.cooldown_actuel -= 1
+        
+        # Reset du flag pour le nouveau tour
+        self.competence_utilisee_ce_tour = False
+        
+        # Compétences passives
         if self.comp == "nécromancie":
             co.nécromancie(self, toutes_unites, plateau, q_range, r_range)
         elif self.comp == "invocation":
@@ -203,17 +244,53 @@ class Unite:
         # Ajoute ici d'autres compétences passives si besoin
     
     def a_competence_active(self):
-        """Retourne True si l'unité a une compétence active utilisable."""
+        """Retourne True si l'unité a une compétence active utilisable (pas en cooldown)."""
         if not self.comp:
             return False
-        return co.est_competence_active(self.comp)
+        if not co.est_competence_active(self.comp):
+            return False
+        return self.cooldown_actuel <= 0  # Utilisable seulement si pas en cooldown
+    
+    def get_cooldown_info(self):
+        """Retourne des informations sur le cooldown de la compétence."""
+        if not self.comp or not co.est_competence_active(self.comp):
+            return None
+        return {
+            "actuel": self.cooldown_actuel,
+            "max": self.cooldown_max,
+            "disponible": self.cooldown_actuel <= 0
+        }
+    
+    def get_competence_status(self):
+        """Retourne le statut de la compétence pour l'affichage."""
+        if not self.comp:
+            return "Aucune compétence"
+        
+        if not co.est_competence_active(self.comp):
+            return f"{self.comp} (passive)"
+        
+        if self.cooldown_actuel <= 0:
+            return f"{self.comp} (prêt)"
+        else:
+            return f"{self.comp} ({self.cooldown_actuel} tours)"
     
     def utiliser_competence(self, cible=None, toutes_unites=None):
         """Utilise la compétence active de l'unité."""
-        if self.a_competence_active() and self.attaque_restantes > 0:
+        # Vérifier les conditions d'utilisation
+        if (self.a_competence_active() and 
+            self.attaque_restantes > 0 and 
+            self.cooldown_actuel <= 0 and 
+            not self.competence_utilisee_ce_tour):
+            
             success = co.utiliser_competence_active(self, self.comp, cible, toutes_unites)
             if success:
-                self.attaque_restantes -= 1
+                # Activer le cooldown et marquer comme utilisée ce tour
+                self.cooldown_actuel = self.cooldown_max
+                self.competence_utilisee_ce_tour = True
+                
+                # Le soin ne consomme pas d'attaque, les autres compétences si
+                if self.comp != "soin":
+                    self.attaque_restantes -= 1
             return success
         return False
 

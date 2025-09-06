@@ -1,0 +1,108 @@
+{
+  "nom": "05_Morts-Vivants",
+  "description": "Rien",
+  "chapitre": "01_Crypte",
+  "numero": 0,
+  "type_restriction": "faction_libre",
+  "unites_imposees": [],
+  "placement_impose": false,
+  "factions_autorisees": [],
+  "faction_unique_requise": true,
+  "faction_imposee": "",
+  "cp_disponible": 20,
+  "max_unites": 20,
+  "unites_ennemis": [
+    [
+      "Squelette",
+      [
+        3,
+        4
+      ]
+    ],
+    [
+      "Archliche",
+      [
+        0,
+        6
+      ]
+    ],
+    [
+      "Liche",
+      [
+        3,
+        6
+      ]
+    ],
+    [
+      "Liche",
+      [
+        -1,
+        5
+      ]
+    ],
+    [
+      "Liche",
+      [
+        6,
+        5
+      ]
+    ],
+    [
+      "Squelette",
+      [
+        -1,
+        4
+      ]
+    ],
+    [
+      "Squelette",
+      [
+        0,
+        4
+      ]
+    ],
+    [
+      "Squelette",
+      [
+        6,
+        4
+      ]
+    ],
+    [
+      "Squelette",
+      [
+        5,
+        4
+      ]
+    ],
+    [
+      "Liche",
+      [
+        1,
+        6
+      ]
+    ],
+    [
+      "Archliche",
+      [
+        4,
+        6
+      ]
+    ],
+    [
+      "Archliche",
+      [
+        5,
+        6
+      ]
+    ]
+  ],
+  "difficulte_ennemis": "normale",
+  "recompense_cp": 5,
+  "recompense_pa": 200,
+  "unites_debloquees": [
+    "Archliche"
+  ],
+  "recompenses_autres": [],
+  "completable_plusieurs_fois": false
+}

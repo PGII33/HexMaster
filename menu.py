@@ -7,7 +7,6 @@ from jeu import Jeu
 from utils import Button
 from boutique import Boutique
 from inventaire import Inventaire
-from tuto import Tuto
 from hexarene import HexArène
 from campagne import Campagne, get_niveau_data
 from unit_selector import UnitSelector
@@ -117,11 +116,6 @@ class HexaMaster:
     def start_en_ligne_placeholder(self):
         # Placeholder pour le mode en ligne
         print("Mode en ligne - À implémenter")
-
-    def start_tuto(self):
-        tuto = Tuto(self.screen)
-        self.jeu = tuto.run_flow()
-        self.etat = "jeu"
 
     def start_campagne(self):
         """Lance le mode campagne"""

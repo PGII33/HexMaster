@@ -19,7 +19,11 @@ def handle_click(jeu, mx, my):
         jeu.competence_btn_rect.collidepoint(mx, my) and jeu.selection and 
         jeu.selection.equipe == jeu.tour):
         
-        if jeu.selection.a_competence_active() and jeu.selection.attaque_restantes > 0:
+        # Vérifier que la compétence est utilisable (pas en cooldown et pas déjà utilisée)
+        cooldown_restant = getattr(jeu.selection, 'cooldown_actuel', 0)
+        competence_utilisee = getattr(jeu.selection, 'competence_utilisee_ce_tour', False)
+        if (jeu.selection.a_competence_active() and jeu.selection.attaque_restantes > 0 and 
+            cooldown_restant == 0 and not competence_utilisee):
             comp_name = jeu.selection.get_competence()
             
             # Compétences qui ne nécessitent pas de cible
@@ -33,7 +37,8 @@ def handle_click(jeu, mx, my):
                 # Entrer en mode sélection de cible
                 jeu.mode_selection_competence = True
                 jeu.competence_en_cours = comp_name
-                jeu.cibles_possibles = _get_valid_targets(jeu, comp_name)
+                jeu.unite_utilisant_competence = jeu.selection  # Stocker l'unité
+                jeu.cibles_possibles = _get_valid_targets(jeu, comp_name, jeu.selection)
                 return
         
     # clic sur une unité ?
@@ -92,6 +97,14 @@ def handle_click(jeu, mx, my):
 
 def _handle_competence_target_selection(jeu, mx, my):
     """Gère la sélection de cible pour une compétence active."""
+    # Vérifier que nous avons une unité qui utilise la compétence
+    if not hasattr(jeu, 'unite_utilisant_competence') or jeu.unite_utilisant_competence is None:
+        # Annuler le mode sélection si pas d'unité
+        jeu.mode_selection_competence = False
+        jeu.competence_en_cours = None
+        jeu.cibles_possibles = []
+        return
+    
     # Clic sur une unité pour la cibler
     for u in jeu.unites:
         if not u.vivant:
@@ -100,35 +113,38 @@ def _handle_competence_target_selection(jeu, mx, my):
         if (mx-x)**2 + (my-y)**2 <= (jeu.unit_radius)**2:
             if u in jeu.cibles_possibles:
                 # Utiliser la compétence sur cette cible
-                success = jeu.selection.utiliser_competence(u, jeu.unites)
+                success = jeu.unite_utilisant_competence.utiliser_competence(u, jeu.unites)
                 if success:
                     # Sortir du mode sélection
                     jeu.mode_selection_competence = False
                     jeu.competence_en_cours = None
                     jeu.cibles_possibles = []
-                    # Mettre à jour l'affichage
-                    jeu.deplacement_possibles = jeu.selection.cases_accessibles(jeu.unites, jeu.q_range, jeu.r_range)
+                    jeu.unite_utilisant_competence = None
+                    # Mettre à jour l'affichage si l'unité est encore sélectionnée
+                    if jeu.selection == jeu.unite_utilisant_competence:
+                        jeu.deplacement_possibles = jeu.selection.cases_accessibles(jeu.unites, jeu.q_range, jeu.r_range)
                 return
     
     # Clic ailleurs = annuler la sélection de compétence
     jeu.mode_selection_competence = False
     jeu.competence_en_cours = None
     jeu.cibles_possibles = []
+    jeu.unite_utilisant_competence = None
 
-def _get_valid_targets(jeu, comp_name):
+def _get_valid_targets(jeu, comp_name, unite_source):
     """Retourne la liste des cibles valides pour une compétence."""
     valid_targets = []
     
     if co.peut_cibler_allie(comp_name):
         # Peut cibler les alliés
         for u in jeu.unites:
-            if u.vivant and u.equipe == jeu.selection.equipe:
+            if u.vivant and u.equipe == unite_source.equipe:
                 valid_targets.append(u)
     
     if co.peut_cibler_ennemi(comp_name):
         # Peut cibler les ennemis
         for u in jeu.unites:
-            if u.vivant and _are_enemies(jeu.selection.equipe, u.equipe, getattr(jeu, 'versus_mode', False)):
+            if u.vivant and _are_enemies(unite_source.equipe, u.equipe, getattr(jeu, 'versus_mode', False)):
                 valid_targets.append(u)
     
     return valid_targets

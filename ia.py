@@ -84,6 +84,12 @@ def trouver_meilleure_cible_competence(unite, competence, tous_unites):
     
     cibles_potentielles = []
     
+    # Déterminer la portée à utiliser pour cette compétence
+    if competence == "soin":
+        portee_competence = 99  # Portée illimitée pour le soin
+    else:
+        portee_competence = unite.portee  # Portée normale pour les autres compétences
+    
     # Collecter les cibles possibles
     for cible in tous_unites:
         if not cible.vivant or cible == unite:
@@ -92,11 +98,11 @@ def trouver_meilleure_cible_competence(unite, competence, tous_unites):
         # Vérifier si on peut cibler cette unité
         if cible.equipe == unite.equipe and peut_cibler_allie(competence):
             # C'est un allié et on peut cibler les alliés
-            if est_a_portee_pos(unite.pos, cible.pos, unite.portee):
+            if est_a_portee_pos(unite.pos, cible.pos, portee_competence):
                 cibles_potentielles.append(cible)
         elif cible.equipe != unite.equipe and peut_cibler_ennemi(competence):
             # C'est un ennemi et on peut cibler les ennemis
-            if est_a_portee_pos(unite.pos, cible.pos, unite.portee):
+            if est_a_portee_pos(unite.pos, cible.pos, portee_competence):
                 cibles_potentielles.append(cible)
     
     if not cibles_potentielles:
@@ -186,76 +192,91 @@ def utiliser_competence_immediate(unite, tous_unites):
 def cible_faible(unite, ennemis, unites):
     """IA améliorée qui utilise intelligemment les compétences actives."""
     
+    action_effectuee = None
+    
     # Phase 1: Essayer d'utiliser des compétences immédiates (sans cible)
     if utiliser_competence_immediate(unite, unites):
-        return "competence"
+        action_effectuee = "competence"
     
     # Phase 2: Essayer d'utiliser des compétences actives sur des cibles
     if hasattr(unite, 'comp') and unite.attaque_restantes > 0:
         meilleure_cible = trouver_meilleure_cible_competence(unite, unite.comp, unites)
         if meilleure_cible:
             unite.utiliser_competence(meilleure_cible, unites)
-            return "competence"
+            if action_effectuee is None:
+                action_effectuee = "competence"
+            else:
+                action_effectuee = "competence_multiple"
     
-    # Phase 3: Logique d'attaque classique
-    # 0) Filtre
-    cibles = [e for e in ennemis if e.vivant]
-    if not cibles:
-        return None
+    # Phase 3: Logique d'attaque classique (seulement si on a encore des attaques)
+    if unite.attaque_restantes > 0:
+        # 0) Filtre
+        cibles = [e for e in ennemis if e.vivant]
+        if not cibles:
+            return action_effectuee
+        
+        cible = min(cibles, key=lambda x: x.pv)
 
-    cible = min(cibles, key=lambda x: x.pv)
+        # 1) Cases atteignables (inclure la position actuelle)
+        accessibles = unite.cases_accessibles(unites)
+        accessibles = dict(accessibles)  # copie défensive
+        accessibles.setdefault(unite.pos, 0)
 
-    # 1) Cases atteignables (inclure la position actuelle)
-    accessibles = unite.cases_accessibles(unites)
-    accessibles = dict(accessibles)  # copie défensive
-    accessibles.setdefault(unite.pos, 0)
+        # 2) Peut-on atteindre ET attaquer la cible ce tour-ci ?
+        adj_to_target = [pos for pos in accessibles if est_a_portee_pos(pos, cible.pos, unite.portee)]
+        if adj_to_target and unite.attaque_restantes > 0:
+            # Choix: coût minimal puis (optionnel) distance au centre de la cible (toujours 1 si adjacent)
+            best_pos = min(adj_to_target, key=lambda p: (accessibles[p], hex_distance(p, cible.pos)))
+            cout = accessibles[best_pos]
+            if cout > 0:
+                unite.pos = best_pos
+                unite.pm -= cout
+            # Une seule attaque
+            unite.attaquer(cible)
+            if action_effectuee is None:
+                return "attaque"
+            else:
+                return "competence_et_attaque"
 
-    # 2) Peut-on atteindre ET attaquer la cible ce tour-ci ?
-    adj_to_target = [pos for pos in accessibles if est_a_portee_pos(pos, cible.pos, unite.portee)]
-    if adj_to_target and unite.attaque_restantes > 0:
-        # Choix: coût minimal puis (optionnel) distance au centre de la cible (toujours 1 si adjacent)
-        best_pos = min(adj_to_target, key=lambda p: (accessibles[p], hex_distance(p, cible.pos)))
-        cout = accessibles[best_pos]
-        if cout > 0:
-            unite.pos = best_pos
-            unite.pm -= cout
-        # Une seule attaque
-        unite.attaquer(cible)
-        return "attaque"
+        # 3) Sinon, opportunisme: une autre cible attaquable depuis une case atteignable (y compris sans bouger)
+        meilleure_option = None  # (cout, pv_ennemi, pos, enn)
+        meilleur_score = None    # (cout, pv_ennemi) pour la comparaison
+        
+        for pos, cout in accessibles.items():
+            # Si plus de PM que le coût nécessaire
+            if cout > unite.pm:
+                continue
+            for enn in cibles:
+                if est_a_portee_pos(pos, enn.pos, unite.portee):
+                    score = (cout, enn.pv)  # Seulement les critères de comparaison
+                    if (meilleur_score is None) or (score < meilleur_score):
+                        meilleur_score = score
+                        meilleure_option = (cout, enn.pv, pos, enn)
 
-    # 3) Sinon, opportunisme: une autre cible attaquable depuis une case atteignable (y compris sans bouger)
-    meilleure_option = None  # (cout, pv_ennemi, pos, enn)
-    meilleur_score = None    # (cout, pv_ennemi) pour la comparaison
-    
-    for pos, cout in accessibles.items():
-        # Si plus de PM que le coût nécessaire
-        if cout > unite.pm:
-            continue
-        for enn in cibles:
-            if est_a_portee_pos(pos, enn.pos, unite.portee):
-                score = (cout, enn.pv)  # Seulement les critères de comparaison
-                if (meilleur_score is None) or (score < meilleur_score):
-                    meilleur_score = score
-                    meilleure_option = (cout, enn.pv, pos, enn)
+        if (meilleure_option is not None) and unite.attaque_restantes > 0:
+            cout, _, pos, enn = meilleure_option
+            if pos != unite.pos:
+                unite.pos = pos
+                unite.pm -= cout
+            unite.attaquer(enn)
+            if action_effectuee is None:
+                return "attaque"
+            else:
+                return "competence_et_attaque"
 
-    if (meilleure_option is not None) and unite.attaque_restantes > 0:
-        cout, _, pos, enn = meilleure_option
-        if pos != unite.pos:
-            unite.pos = pos
-            unite.pm -= cout
-        unite.attaquer(enn)
-        return "attaque"
+        # 4) Sinon, avancer vers la cible principale (sans attaquer)
+        if accessibles and unite.pm > 0:
+            # Choisir la case qui réduit le plus la distance hex; tie-breaker sur coût
+            best_move = min(accessibles.keys(), key=lambda p: (hex_distance(p, cible.pos), accessibles[p]))
+            if best_move != unite.pos and accessibles[best_move] <= unite.pm:
+                unite.pos = best_move
+                unite.pm -= accessibles[best_move]
+                if action_effectuee is None:
+                    return "deplacement"
+                else:
+                    return "competence_et_deplacement"
 
-    # 4) Sinon, avancer vers la cible principale (sans attaquer)
-    if accessibles and unite.pm > 0:
-        # Choisir la case qui réduit le plus la distance hex; tie-breaker sur coût
-        best_move = min(accessibles.keys(), key=lambda p: (hex_distance(p, cible.pos), accessibles[p]))
-        if best_move != unite.pos and accessibles[best_move] <= unite.pm:
-            unite.pos = best_move
-            unite.pm -= accessibles[best_move]
-            return "deplacement"
-
-    return None
+    return action_effectuee
 
 
 def ia_tactique_avancee(unite, ennemis, unites):

@@ -62,10 +62,20 @@ class Campagne:
                 if os.path.exists(niveau_file):
                     config = charger_niveau(niveau_file)
                     if config:
-                        # Extraire le numéro de niveau
-                        if "_" in level_folder:
+                        # Extraire le numéro de niveau - format plus flexible
+                        level_num = None
+                        if "_" in level_folder and level_folder.split("_")[0].isdigit():
+                            # Format: "01_NomNiveau"
                             level_num = int(level_folder.split("_")[0])
-                        else:
+                        elif "niveau" in level_folder.lower():
+                            # Format: "Niveau 1" ou "Niveau_1"
+                            import re
+                            match = re.search(r'niveau[_\s]*(\d+)', level_folder.lower())
+                            if match:
+                                level_num = int(match.group(1))
+                        
+                        if level_num is None:
+                            # Attribuer un numéro séquentiel
                             level_num = len(chapitres[chapter_name]["niveaux"]) + 1
                         
                         chapitres[chapter_name]["niveaux"][level_num] = config
@@ -211,10 +221,17 @@ def get_niveau_data(chapitre: str, numero: int) -> dict:
     for level_folder in os.listdir(chapter_path):
         level_path = os.path.join(chapter_path, level_folder)
         if os.path.isdir(level_path):
-            if "_" in level_folder:
+            # Extraire le numéro de niveau - format plus flexible
+            level_num = None
+            if "_" in level_folder and level_folder.split("_")[0].isdigit():
+                # Format: "01_NomNiveau"
                 level_num = int(level_folder.split("_")[0])
-            else:
-                continue
+            elif "niveau" in level_folder.lower():
+                # Format: "Niveau 1" ou "Niveau_1"
+                import re
+                match = re.search(r'niveau[_\s]*(\d+)', level_folder.lower())
+                if match:
+                    level_num = int(match.group(1))
             
             if level_num == numero:
                 niveau_file = os.path.join(level_path, "niveau.json")
@@ -252,13 +269,23 @@ def appliquer_recompenses_niveau(chapitre: str, numero: int):
                     for level_folder in os.listdir(chapter_path):
                         level_path = os.path.join(chapter_path, level_folder)
                         if os.path.isdir(level_path):
-                            if "_" in level_folder:
+                            # Extraire le numéro de niveau - format plus flexible
+                            level_num = None
+                            if "_" in level_folder and level_folder.split("_")[0].isdigit():
+                                # Format: "01_NomNiveau"
                                 level_num = int(level_folder.split("_")[0])
-                                if level_num == numero:
-                                    niveau_file = os.path.join(level_path, "niveau.json")
-                                    if os.path.exists(niveau_file):
-                                        config = charger_niveau(niveau_file)
-                                    break
+                            elif "niveau" in level_folder.lower():
+                                # Format: "Niveau 1" ou "Niveau_1"
+                                import re
+                                match = re.search(r'niveau[_\s]*(\d+)', level_folder.lower())
+                                if match:
+                                    level_num = int(match.group(1))
+                            
+                            if level_num == numero:
+                                niveau_file = os.path.join(level_path, "niveau.json")
+                                if os.path.exists(niveau_file):
+                                    config = charger_niveau(niveau_file)
+                                break
                     break
     
     if not config:
