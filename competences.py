@@ -98,18 +98,19 @@ def invocation(self, toutes_unites, plateau, q_range=None, r_range=None):
     q, r = self.pos
     candidates = [Goule, Squelette, Spectre, Zombie, Vampire]
     random.shuffle(candidates)
-    for dq, dr in directions:
-        new_pos = (q+dq, r+dr)
-        new_q, new_r = new_pos
-        
-        # VÉRIFIER QUE LA POSITION EST DANS LA GRILLE
-        if new_q not in q_range or new_r not in r_range:
-            continue
+    for i in range (2):
+        for dq, dr in directions:
+            new_pos = (q+dq, r+dr)
+            new_q, new_r = new_pos
             
-        if plateau.est_case_vide(new_pos, toutes_unites):
-            UniteClass = random.choice(candidates)
-            toutes_unites.append(UniteClass(self.equipe, new_pos))
-            break
+            # VÉRIFIER QUE LA POSITION EST DANS LA GRILLE
+            if new_q not in q_range or new_r not in r_range:
+                continue
+                
+            if plateau.est_case_vide(new_pos, toutes_unites):
+                UniteClass = random.choice(candidates)
+                toutes_unites.append(UniteClass(self.equipe, new_pos))
+                break
 
 # ========== COMPÉTENCES RELIGIEUX ==========
 
