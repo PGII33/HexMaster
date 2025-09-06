@@ -22,6 +22,11 @@ class LevelBuilder:
         
         # UI temporaire
         self.enemy_units_selected = []
+        
+        # Variables pour la préservation des positions
+        self._derniere_composition = []
+        self._positions_sauvegardees = []
+        
         self.text_data = {
             "nom": "",
             "description": "",
@@ -39,8 +44,13 @@ class LevelBuilder:
         center_x = w // 2
         
         if self.etat == "main_menu":
-            self.ui.add_button((center_x-140, h//2-150, 280, 50), "Créer Niveau", self.nouveau_niveau)
+            self.ui.add_button((center_x-140, h//2-180, 280, 50), "Créer Niveau", self.nouveau_niveau)
+            self.ui.add_button((center_x-140, h//2-120, 280, 50), "Modifier Niveau", self.modifier_niveau)
             self.ui.add_button((20, h-70, 150, 50), "Retour", self.retour)
+        
+        elif self.etat == "selection_niveau":
+            # Interface de sélection de niveau à modifier
+            self.ui.add_button((20, h-70, 150, 50), "Retour", self.retour_menu)
         
         elif self.etat == "config_generale":
             # Boutons de navigation
@@ -93,9 +103,15 @@ class LevelBuilder:
         
         elif self.etat == "enemy_selection":
             self.ui.add_button((50, 160, 300, 40), "Sélectionner les Ennemis", self.selectionner_ennemis)
+            
+            # Texte du bouton selon le mode
+            placement_button_text = "Modifier Placement" if (hasattr(self, 'niveau_selectionne') and 
+                                                           self.niveau_selectionne and 
+                                                           self.niveau_config.unites_ennemis) else "Placer Ennemis"
+            
             actions = [
                 ("Retour", self.retour_restrictions),
-                ("Placer Ennemis", self.placer_ennemis)
+                (placement_button_text, self.placer_ennemis)
             ]
             self.ui.add_navigation_buttons(h, actions)
         
@@ -165,6 +181,111 @@ class LevelBuilder:
     def retour_placement(self):
         self.etat = "enemy_selection"
         self.creer_boutons()
+    
+    # ------ Modification de niveau ------
+    def modifier_niveau(self):
+        """Lance l'interface de sélection de niveau à modifier"""
+        self.etat = "selection_niveau"
+        self.niveaux_disponibles = self._charger_liste_niveaux()
+        self.niveau_selectionne = None
+        self.creer_boutons()
+    
+    def _charger_liste_niveaux(self):
+        """Charge la liste des niveaux disponibles dans le dossier Campagne"""
+        niveaux = []
+        campagne_path = "Campagne"
+        
+        if not os.path.exists(campagne_path):
+            return niveaux
+        
+        # Parcourir les chapitres
+        for chapitre_folder in sorted(os.listdir(campagne_path)):
+            chapitre_path = os.path.join(campagne_path, chapitre_folder)
+            if not os.path.isdir(chapitre_path):
+                continue
+            
+            # Extraire le nom du chapitre
+            if "_" in chapitre_folder:
+                chapitre_nom = chapitre_folder.split("_", 1)[1].replace("_", " ")
+            else:
+                chapitre_nom = chapitre_folder
+            
+            # Parcourir les niveaux du chapitre
+            for niveau_folder in sorted(os.listdir(chapitre_path)):
+                niveau_path = os.path.join(chapitre_path, niveau_folder)
+                if not os.path.isdir(niveau_path):
+                    continue
+                
+                niveau_file = os.path.join(niveau_path, "niveau.json")
+                if os.path.exists(niveau_file):
+                    try:
+                        from niveau_structure import charger_niveau
+                        config = charger_niveau(niveau_file)
+                        if config:
+                            niveaux.append({
+                                "nom": config.nom or f"Niveau {config.numero}",
+                                "chapitre": chapitre_nom,
+                                "numero": config.numero,
+                                "chemin": niveau_file,
+                                "config": config
+                            })
+                    except Exception as e:
+                        print(f"Erreur lors du chargement de {niveau_file}: {e}")
+        
+        return niveaux
+    
+    def charger_niveau_pour_modification(self, niveau_info):
+        """Charge un niveau existant pour modification"""
+        try:
+            from niveau_structure import charger_niveau
+            config = charger_niveau(niveau_info["chemin"])
+            if config:
+                self.niveau_config = config
+                self.niveau_selectionne = niveau_info
+                # Charger les données de texte pour l'interface
+                self.text_data = {
+                    "nom": config.nom,
+                    "description": config.description,
+                    "chapitre": config.chapitre
+                }
+                
+                # Récupérer les unités ennemies existantes pour la modification
+                self.enemy_units_selected = []
+                for unit_class, position in config.unites_ennemis:
+                    self.enemy_units_selected.append(unit_class)
+                
+                # Initialiser les variables de préservation avec les données existantes
+                self._derniere_composition = self.enemy_units_selected[:]
+                self._positions_sauvegardees = config.unites_ennemis[:]
+                
+                print(f"Niveau '{config.nom}' chargé pour modification")
+                print(f"  - {len(config.unites_ennemis)} unités ennemies chargées")
+                print(f"  - Types d'unités: {[cls.__name__ for cls, pos in config.unites_ennemis]}")
+                
+                # Aller à la configuration générale pour modification
+                self.etat = "config_generale"
+                self.creer_boutons()
+            else:
+                print("Erreur lors du chargement du niveau")
+        except Exception as e:
+            print(f"Erreur: {e}")
+    
+    def sauvegarder_niveau_modifie(self):
+        """Sauvegarde les modifications sur le niveau existant"""
+        if self.niveau_selectionne:
+            try:
+                from niveau_structure import sauvegarder_niveau
+                # Utiliser le même chemin que le niveau original
+                sauvegarder_niveau(self.niveau_config, self.niveau_selectionne["chemin"])
+                print(f"Niveau '{self.niveau_config.nom}' mis à jour avec succès!")
+                # Retourner au menu principal
+                self.etat = "main_menu" 
+                self.creer_boutons()
+            except Exception as e:
+                print(f"Erreur lors de la sauvegarde: {e}")
+        else:
+            # Comportement normal pour nouveau niveau
+            self.sauvegarder_niveau()
     
     # ------ Modificateurs de paramètres ------
     def modifier_max_units(self, delta):
@@ -289,16 +410,84 @@ class LevelBuilder:
         self.etat = getattr(self, 'etat_precedent', 'rewards_config')
         self.creer_boutons()
     
+    # ------ Gestion de la préservation des positions ------
+    def _compositions_identiques(self, comp1, comp2):
+        """Vérifie si deux compositions d'unités sont identiques"""
+        if len(comp1) != len(comp2):
+            return False
+        
+        # Compter les occurrences de chaque classe dans chaque composition
+        count1 = {}
+        count2 = {}
+        
+        for cls in comp1:
+            count1[cls] = count1.get(cls, 0) + 1
+        
+        for cls in comp2:
+            count2[cls] = count2.get(cls, 0) + 1
+        
+        return count1 == count2
+    
+    def _conserver_positions_communes(self, ancienne_composition, nouvelle_composition):
+        """Conserve les positions des unités communes lors d'un changement de composition"""
+        if not self.niveau_config.unites_ennemis:
+            return
+        
+        # Créer des dictionnaires de comptage pour les compositions
+        ancien_count = {}
+        nouveau_count = {}
+        
+        for cls in ancienne_composition:
+            ancien_count[cls] = ancien_count.get(cls, 0) + 1
+        
+        for cls in nouvelle_composition:
+            nouveau_count[cls] = nouveau_count.get(cls, 0) + 1
+        
+        # Identifier les unités communes (minimum entre ancien et nouveau count)
+        unites_communes = {}
+        for cls in ancien_count:
+            if cls in nouveau_count:
+                unites_communes[cls] = min(ancien_count[cls], nouveau_count[cls])
+        
+        if not unites_communes:
+            # Aucune unité commune, effacer toutes les positions
+            self.niveau_config.unites_ennemis = []
+            print("Aucune unité commune, positions effacées")
+            return
+        
+        # Conserver seulement les positions des unités communes
+        nouvelles_positions = []
+        unites_conservees = {}
+        
+        for unit_class, position in self.niveau_config.unites_ennemis:
+            if (unit_class in unites_communes and 
+                unites_conservees.get(unit_class, 0) < unites_communes[unit_class]):
+                nouvelles_positions.append((unit_class, position))
+                unites_conservees[unit_class] = unites_conservees.get(unit_class, 0) + 1
+        
+        self.niveau_config.unites_ennemis = nouvelles_positions
+        
+        print(f"Positions conservées: {len(nouvelles_positions)} unités communes")
+        for cls, count in unites_conservees.items():
+            print(f"  - {cls.__name__}: {count} position(s) conservée(s)")
+    
     # ------ Actions principales ------
     def nouveau_niveau(self):
         """Commence la création d'un nouveau niveau"""
         self.niveau_config = NiveauConfig()
         self.enemy_units_selected = []
+        
+        # Réinitialiser les variables de préservation des positions
+        self._derniere_composition = []
+        self._positions_sauvegardees = []
+        
         self.text_data = {
             "nom": "",
             "description": "",
             "chapitre": ""
         }
+        # Réinitialiser le niveau sélectionné si on était en mode modification
+        self.niveau_selectionne = None
         self.etat = "config_generale"
         self.creer_boutons()
     
@@ -324,11 +513,19 @@ class LevelBuilder:
     def selectionner_ennemis(self):
         """Ouvre le sélecteur d'unités pour les ennemis"""
         # Utiliser le mode builder_enemy pour aucune contrainte
-        selector = UnitSelector(self.screen, "builder_enemy")
+        # Passer les unités actuellement sélectionnées pour les pré-sélectionner
+        selector = UnitSelector(self.screen, "builder_enemy", preselected_units=self.enemy_units_selected)
         selected_units = selector.run()
         
         if selected_units is not None:
+            # Conserver les positions existantes pour les unités communes
+            old_units = self.enemy_units_selected[:]
             self.enemy_units_selected = selected_units
+            
+            # Si on a des unités placées et qu'on change la composition
+            if hasattr(self, 'niveau_config') and self.niveau_config.unites_ennemis:
+                self._conserver_positions_communes(old_units, selected_units)
+            
             print(f"Unités ennemies sélectionnées: {len(self.enemy_units_selected)}")
     
     def placer_ennemis(self):
@@ -337,19 +534,43 @@ class LevelBuilder:
             print("Erreur: Aucune unité ennemie sélectionnée")
             return
         
+        # Préparer les unités existantes si on est en mode modification OU
+        # si on a des positions sauvegardées pour cette composition
+        existing_units = None
+        
+        # Cas 1: Mode modification d'un niveau existant
+        if hasattr(self, 'niveau_selectionne') and self.niveau_selectionne and self.niveau_config.unites_ennemis:
+            existing_units = []
+            for unit_class, position in self.niveau_config.unites_ennemis:
+                existing_units.append((unit_class, position))
+            print(f"Chargement du placement existant (modification): {len(existing_units)} unités")
+        
+        # Cas 2: Retour au placement avec la même composition (préservation des positions)
+        elif (hasattr(self, '_derniere_composition') and 
+              hasattr(self, '_positions_sauvegardees') and
+              self._compositions_identiques(self._derniere_composition, self.enemy_units_selected)):
+            existing_units = self._positions_sauvegardees[:]
+            print(f"Restauration du placement précédent: {len(existing_units)} unités")
+        
         # Utiliser la phase de placement pour les ennemis (zone rouge)
         placement = PlacementPhase(
             self.screen,
             self.enemy_units_selected,
-            titre="Placement des unités ennemies",
+            titre="Placement des unités ennemies" + (" (Modification)" if existing_units else ""),
             player_spawn_zone=[4, 5, 6],  # Zone rouge pour les ennemis
-            enemy_spawn_zone=[-1, 0, 1]   # Zone verte (non utilisée ici)
+            enemy_spawn_zone=[-1, 0, 1],   # Zone verte (non utilisée ici)
+            existing_units=existing_units   # Passer les unités existantes
         )
         
         enemy_placed = placement.run()
         
         if enemy_placed is not None:
             self.niveau_config.unites_ennemis = enemy_placed
+            
+            # Sauvegarder cette composition et ces positions pour future restauration
+            self._derniere_composition = self.enemy_units_selected[:]
+            self._positions_sauvegardees = enemy_placed[:]
+            
             print(f"Ennemis placés: {len(enemy_placed)}")
             self.etat = "rewards_config"
             self.creer_boutons()
@@ -357,7 +578,16 @@ class LevelBuilder:
             print("Placement annulé")
     
     def sauvegarder_niveau(self):
-        """Sauvegarde le niveau créé"""
+        """Sauvegarde le niveau (nouveau ou modifié)"""
+        # Synchroniser les données de configuration avec les champs de texte
+        self._synchroniser_config_avec_ui()
+        
+        # Si on a un niveau sélectionné, on est en mode modification
+        if hasattr(self, 'niveau_selectionne') and self.niveau_selectionne:
+            self.sauvegarder_niveau_modifie()
+            return
+        
+        # Sinon, sauvegarde normale pour nouveau niveau
         # Valider la configuration
         valide, erreurs = self.niveau_config.valider()
         if not valide:
@@ -386,6 +616,12 @@ class LevelBuilder:
             print(f"Niveau sauvegardé: {chemin_fichier}")
         except Exception as e:
             print(f"Erreur lors de la sauvegarde: {e}")
+    
+    def _synchroniser_config_avec_ui(self):
+        """Met à jour la configuration avec les données de l'interface utilisateur"""
+        self.niveau_config.nom = self.text_data.get("nom", "")
+        self.niveau_config.description = self.text_data.get("description", "")
+        self.niveau_config.chapitre = self.text_data.get("chapitre", "")
     
     def tester_niveau(self):
         """Lance le niveau pour le tester avec toutes les contraintes"""
@@ -537,6 +773,77 @@ class LevelBuilder:
         self.ui.draw_title("Level Builder", 100)
         self.ui.draw_buttons()
     
+    def afficher_selection_niveau(self):
+        """Affiche l'interface de sélection de niveau à modifier"""
+        self.screen.fill((255, 255, 255))
+        self.ui.draw_title("Modifier un Niveau", 50)
+        
+        y = 120
+        
+        if not hasattr(self, 'niveaux_disponibles') or not self.niveaux_disponibles:
+            self.ui.draw_text("Aucun niveau trouvé dans le dossier Campagne/", 50, y, color=(255, 0, 0))
+            self.ui.draw_buttons()
+            return
+        
+        self.ui.draw_text("Sélectionnez un niveau à modifier:", 50, y)
+        y += 40
+        
+        # Afficher la liste des niveaux
+        max_visible = 12  # Nombre maximum de niveaux visibles
+        start_index = getattr(self, 'scroll_offset', 0)
+        end_index = min(start_index + max_visible, len(self.niveaux_disponibles))
+        
+        for i in range(start_index, end_index):
+            niveau = self.niveaux_disponibles[i]
+            
+            # Couleur alternée pour la lisibilité
+            bg_color = (240, 240, 240) if i % 2 == 0 else (255, 255, 255)
+            
+            # Rectangle de fond
+            niveau_rect = pygame.Rect(50, y, 700, 35)
+            pygame.draw.rect(self.screen, bg_color, niveau_rect)
+            pygame.draw.rect(self.screen, (200, 200, 200), niveau_rect, 1)
+            
+            # Texte du niveau
+            text = f"{niveau['chapitre']} - {niveau['nom']} (Niveau {niveau['numero']})"
+            self.ui.draw_text(text, 60, y + 8, color=(0, 0, 0))
+            
+            # Stocker le rectangle pour la détection de clic
+            if not hasattr(self, 'niveau_rects'):
+                self.niveau_rects = {}
+            self.niveau_rects[i] = niveau_rect
+            
+            y += 40
+        
+        # Indicateurs de scroll si nécessaire
+        if len(self.niveaux_disponibles) > max_visible:
+            total_pages = (len(self.niveaux_disponibles) - 1) // max_visible + 1
+            current_page = start_index // max_visible + 1
+            self.ui.draw_text(f"Page {current_page}/{total_pages} - Utilisez la molette pour défiler", 
+                            50, y + 20, color=(100, 100, 100))
+        
+        self.ui.draw_buttons()
+    
+    def _handle_niveau_selection_click(self, pos):
+        """Gère les clics sur la liste de niveaux"""
+        if hasattr(self, 'niveau_rects'):
+            for index, rect in self.niveau_rects.items():
+                if rect.collidepoint(pos):
+                    niveau_info = self.niveaux_disponibles[index]
+                    self.charger_niveau_pour_modification(niveau_info)
+                    break
+    
+    def _handle_scroll(self, direction):
+        """Gère le scroll dans la liste de niveaux"""
+        if not hasattr(self, 'scroll_offset'):
+            self.scroll_offset = 0
+        
+        max_visible = 12
+        max_offset = max(0, len(self.niveaux_disponibles) - max_visible)
+        
+        # Direction: 1 = scroll up (vers le haut), -1 = scroll down (vers le bas)
+        self.scroll_offset = max(0, min(max_offset, self.scroll_offset - direction))
+    
     def afficher_config_generale(self):
         """Affiche l'interface de configuration générale"""
         self.screen.fill((255, 255, 255))
@@ -631,6 +938,24 @@ class LevelBuilder:
                                 font=self.ui.font_small, color=(100, 100, 100))
         else:
             self.ui.draw_text("Aucune unité sélectionnée", 50, 220, color=(200, 0, 0))
+        
+        # Afficher le placement actuel si on est en mode modification
+        if (hasattr(self, 'niveau_selectionne') and self.niveau_selectionne and 
+            self.niveau_config.unites_ennemis):
+            
+            y_placement = 400
+            self.ui.draw_text("Placement actuel:", 50, y_placement, color=(0, 0, 150))
+            y_placement += 30
+            
+            for i, (unit_class, position) in enumerate(self.niveau_config.unites_ennemis[:8]):  # Limiter l'affichage
+                tmp = unit_class("ennemi", position)
+                placement_text = f"- {tmp.get_nom()} à {position}"
+                self.ui.draw_text(placement_text, 70, y_placement, font=self.ui.font_small, color=(50, 50, 150))
+                y_placement += 25
+            
+            if len(self.niveau_config.unites_ennemis) > 8:
+                self.ui.draw_text(f"... et {len(self.niveau_config.unites_ennemis) - 8} autres", 70, y_placement, 
+                                font=self.ui.font_small, color=(100, 100, 100))
         
         self.ui.draw_buttons()
     
@@ -754,14 +1079,23 @@ class LevelBuilder:
                         # Gestion des clics sur les champs de texte
                         if self.etat == "config_generale":
                             self.ui.handle_field_click(event.pos, self.field_rects)
+                        # Gestion des clics sur la liste de niveaux
+                        elif self.etat == "selection_niveau":
+                            self._handle_niveau_selection_click(event.pos)
                 
                 elif event.type == pygame.KEYDOWN:
                     if self.etat == "config_generale":
                         self.ui.handle_text_input(event, self.text_data, self.ui.champ_actif)
+                
+                elif event.type == pygame.MOUSEWHEEL:
+                    if self.etat == "selection_niveau":
+                        self._handle_scroll(event.y)
             
             # Affichage selon l'état
             if self.etat == "main_menu":
                 self.afficher_main_menu()
+            elif self.etat == "selection_niveau":
+                self.afficher_selection_niveau()
             elif self.etat == "config_generale":
                 self.afficher_config_generale()
             elif self.etat == "restrictions_config":

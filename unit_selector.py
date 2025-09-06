@@ -18,7 +18,10 @@ class UnitSelector:
         # Configuration selon le mode
         self.config = self._get_mode_config(**kwargs)
         
-        self.selected_units = []
+        # Initialiser avec les unités pré-sélectionnées si fournies
+        preselected_units = kwargs.get('preselected_units', [])
+        self.selected_units = preselected_units[:]  # Copie de la liste
+        
         self.running = True
         self.cancelled = False
         self.scroll_y = 0

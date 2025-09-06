@@ -5,7 +5,7 @@ from layout import recalculer_layout, hex_to_pixel, pixel_to_hex
 import math
 
 class PlacementPhase:
-    def __init__(self, screen, selected_units, titre=None, player_spawn_zone=None, enemy_spawn_zone=None):
+    def __init__(self, screen, selected_units, titre=None, player_spawn_zone=None, enemy_spawn_zone=None, existing_units=None):
         self.screen = screen
         self.selected_units = selected_units[:]  # copie
         self.font = pygame.font.SysFont(None, 28)
@@ -35,6 +35,18 @@ class PlacementPhase:
         self.available_units = {}
         for cls in selected_units:
             self.available_units[cls] = self.available_units.get(cls, 0) + 1
+        
+        # Charger les unités existantes si fourni (pour modification)
+        if existing_units:
+            for unit_class, position in existing_units:
+                # S'assurer que la position est un tuple (pas une liste)
+                if isinstance(position, list):
+                    position = tuple(position)
+                
+                self.placed_units[position] = unit_class
+                # Décrémenter le compteur d'unités disponibles
+                if unit_class in self.available_units and self.available_units[unit_class] > 0:
+                    self.available_units[unit_class] -= 1
         
         # Drag and drop
         self.dragging = None  # (classe, source_type, source_pos) ou None
