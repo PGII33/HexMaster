@@ -35,14 +35,17 @@ class HexaMaster:
         w, h = self.screen.get_size()
         center_x = w // 2
         
-        # Menu principal
+        # Menu principal - Boutons plus grands avec plus d'espacement
         self.boutons_menu = [
-            Button((center_x-140, h//2-150, 280, 60), "Jouer", self.open_playmenu, self.font_med),
-            Button((center_x-140, h//2-80, 280, 60), "Level Builder", self.open_level_builder, self.font_med),
-            Button((center_x-140, h//2-10, 280, 60), "Inventaire", self.open_inventaire, self.font_med),
-            Button((center_x-140, h//2+60, 280, 60), "Boutique", self.open_boutique, self.font_med),
-            Button((center_x-140, h//2+130, 280, 60), "Quitter", lambda: sys.exit(), self.font_med),
+            Button((center_x-160, h//2-200, 320, 70), "Jouer", self.open_playmenu, self.font_med),
+            Button((center_x-160, h//2-120, 320, 70), "Inventaire", self.open_inventaire, self.font_med),
+            Button((center_x-160, h//2-40, 320, 70), "Boutique", self.open_boutique, self.font_med),
+            Button((center_x-160, h//2+40, 320, 70), "Custom", self.open_custom_menu, self.font_med),
+            Button((center_x-160, h//2+120, 320, 70), "Quitter", lambda: sys.exit(), self.font_med),
         ]
+
+        # Bouton Options en haut à droite - présent sur tous les écrans
+        self.bouton_option = Button((w-140, 20, 120, 50), "Options", self.open_option, self.font_med)
 
         # Menu Jouer principal
         self.boutons_playmenu = [
@@ -64,6 +67,13 @@ class HexaMaster:
             Button((center_x-140, h//2-60, 280, 50), "Local", self.start_versus, self.font_med),
             Button((center_x-140, h//2, 280, 50), "En ligne", self.start_en_ligne_placeholder, self.font_med),
             Button((20, h-70, 150, 50), "Retour", self.back_to_playmenu, self.font_med),
+        ]
+
+        # Sous-menu Custom
+        self.boutons_custom_menu = [
+            Button((center_x-140, h//2-60, 280, 50), "Level Builder", self.open_level_builder, self.font_med),
+            Button((center_x-140, h//2, 280, 50), "Unite Builder", self.open_unite_builder, self.font_med),
+            Button((20, h-70, 150, 50), "Retour", self.back_to_menu, self.font_med),
         ]
 
         self.boutons_retour_placeholder = [
@@ -88,6 +98,9 @@ class HexaMaster:
     def open_jcj_menu(self):
         self.etat = "jcj_menu"
 
+    def open_custom_menu(self):
+        self.etat = "custom_menu"
+
     # ------ Actions des boutons ------
     def open_inventaire(self):
         inv = Inventaire(self.screen)
@@ -98,6 +111,14 @@ class HexaMaster:
         shop = Boutique(self.screen)
         shop.afficher()
         self.creer_boutons()
+
+    def open_option(self):
+        """Affiche l'écran d'options (en construction)"""
+        self.etat = "option_construction"
+
+    def open_unite_builder(self):
+        """Affiche l'écran du constructeur d'unités (en construction)"""
+        self.etat = "unite_builder_construction"
 
     def open_missions_placeholder(self):
         self.etat = "missions"
@@ -352,16 +373,25 @@ class HexaMaster:
 
                 if self.etat == "menu":
                     for b in self.boutons_menu: b.handle_event(event)
+                    self.bouton_option.handle_event(event)
                 elif self.etat == "playmenu":
                     for b in self.boutons_playmenu: b.handle_event(event)
+                    self.bouton_option.handle_event(event)
                 elif self.etat == "campagne_menu":
                     for b in self.boutons_campagne_menu: b.handle_event(event)
+                    self.bouton_option.handle_event(event)
                 elif self.etat == "hexarene_menu":
                     for b in self.boutons_hexarene_menu: b.handle_event(event)
+                    self.bouton_option.handle_event(event)
                 elif self.etat == "jcj_menu":
                     for b in self.boutons_jcj_menu: b.handle_event(event)
-                elif self.etat in ["missions"]:
+                    self.bouton_option.handle_event(event)
+                elif self.etat == "custom_menu":
+                    for b in self.boutons_custom_menu: b.handle_event(event)
+                    self.bouton_option.handle_event(event)
+                elif self.etat in ["missions", "option_construction", "unite_builder_construction"]:
                     for b in self.boutons_retour_placeholder: b.handle_event(event)
+                    # Pas de bouton option sur les écrans de construction
                 elif self.etat == "jeu":
                     if self.jeu:
                         self.jeu.handle_event(event)
@@ -376,7 +406,9 @@ class HexaMaster:
                 self.afficher_hexarene_menu()
             elif self.etat == "jcj_menu":
                 self.afficher_jcj_menu()
-            elif self.etat in ["missions"]:
+            elif self.etat == "custom_menu":
+                self.afficher_custom_menu()
+            elif self.etat in ["missions", "option_construction", "unite_builder_construction"]:
                 self.afficher_placeholder()
             elif self.etat == "jeu":
                 if self.jeu:
@@ -405,6 +437,7 @@ class HexaMaster:
         self.screen.blit(title, (self.screen.get_width()//2 - title.get_width()//2, 100))
         for b in self.boutons_menu:
             b.draw(self.screen)
+        self.bouton_option.draw(self.screen)
 
     def afficher_playmenu(self):
         self.screen.fill(BLANC)
@@ -412,6 +445,7 @@ class HexaMaster:
         self.screen.blit(title, (self.screen.get_width()//2 - title.get_width()//2, 100))
         for b in self.boutons_playmenu:
             b.draw(self.screen)
+        self.bouton_option.draw(self.screen)
 
     def afficher_campagne_menu(self):
         self.screen.fill(BLANC)
@@ -419,6 +453,7 @@ class HexaMaster:
         self.screen.blit(title, (self.screen.get_width()//2 - title.get_width()//2, 100))
         for b in self.boutons_campagne_menu:
             b.draw(self.screen)
+        self.bouton_option.draw(self.screen)
 
     def afficher_hexarene_menu(self):
         self.screen.fill(BLANC)
@@ -426,6 +461,7 @@ class HexaMaster:
         self.screen.blit(title, (self.screen.get_width()//2 - title.get_width()//2, 100))
         for b in self.boutons_hexarene_menu:
             b.draw(self.screen)
+        self.bouton_option.draw(self.screen)
 
     def afficher_jcj_menu(self):
         self.screen.fill(BLANC)
@@ -433,10 +469,30 @@ class HexaMaster:
         self.screen.blit(title, (self.screen.get_width()//2 - title.get_width()//2, 100))
         for b in self.boutons_jcj_menu:
             b.draw(self.screen)
+        self.bouton_option.draw(self.screen)
+
+    def afficher_custom_menu(self):
+        self.screen.fill(BLANC)
+        title = self.font_big.render("Custom", True, BLEU)
+        self.screen.blit(title, (self.screen.get_width()//2 - title.get_width()//2, 100))
+        for b in self.boutons_custom_menu:
+            b.draw(self.screen)
+        self.bouton_option.draw(self.screen)
 
     def afficher_placeholder(self):
         self.screen.fill(BLANC)
-        title = self.font_big.render("En construction...", True, BLEU)
-        self.screen.blit(title, (self.screen.get_width()//2 - title.get_width()//2, 300))
+        if self.etat == "option_construction":
+            title = self.font_big.render("Options", True, BLEU)
+            subtitle = self.font_med.render("Écran en construction", True, BLEU)
+        elif self.etat == "unite_builder_construction":
+            title = self.font_big.render("Unite Builder", True, BLEU)
+            subtitle = self.font_med.render("Écran en construction", True, BLEU)
+        else:
+            title = self.font_big.render("En construction...", True, BLEU)
+            subtitle = None
+            
+        self.screen.blit(title, (self.screen.get_width()//2 - title.get_width()//2, 250))
+        if subtitle:
+            self.screen.blit(subtitle, (self.screen.get_width()//2 - subtitle.get_width()//2, 320))
         for b in self.boutons_retour_placeholder:
             b.draw(self.screen)
