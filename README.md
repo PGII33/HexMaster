@@ -1,5 +1,18 @@
 # HexMaster
 
+## Jouer au jeu
+
+### Télécharger la dernière version
+➡️ **[Télécharger HexMaster](../../releases/latest)** ⬅️
+
+1. Cliquez sur le lien ci-dessus
+2. Téléchargez le fichier `HexMaster.exe`
+3. Lancez le jeu directement (aucune installation requise)
+
+### Versions précédentes
+Toutes les versions sont disponibles dans l'onglet [Releases](../../releases).
+
+*Note : Une nouvelle version est automatiquement créée à chaque mise à jour du code.*
 
 ## Acronymes
 

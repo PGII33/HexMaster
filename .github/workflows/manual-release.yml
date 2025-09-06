@@ -1,0 +1,68 @@
+name: Build and Release EXE (Fallback)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_suffix:
+        description: 'Suffixe pour la version (optionnel)'
+        required: false
+        default: ''
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build exe
+        run: |
+          pyinstaller main.spec
+
+      - name: Generate version tag
+        id: version
+        run: |
+          $timestamp = Get-Date -Format "yyyy.MM.dd.HHmm"
+          $suffix = "${{ github.event.inputs.version_suffix }}"
+          if ($suffix) {
+            $version = "v$timestamp-$suffix"
+          } else {
+            $version = "v$timestamp"
+          }
+          echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+          echo "Generated version: $version"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.VERSION }}
+          name: HexMaster ${{ steps.version.outputs.VERSION }}
+          body: |
+            🎮 **HexMaster - Version manuelle**
+            
+            Version créée manuellement à partir du commit: ${{ github.sha }}
+            
+            **Téléchargement:**
+            - Téléchargez HexMaster.exe ci-dessous
+            - Aucune installation requise, lancez directement le jeu !
+            
+            **Informations:**
+            - Build date: ${{ steps.version.outputs.VERSION }}
+            - Commit: ${{ github.sha }}
+          files: dist/HexMaster.exe
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

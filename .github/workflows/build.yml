@@ -1,12 +1,16 @@
-name: Build and Package EXE
+name: Build and Release EXE (Legacy - Disabled)
 
+# Workflow désactivé - utilisez release.yml à la place
 on:
-  push:
-    branches: [ "main" ]
+  workflow_dispatch:  # Seulement déclenchement manuel
+  # push:
+  #   branches: [ "main" ]
 
 jobs:
   build:
     runs-on: windows-latest
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v3
@@ -26,9 +30,43 @@ jobs:
         run: |
           pyinstaller main.spec
 
-      - name: Upload exe artifact
-        uses: actions/upload-artifact@v4
+      - name: Generate version tag
+        id: version
+        run: |
+          $timestamp = Get-Date -Format "yyyy.MM.dd.HHmm"
+          $version = "v$timestamp"
+          echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+          echo "Generated version: $version"
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          name: game-exe
-          path: dist/*.exe
-          retention-days: 30
+          tag_name: ${{ steps.version.outputs.VERSION }}
+          release_name: HexMaster ${{ steps.version.outputs.VERSION }}
+          body: |
+            🎮 **HexMaster - Version automatique**
+            
+            Nouvelle version générée automatiquement à partir du commit: ${{ github.sha }}
+            
+            **Téléchargement:**
+            - Téléchargez `HexMaster.exe` ci-dessous
+            - Aucune installation requise, lancez directement le jeu !
+            
+            **Changements:**
+            - Derniers commits intégrés
+            - Build automatique depuis le code source
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: dist/HexMaster.exe
+          asset_name: HexMaster.exe
+          asset_content_type: application/octet-stream
