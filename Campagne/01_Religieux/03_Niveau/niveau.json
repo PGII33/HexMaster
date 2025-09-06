@@ -1,7 +1,7 @@
 {
   "nom": "Empty Name",
   "description": "Rien",
-  "chapitre": "Religieux",
+  "chapitre": "01_Religieux",
   "numero": 3,
   "type_restriction": "faction_unique",
   "unites_imposees": [],
