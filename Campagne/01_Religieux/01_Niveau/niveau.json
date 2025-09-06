@@ -1,6 +1,6 @@
 {
-  "nom": "Empty Name",
-  "description": "Rien",
+  "nom": "Brigade des fanatiques",
+  "description": "",
   "chapitre": "01_Religieux",
   "numero": 1,
   "type_restriction": "faction_unique",
@@ -31,6 +31,27 @@
       [
         2,
         4
+      ]
+    ],
+    [
+      "Missionnaire",
+      [
+        3,
+        4
+      ]
+    ],
+    [
+      "Fanatique",
+      [
+        0,
+        5
+      ]
+    ],
+    [
+      "Fanatique",
+      [
+        5,
+        5
       ]
     ]
   ],
