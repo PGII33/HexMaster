@@ -1,20 +1,45 @@
 # HexMaster
 
 
+## Acronymes
+
+### PA
+Les PA (Points d'âme) sont la monaie principale du jeu, elle permet de débloquer des unitées.
+
+### CP
+Les CP (Contraintes de Placements) représentent le maximum d'unité plaçables par leurs tier. Tier X = X CP demandés.
+
+### PV
+Les PV (Points de vies) représentent la santé d'une unitée. Arrivée à 0 ou moins, l'unitée meurt.
+
+### DMG
+Les DMG (domages) représentent les dégats infligeables en une attaque classique.
+
+### MV
+Les MV (Mouvements) sont les mouvements maximum d'une unitée en un tour.
+
+## PM
+Les PM (Points de mouvements) sont les mouvements restants disponibles d'une unitée sur un tour.
+
 ## Mode de jeu
 
 ### Campagne
-C'est le mode histoire du jeu. Chaque chapitre de la campagne correspond à une faction, chaque chapitre est composé de différents niveaux. C'est en jouant la campagne que l'on débloque de nouvelles factions.
+La campagne est constitué d'un chapitre par faction, et en fin de jeu de chapitres bonus.
+Un chapitre est composé de plusieurs niveaux, dont au moins un comportant un Boss (tier 4). A l'élimination de ce Boss, on débloque une nouvelle unitée de faction bloqué ainsi que la possibilité de débloquer ses unités dans la boutique.
+
+En complétant la campgane on gagne aussi des PA et des CP pour le mode Hexarène
 
 ### Hexarène
-Le mode arène, qui permet d'affronter des adversaires un peu plus puissant que sois.
+Hexarène est un mode infini, on choisit parmi 2 options : "Mode faction" et "Mode Libre". Ces deux modes apportent ou non des contraintes sur les unités jouables du joueur et du bot. Le bot choisit automatiquement ses unités, ce mode permet des niveaux infinis, ou de tester des combinaisons d'unités en dehors de la campagne. A l'élimination d'une unitée dans ce mode, des PA sont gagnés (Tier X = X PA).
+
+Les CP max de ce mode augementent avec le nombre de niveau terminé sur la campagne.
 
 ### JcJ (local)
 Permet d'affronter un second joueur en local.
 
 ## Factions
 
-Différentes factions sont disponibles.
+Les unités du jeu sont séparés en différentes "factions" il s'agit de groupe auquels appartienent ses unités. Sur certains modes de jeux, la faction est imposée, ou le mélange de factions est prohibé. Sur d'autre, la composition d'équipe est indépendante des factions. 
 
 ### Morts-Vivants
 
