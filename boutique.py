@@ -8,8 +8,9 @@ from competences import COMPETENCES
 class Boutique:
     def __init__(self, screen):
         self.screen = screen
-        self.font = pygame.font.SysFont(None, 28)
-        self.title_font = pygame.font.SysFont(None, 36)
+        if screen:  # Seulement si on a un écran
+            self.font = pygame.font.SysFont(None, 28)
+            self.title_font = pygame.font.SysFont(None, 36)
         self.data = sauvegarde.charger()
         self.boutons = []
         self.scroll_y = 0
@@ -17,6 +18,19 @@ class Boutique:
         # Système de déblocage secret pour Tier 4
         self.secret_clicks = 0
         self.secret_click_rect = None
+
+    def est_faction_debloquee(self, faction):
+        """Vérifie si le joueur possède au moins une unité de cette faction"""
+        unites_possedees = self.data.get("unites", [])
+        
+        # Parcourir toutes les unités possédées
+        for nom_unite in unites_possedees:
+            # Trouver la classe correspondante
+            for classe_unite in CLASSES_UNITES:
+                tmp = classe_unite("joueur", (0,0))
+                if tmp.get_nom() == nom_unite and tmp.faction == faction:
+                    return True
+        return False
 
     def _grid_specs(self):
         screen_w, screen_h = self.screen.get_size()
@@ -114,6 +128,11 @@ class Boutique:
             x, y, col = margin, start_y, 0
             for cls in CLASSES_UNITES:
                 tmp = cls("joueur", (0,0))
+                
+                # Vérifier si la faction est débloquée
+                if not self.est_faction_debloquee(tmp.faction):
+                    continue
+                
                 comp = tmp.get_competence()
                 comp_desc = "" if not comp else COMPETENCES.get(comp, "")
                 base_lines = [
@@ -143,6 +162,11 @@ class Boutique:
             x, y, col = margin, start_y - self.scroll_y, 0
             for cls in CLASSES_UNITES:
                 tmp = cls("joueur", (0,0))
+                
+                # Vérifier si la faction est débloquée
+                if not self.est_faction_debloquee(tmp.faction):
+                    continue
+                
                 nom = tmp.get_nom()
                 prix = tmp.get_prix()
                 comp = tmp.get_competence()
