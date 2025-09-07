@@ -174,18 +174,14 @@ Cyclopes
 
 | Vincent OP | 4    | Lancé de Claquette |
 | Micky   OP | 4    | Réincarnation      |
-| Clément OP | 4    | Paléonthologue     |
+| Clément OP | 4    | M. ADN             |
 | Mathis     | 4    |                    |
 
 ### Idées Compétences
     Regard Mortel : ???
     Lancé de Claquette : Tout les 3 tours, peut lancer une claquette n'importe où sur la carte infligeant des dégats.
-    Paléonthologue : Invoque une unité "Dinosaures" sur une case adjacente (chaque tour, tier + 1, max à 4 (tier des boss)).
+    M. ADN : Invoque une unité "Dinosaures" sur une case adjacente (chaque tour, tier + 1, max à 4 (tier des boss)).
     Réincarnation : Quand meurt, se réincarne dans le corps d'une unite allié de plus bas rang disponible (max rang 3).
-
-
-### Autre
-Clem voudrait remplacer "Paléonthologue" par "M. ADN"
 
 ## Mentions
 
