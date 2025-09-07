@@ -6,20 +6,27 @@ def get_save_path():
     """Retourne le chemin correct du fichier de sauvegarde selon l'environnement"""
     if getattr(sys, 'frozen', False):
         # Application compilée avec PyInstaller
-        # Le fichier sera dans le même dossier que l'EXE
-        application_path = os.path.dirname(sys.executable)
+        # Utiliser le dossier utilisateur pour éviter les problèmes de permissions
+        import tempfile
+        user_data_dir = os.path.join(os.path.expanduser("~"), "HexMaster")
+        
+        # Créer le dossier s'il n'existe pas
+        os.makedirs(user_data_dir, exist_ok=True)
+        
+        return os.path.join(user_data_dir, "sauvegarde.json")
     else:
-        # Mode développement
+        # Mode développement - garder dans le dossier du projet
         application_path = os.path.dirname(os.path.abspath(__file__))
-    
-    return os.path.join(application_path, "sauvegarde.json")
+        return os.path.join(application_path, "sauvegarde.json")
 
 FICHIER_SAVE = get_save_path()
 
 def charger():
     try:
+        print(f"[DEBUG] Tentative de chargement depuis: {FICHIER_SAVE}")
         with open(FICHIER_SAVE, "r", encoding="utf-8") as f:
             data = json.load(f)
+            print(f"[DEBUG] Sauvegarde chargée avec succès: {len(data)} éléments")
             # Ajouter CP si pas présent
             if "cp" not in data:
                 data["cp"] = 5  # CP de départ
@@ -35,19 +42,59 @@ def charger():
             if "unites" in data and "Goule" not in data["unites"]:
                 data["unites"].append("Goule")
             return data
-    except (FileNotFoundError, json.JSONDecodeError):
-        return {
-            "pa": 0,
-            "unites": ["Goule"],  # Goule débloquée par défaut
-            "cp": 5,  # CP de départ
-            "campagne_progression": {
-                "Religieux": {"niveaux_completes": [], "disponible": True}
-            }
+    except FileNotFoundError:
+        print(f"[DEBUG] Fichier de sauvegarde non trouvé: {FICHIER_SAVE}")
+        return creer_sauvegarde_defaut()
+    except json.JSONDecodeError as e:
+        print(f"[DEBUG] Erreur de lecture JSON: {e}")
+        return creer_sauvegarde_defaut()
+    except Exception as e:
+        print(f"[DEBUG] Erreur inattendue lors du chargement: {e}")
+        return creer_sauvegarde_defaut()
+
+def creer_sauvegarde_defaut():
+    """Crée une sauvegarde par défaut"""
+    data = {
+        "pa": 0,
+        "unites": ["Goule"],  # Goule débloquée par défaut
+        "cp": 5,  # CP de départ
+        "campagne_progression": {
+            "Religieux": {"niveaux_completes": [], "disponible": True}
         }
+    }
+    print(f"[DEBUG] Création d'une nouvelle sauvegarde par défaut")
+    return data
 
 def sauvegarder(data):
-    with open(FICHIER_SAVE, "w") as f:
-        json.dump(data, f, indent=2)
+    try:
+        print(f"[DEBUG] Tentative de sauvegarde vers: {FICHIER_SAVE}")
+        
+        # S'assurer que le dossier parent existe
+        os.makedirs(os.path.dirname(FICHIER_SAVE), exist_ok=True)
+        
+        # Tenter d'écrire le fichier
+        with open(FICHIER_SAVE, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        
+        print(f"[DEBUG] Sauvegarde réussie: {len(data)} éléments sauvés")
+        
+        # Vérifier que le fichier a bien été créé et contient des données
+        if os.path.exists(FICHIER_SAVE):
+            size = os.path.getsize(FICHIER_SAVE)
+            print(f"[DEBUG] Fichier créé: {size} octets")
+        else:
+            print(f"[DEBUG] ERREUR: Le fichier n'a pas été créé!")
+            
+    except PermissionError as e:
+        print(f"[ERREUR] Pas de permission d'écriture: {e}")
+        print(f"[ERREUR] Chemin tentative: {FICHIER_SAVE}")
+    except Exception as e:
+        print(f"[ERREUR] Erreur lors de la sauvegarde: {e}")
+        print(f"[ERREUR] Chemin tentative: {FICHIER_SAVE}")
+
+def obtenir_chemin_sauvegarde():
+    """Retourne le chemin du fichier de sauvegarde pour debug"""
+    return FICHIER_SAVE
 
 
 def appliquer_recompenses_niveau(niveau_config, chapitre_nom, numero_niveau):

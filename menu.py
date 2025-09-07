@@ -80,6 +80,16 @@ class HexaMaster:
             Button((20, h-70, 150, 50), "Retour", self.back_to_menu, self.font_med)
         ]
 
+        # Menu Options
+        self.boutons_options = [
+            Button((center_x-200, h//2-120, 400, 80), "Debug Sauvegarde", self.debug_sauvegarde, self.font_med),
+            Button((center_x-200, h//2-20, 400, 80), "Réinitialiser Sauvegarde", self.reset_sauvegarde, self.font_med),
+            Button((20, h-70, 150, 50), "Retour", self.back_to_menu, self.font_med)
+        ]
+
+        # Variables pour le debug
+        self.debug_info = ""
+
     # ------ Navigation entre menus ------
     def back_to_menu(self):
         if self.etat == "jeu":
@@ -113,8 +123,72 @@ class HexaMaster:
         self.creer_boutons()
 
     def open_option(self):
-        """Affiche l'écran d'options (en construction)"""
-        self.etat = "option_construction"
+        """Affiche l'écran d'options"""
+        self.etat = "options"
+
+    def debug_sauvegarde(self):
+        """Affiche les informations de debug sur la sauvegarde"""
+        import sauvegarde
+        
+        info_lines = []
+        info_lines.append("=== DEBUG SAUVEGARDE ===")
+        
+        # Chemin de sauvegarde
+        chemin = sauvegarde.obtenir_chemin_sauvegarde()
+        info_lines.append(f"Chemin: {chemin}")
+        
+        # Mode EXE
+        import sys
+        info_lines.append(f"Mode EXE: {getattr(sys, 'frozen', False)}")
+        
+        # Existence du fichier
+        import os
+        if os.path.exists(chemin):
+            size = os.path.getsize(chemin)
+            info_lines.append(f"Fichier existe: {size} octets")
+        else:
+            info_lines.append("Fichier n'existe pas")
+        
+        # Données actuelles
+        try:
+            data = sauvegarde.charger()
+            info_lines.append(f"PA: {data.get('pa', 'N/A')}")
+            info_lines.append(f"CP: {data.get('cp', 'N/A')}")
+            unites = data.get('unites', [])
+            info_lines.append(f"Unités: {len(unites)} débloquées")
+            
+            # Test d'écriture
+            test_data = data.copy()
+            test_data['debug_test'] = f"test_{pygame.time.get_ticks()}"
+            sauvegarde.sauvegarder(test_data)
+            info_lines.append("Test écriture: OK")
+            
+        except Exception as e:
+            info_lines.append(f"Erreur: {e}")
+        
+        self.debug_info = "\\n".join(info_lines)
+        print(self.debug_info)  # Aussi dans la console
+
+    def reset_sauvegarde(self):
+        """Réinitialise la sauvegarde"""
+        import sauvegarde
+        
+        data_default = {
+            "pa": 0,
+            "unites": ["Goule"],
+            "cp": 5,
+            "campagne_progression": {
+                "Religieux": {"niveaux_completes": [], "disponible": True}
+            }
+        }
+        
+        try:
+            sauvegarde.sauvegarder(data_default)
+            self.debug_info = "Sauvegarde réinitialisée avec succès!"
+            print(self.debug_info)
+        except Exception as e:
+            self.debug_info = f"Erreur lors de la réinitialisation: {e}"
+            print(self.debug_info)
 
     def open_unite_builder(self):
         """Affiche l'écran du constructeur d'unités (en construction)"""
@@ -390,8 +464,10 @@ class HexaMaster:
                 elif self.etat == "custom_menu":
                     for b in self.boutons_custom_menu: b.handle_event(event)
                     self.bouton_option.handle_event(event)
-                elif self.etat in ["missions", "option_construction", "unite_builder_construction"]:
+                elif self.etat in ["missions", "unite_builder_construction"]:
                     for b in self.boutons_retour_placeholder: b.handle_event(event)
+                elif self.etat == "options":
+                    for b in self.boutons_options: b.handle_event(event)
                     # Pas de bouton option sur les écrans de construction
                 elif self.etat == "jeu":
                     if self.jeu:
@@ -409,8 +485,10 @@ class HexaMaster:
                 self.afficher_jcj_menu()
             elif self.etat == "custom_menu":
                 self.afficher_custom_menu()
-            elif self.etat in ["missions", "option_construction", "unite_builder_construction"]:
+            elif self.etat in ["missions", "unite_builder_construction"]:
                 self.afficher_placeholder()
+            elif self.etat == "options":
+                self.afficher_options()
             elif self.etat == "jeu":
                 if self.jeu:
                     # Vérifier si le jeu est terminé
@@ -482,10 +560,7 @@ class HexaMaster:
 
     def afficher_placeholder(self):
         self.screen.fill(BLANC)
-        if self.etat == "option_construction":
-            title = self.font_big.render("Options", True, BLEU)
-            subtitle = self.font_med.render("Écran en construction", True, BLEU)
-        elif self.etat == "unite_builder_construction":
+        if self.etat == "unite_builder_construction":
             title = self.font_big.render("Unite Builder", True, BLEU)
             subtitle = self.font_med.render("Écran en construction", True, BLEU)
         else:
@@ -497,3 +572,24 @@ class HexaMaster:
             self.screen.blit(subtitle, (self.screen.get_width()//2 - subtitle.get_width()//2, 320))
         for b in self.boutons_retour_placeholder:
             b.draw(self.screen)
+
+    def afficher_options(self):
+        """Affiche le menu d'options avec debug de sauvegarde"""
+        self.screen.fill(BLANC)
+        
+        # Titre
+        title = self.font_big.render("Options", True, BLEU)
+        self.screen.blit(title, (self.screen.get_width()//2 - title.get_width()//2, 50))
+        
+        # Boutons
+        for b in self.boutons_options:
+            b.draw(self.screen)
+        
+        # Afficher les informations de debug si disponibles
+        if hasattr(self, 'debug_info') and self.debug_info:
+            y_offset = 200
+            for line in self.debug_info.split('\\n'):
+                if line.strip():
+                    text = self.font_small.render(line, True, BLEU)
+                    self.screen.blit(text, (50, y_offset))
+                    y_offset += 25
