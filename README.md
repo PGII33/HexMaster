@@ -83,7 +83,7 @@ Les unités du jeu sont séparés en différentes "factions" il s'agit de groupe
 
 | Nom       | Tier | Compétences       |
 |-----------|------|-------------------|
-| Cristal   | 0    |                   |
+| Cristal   | 0    |Effondrement       |
 | Esprit    | 1    |                   |
 | Driade    | 1    |Enracinement       |
 | Gnome     | 1    |Cristalisation     |
@@ -126,8 +126,9 @@ Les unités du jeu sont séparés en différentes "factions" il s'agit de groupe
     Bouclier de la foi : 2 Bouclier sur les unités autour de soi.
     Combustion Différée : Toute unité touché meurt au bout de 3 tours.
     Commandement : Une attaque supplémentaire avec des dégats additionnels (dmg) pour la cible.
-    Cristallisation : Crée un cristal 10PV sur une case adjacente sélectionnée
+    Cristallisation : Crée un cristal de 10PV sur une case adjacente sélectionnée qui se brise au prochain tour.
     Divertissement : S'il lui reste une attaque, divertis les ennemis adjacents qui perdent une attaque (fin de tour).
+    Effondrement : Meurt à son tour.
     Enracinement : Gagne 2PV si aucun déplacement n'a été fait ce tour ci.
     Explosion sacrée : Se sacrifie pour infliger ses points de vie en dégats.
     Fantomatique : Se déplace au travers des unites gratuitement.
