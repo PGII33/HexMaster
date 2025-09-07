@@ -12,6 +12,12 @@ BLEU_BOUCLIER = (100, 150, 255)
 JAUNE_CIBLE = (255, 255, 100)
 
 def dessiner(jeu):
+    # Debug mode sélection
+    if hasattr(jeu, 'mode_selection_competence') and jeu.mode_selection_competence:
+        print(f"🎯 MODE SELECTION ACTIF: {jeu.competence_en_cours}, cibles: {len(jeu.cibles_possibles) if hasattr(jeu, 'cibles_possibles') else 0}")
+        if hasattr(jeu, 'cibles_possibles'):
+            print(f"   Cibles: {jeu.cibles_possibles}")
+    
     jeu.screen.fill(BLANC)
 
     # bandeau
@@ -55,6 +61,55 @@ def dessiner(jeu):
                 jeu.screen.blit(txtc, (cx - txtc.get_width()//2, cy - txtc.get_height()//2))
             else:
                 dessiner_hex(jeu, q, r, GRIS, max(1, int(jeu.taille_hex * 0.05)))
+                
+            # Affichage des compétences (indépendant des mouvements)
+            if (hasattr(jeu, 'mode_selection_competence') and jeu.mode_selection_competence and 
+                  hasattr(jeu, 'cibles_possibles') and (q,r) in jeu.cibles_possibles):
+                # Afficher les cases ciblables par les compétences (ex: cristalisation)
+                cx, cy = hex_to_pixel(jeu, q, r)
+                
+                # Dessiner un hexagone vert semi-transparent de la même taille
+                points = []
+                for i in range(6):
+                    angle = math.pi / 3 * i + math.pi / 6  # Décalage de 30° pour avoir une arête au nord
+                    px = cx + jeu.taille_hex * 0.9 * math.cos(angle)
+                    py = cy + jeu.taille_hex * 0.9 * math.sin(angle)
+                    points.append((px, py))
+                
+                # Créer une surface temporaire pour la transparence
+                temp_surface = pygame.Surface((jeu.taille_hex * 2, jeu.taille_hex * 2), pygame.SRCALPHA)
+                pygame.draw.polygon(temp_surface, (0, 255, 100, 120), 
+                                  [(p[0] - cx + jeu.taille_hex, p[1] - cy + jeu.taille_hex) for p in points])
+                jeu.screen.blit(temp_surface, (cx - jeu.taille_hex, cy - jeu.taille_hex))
+                
+                # Dessiner une forme de cristal spécifique pour la cristalisation
+                if hasattr(jeu, 'competence_en_cours') and jeu.competence_en_cours == "cristalisation":
+                    # Forme de cristal (losange avec des facettes)
+                    cristal_size = 16
+                    # Losange principal
+                    points_cristal = [
+                        (cx, cy - cristal_size),      # Haut
+                        (cx + cristal_size//2, cy),    # Droite
+                        (cx, cy + cristal_size),      # Bas
+                        (cx - cristal_size//2, cy)     # Gauche
+                    ]
+                    pygame.draw.polygon(jeu.screen, (255, 255, 255), points_cristal)
+                    pygame.draw.polygon(jeu.screen, (100, 255, 255), points_cristal, 2)
+                    
+                    # Petites facettes internes pour effet cristal
+                    facette_size = cristal_size // 3
+                    pygame.draw.line(jeu.screen, (200, 255, 255), 
+                                   (cx - facette_size, cy - facette_size), 
+                                   (cx + facette_size, cy + facette_size), 2)
+                    pygame.draw.line(jeu.screen, (200, 255, 255), 
+                                   (cx - facette_size, cy + facette_size), 
+                                   (cx + facette_size, cy - facette_size), 2)
+                else:
+                    # Pour autres compétences, simple croix
+                    pygame.draw.circle(jeu.screen, (255, 255, 255), (cx, cy), 12)
+                    pygame.draw.circle(jeu.screen, (0, 255, 0), (cx, cy), 10)
+                    pygame.draw.line(jeu.screen, (255, 255, 255), (cx-6, cy), (cx+6, cy), 3)
+                    pygame.draw.line(jeu.screen, (255, 255, 255), (cx, cy-6), (cx, cy+6), 3)
 
     # unités
     for u in jeu.unites:
@@ -81,10 +136,20 @@ def dessiner(jeu):
             bouclier_txt = jeu.font_small.render(f"{u.bouclier}", True, BLEU_BOUCLIER)
             jeu.screen.blit(bouclier_txt, (x + jeu.unit_radius + 5, y - jeu.unit_radius - 5))
 
-        # Indicateur de cible possible pour compétence
+        # Indicateur de cible possible pour compétence (unités)
         if (hasattr(jeu, 'mode_selection_competence') and jeu.mode_selection_competence and 
-            hasattr(jeu, 'cibles_possibles') and u in jeu.cibles_possibles):
-            pygame.draw.circle(jeu.screen, JAUNE_CIBLE, (x, y), jeu.unit_radius + 12, 5)
+            hasattr(jeu, 'cibles_possibles') and (u in jeu.cibles_possibles or u.pos in jeu.cibles_possibles)):
+            # Cercle jaune pulsant plus visible
+            pygame.draw.circle(jeu.screen, (255, 255, 0), (x, y), jeu.unit_radius + 15, 6)
+            pygame.draw.circle(jeu.screen, (255, 255, 100), (x, y), jeu.unit_radius + 8, 3)
+            
+            # Ajouter un indicateur de soin (croix rouge)
+            if jeu.competence_en_cours == "soin":
+                # Croix de soin
+                pygame.draw.line(jeu.screen, (255, 255, 255), (x-8, y), (x+8, y), 4)
+                pygame.draw.line(jeu.screen, (255, 255, 255), (x, y-8), (x, y+8), 4)
+                pygame.draw.line(jeu.screen, (255, 0, 0), (x-6, y), (x+6, y), 2)
+                pygame.draw.line(jeu.screen, (255, 0, 0), (x, y-6), (x, y+6), 2)
 
         name_txt = jeu.font_small.render(u.get_nom(), True, NOIR)
         jeu.screen.blit(name_txt, (x - name_txt.get_width() // 2, y - jeu.unit_radius - name_txt.get_height() - 2))
@@ -162,7 +227,11 @@ def dessiner(jeu):
             jeu.screen.blit(txt, (jeu.info_panel.x + 10, jeu.info_panel.y + 10 + i * (txt.get_height() + 4)))
 
         # Bouton pour compétence active si disponible (et pas en mode sélection)
-        if (hasattr(u, 'a_competence_active') and u.a_competence_active() and u.attaque_restantes > 0 and
+        # Compétences qui ne nécessitent pas d'attaque restante
+        competences_sans_attaque = ["soin"]
+        attaque_necessaire = getattr(u, 'comp', '') not in competences_sans_attaque
+        if (hasattr(u, 'a_competence_active') and u.a_competence_active() and 
+            (not attaque_necessaire or u.attaque_restantes > 0) and
             u.equipe == jeu.tour and not (hasattr(jeu, 'mode_selection_competence') and jeu.mode_selection_competence)):
             
             btn_y = jeu.info_panel.y + 10 + len(lignes) * (jeu.font_norm.get_height() + 4) + 10
@@ -178,6 +247,7 @@ def dessiner(jeu):
                 btn_color = (100, 200, 100)  # Vert si utilisable
                 text_color = NOIR
                 btn_text = f"Utiliser {u.get_competence()}"
+                print(f"🟢 BOUTON COMPETENCE AFFICHE: {u.get_competence()} pour {u.nom}")
             else:
                 btn_color = (150, 150, 150)  # Gris si en cooldown ou déjà utilisée
                 text_color = (100, 100, 100)
@@ -206,8 +276,10 @@ def dessiner(jeu):
             # Stocker le rectangle pour la détection de clic seulement si utilisable
             if competence_utilisable:
                 jeu.competence_btn_rect = btn_rect
+                print(f"🟢 BOUTON CLIQUABLE DEFINI: {btn_rect}")
             else:
                 jeu.competence_btn_rect = None
+                print(f"🔴 BOUTON NON CLIQUABLE: {u.get_competence()}")
         else:
             jeu.competence_btn_rect = None
 

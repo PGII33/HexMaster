@@ -163,6 +163,29 @@ def bénédiction(self, cible):
         return True
     return False
 
+def cristalisation(self, cible_pos, toutes_unites):
+    """Crée un Cristal sur une case adjacente à 1 de portée."""
+    from unites import Cristal
+    directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
+    q, r = self.pos
+    
+    # Vérifier si la cible est adjacente
+    for dq, dr in directions:
+        if (q+dq, r+dr) == cible_pos:
+            # Vérifier que la case est vide
+            case_libre = True
+            for unite in toutes_unites:
+                if unite.pos == cible_pos and unite.vivant:
+                    case_libre = False
+                    break
+            
+            if case_libre:
+                cristal = Cristal(self.equipe, cible_pos)
+                toutes_unites.append(cristal)
+                return True
+    
+    return False
+
 def lumière_vengeresse(self, cible):
     """Regagne son attaque lorsqu'il tue un Mort-Vivant."""
     if not cible.vivant and cible.faction == "Morts-Vivants":
@@ -188,7 +211,7 @@ def aura_sacrée(self, toutes_unites):
 # Fonction utilitaire pour déterminer si une compétence est active
 def est_competence_active(nom_competence):
     """Retourne True si la compétence nécessite une cible."""
-    competences_actives = ["soin", "bénédiction"]  # Retiré "explosion sacrée" et "lumière vengeresse"
+    competences_actives = ["soin", "bénédiction", "cristalisation"]
     return nom_competence in competences_actives
 
 def peut_cibler_allie(nom_competence):
@@ -198,8 +221,13 @@ def peut_cibler_allie(nom_competence):
 
 def peut_cibler_ennemi(nom_competence):
     """Retourne True si la compétence peut cibler des ennemis."""
-    competences_ennemis = []  # Retiré "explosion sacrée"
+    competences_ennemis = []
     return nom_competence in competences_ennemis
+
+def peut_cibler_case_vide(nom_competence):
+    """Retourne True si la compétence peut cibler des cases vides."""
+    competences_cases = ["cristalisation"]
+    return nom_competence in competences_cases
 
 def utiliser_competence_active(unite, nom_competence, cible, toutes_unites=None):
     """Utilise une compétence active sur une cible."""
@@ -207,6 +235,8 @@ def utiliser_competence_active(unite, nom_competence, cible, toutes_unites=None)
         return soin(unite, cible)
     elif nom_competence == "bénédiction":
         return bénédiction(unite, cible)
+    elif nom_competence == "cristalisation":
+        return cristalisation(unite, cible, toutes_unites)
     return False
 
 

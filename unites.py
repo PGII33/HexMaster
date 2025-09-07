@@ -280,8 +280,12 @@ class Unite:
     def utiliser_competence(self, cible=None, toutes_unites=None):
         """Utilise la compétence active de l'unité."""
         # Vérifier les conditions d'utilisation
+        # Compétences qui ne nécessitent pas d'attaque restante
+        competences_sans_attaque = ["soin"]
+        attaque_necessaire = self.comp not in competences_sans_attaque
+        
         if (self.a_competence_active() and 
-            self.attaque_restantes > 0 and 
+            (not attaque_necessaire or self.attaque_restantes > 0) and 
             self.cooldown_actuel <= 0 and 
             not self.competence_utilisee_ce_tour):
             
@@ -291,8 +295,8 @@ class Unite:
                 self.cooldown_actuel = self.cooldown_max
                 self.competence_utilisee_ce_tour = True
                 
-                # Le soin ne consomme pas d'attaque, les autres compétences si
-                if self.comp != "soin":
+                # Seules certaines compétences ne consomment pas d'attaque
+                if self.comp not in competences_sans_attaque:
                     self.attaque_restantes -= 1
             return success
         return False

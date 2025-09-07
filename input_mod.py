@@ -19,27 +19,58 @@ def handle_click(jeu, mx, my):
         jeu.competence_btn_rect.collidepoint(mx, my) and jeu.selection and 
         jeu.selection.equipe == jeu.tour):
         
+        print(f"🔵 CLIC SUR BOUTON COMPETENCE: {jeu.selection.get_competence()}")
+        
         # Vérifier que la compétence est utilisable (pas en cooldown et pas déjà utilisée)
         cooldown_restant = getattr(jeu.selection, 'cooldown_actuel', 0)
         competence_utilisee = getattr(jeu.selection, 'competence_utilisee_ce_tour', False)
-        if (jeu.selection.a_competence_active() and jeu.selection.attaque_restantes > 0 and 
+        
+        # Compétences qui ne nécessitent pas d'attaque restante
+        competences_sans_attaque = ["soin"]
+        comp_name = jeu.selection.get_competence()
+        attaque_necessaire = comp_name not in competences_sans_attaque
+        
+        if (jeu.selection.a_competence_active() and 
+            (not attaque_necessaire or jeu.selection.attaque_restantes > 0) and 
             cooldown_restant == 0 and not competence_utilisee):
-            comp_name = jeu.selection.get_competence()
+            
+            print(f"🟢 ACTIVATION: {comp_name}")
             
             # Compétences qui ne nécessitent pas de cible
             if comp_name == "explosion sacrée":
+                print(f"   Explosion sacrée directe")
                 jeu.selection.utiliser_competence(None, jeu.unites)
                 jeu.deplacement_possibles = jeu.selection.cases_accessibles(jeu.unites, jeu.q_range, jeu.r_range)
                 return
             
             # Compétences qui nécessitent une cible
-            elif comp_name in ["soin", "bénédiction"]:
+            elif comp_name in ["soin", "bénédiction", "cristalisation"]:
+                print(f"🔸 DEBUG: Activation {comp_name} pour {jeu.selection.nom}")
+                print(f"   - Mode sélection: {getattr(jeu, 'mode_selection_competence', False)}")
+                print(f"   - Attaques restantes: {jeu.selection.attaque_restantes}")
+                print(f"   - Cooldown: {getattr(jeu.selection, 'cooldown_actuel', 0)}")
+                print(f"   - Compétence utilisée: {getattr(jeu.selection, 'competence_utilisee_ce_tour', False)}")
+                
+                print(f"   Mode sélection activé pour {comp_name}")
                 # Entrer en mode sélection de cible
                 jeu.mode_selection_competence = True
                 jeu.competence_en_cours = comp_name
                 jeu.unite_utilisant_competence = jeu.selection  # Stocker l'unité
                 jeu.cibles_possibles = _get_valid_targets(jeu, comp_name, jeu.selection)
+                print(f"   {len(jeu.cibles_possibles)} cibles disponibles")
+                if jeu.cibles_possibles:
+                    print(f"   Première cible: {jeu.cibles_possibles[0]}")
                 return
+        else:
+            print(f"🔴 CONDITIONS NON REMPLIES")
+            if not jeu.selection.a_competence_active():
+                print(f"   - Pas de compétence active")
+            if attaque_necessaire and jeu.selection.attaque_restantes <= 0:
+                print(f"   - Pas d'attaque restante")
+            if cooldown_restant > 0:
+                print(f"   - En cooldown ({cooldown_restant} tours)")
+            if competence_utilisee:
+                print(f"   - Déjà utilisée ce tour")
         
     # clic sur une unité ?
     for u in jeu.unites:
@@ -125,6 +156,30 @@ def _handle_competence_target_selection(jeu, mx, my):
                         jeu.deplacement_possibles = jeu.selection.cases_accessibles(jeu.unites, jeu.q_range, jeu.r_range)
                 return
     
+    # Vérifier les clics sur des cases vides (pour cristalisation)
+    for cible_pos in jeu.cibles_possibles:
+        if isinstance(cible_pos, tuple):  # C'est une position de case vide
+            q, r = cible_pos
+            x, y = hex_to_pixel(jeu, q, r)
+            # Vérifier si le clic est dans cette case hexagonale
+            if (mx-x)**2 + (my-y)**2 <= (jeu.taille_hex)**2:
+                print(f"🟢 CLIC SUR CASE VIDE: {cible_pos}")
+                # Utiliser la compétence sur cette position
+                success = jeu.unite_utilisant_competence.utiliser_competence(cible_pos, jeu.unites)
+                if success:
+                    print(f"🟢 COMPETENCE UTILISEE SUR CASE VIDE")
+                    # Sortir du mode sélection
+                    jeu.mode_selection_competence = False
+                    jeu.competence_en_cours = None
+                    jeu.cibles_possibles = []
+                    jeu.unite_utilisant_competence = None
+                    # Mettre à jour l'affichage
+                    if jeu.selection:
+                        jeu.deplacement_possibles = jeu.selection.cases_accessibles(jeu.unites, jeu.q_range, jeu.r_range)
+                else:
+                    print(f"🔴 ECHEC COMPETENCE SUR CASE VIDE")
+                return
+    
     # Clic ailleurs = annuler la sélection de compétence
     jeu.mode_selection_competence = False
     jeu.competence_en_cours = None
@@ -146,6 +201,38 @@ def _get_valid_targets(jeu, comp_name, unite_source):
         for u in jeu.unites:
             if u.vivant and _are_enemies(unite_source.equipe, u.equipe, getattr(jeu, 'versus_mode', False)):
                 valid_targets.append(u)
+    
+    if co.peut_cibler_case_vide(comp_name):
+        # Peut cibler des cases vides adjacentes (pour cristalisation)
+        print(f"   🔸 DEBUG: Recherche cases vides pour {comp_name}")
+        print(f"   Position source: {unite_source.pos}")
+        directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
+        q, r = unite_source.pos
+        print(f"   Coordonnées source: q={q}, r={r}")
+        
+        for dq, dr in directions:
+            case_pos = (q+dq, r+dr)
+            case_q, case_r = case_pos
+            print(f"   Vérification case: {case_pos}")
+            # Vérifier que la case est dans les limites du jeu
+            if (case_q in jeu.q_range and case_r in jeu.r_range):
+                print(f"     - Dans les limites ✓")
+                # Vérifier que la case est vide
+                case_libre = True
+                for u in jeu.unites:
+                    if u.pos == case_pos and u.vivant:
+                        case_libre = False
+                        print(f"     - Occupée par {u.nom} ✗")
+                        break
+                
+                if case_libre:
+                    # Ajouter la position comme cible valide
+                    valid_targets.append(case_pos)
+                    print(f"     - Case vide trouvée ✓: {case_pos}")
+                else:
+                    print(f"     - Case occupée ✗")
+            else:
+                print(f"     - Hors limites ✗ (q_range: {jeu.q_range}, r_range: {jeu.r_range})")
     
     return valid_targets
 
