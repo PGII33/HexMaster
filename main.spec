@@ -7,7 +7,6 @@ a = Analysis(
     datas=[
         ('Campagne', 'Campagne'),
         ('custom_levels', 'custom_levels'),
-        ('sauvegarde.json', '.'),
     ],
     hiddenimports=[],
     hookspath=[],

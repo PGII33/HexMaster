@@ -28,6 +28,11 @@ jobs:
 
       - name: Build exe
         run: |
+          # S'assurer que les dossiers requis existent
+          if (-not (Test-Path "custom_levels")) { New-Item -ItemType Directory -Path "custom_levels" }
+          if (-not (Test-Path "custom_levels/.keep")) { 
+            "# Placeholder file" | Out-File -FilePath "custom_levels/.keep" -Encoding UTF8 
+          }
           pyinstaller main.spec
 
       - name: Generate version and release info
