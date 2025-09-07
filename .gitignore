@@ -6,6 +6,9 @@ __pycache__/
 # Fichiers de test temporaires
 test_*.py
 
+# Fichiers de débogage
+debug_*.py
+
 # C extensions
 *.so
 
