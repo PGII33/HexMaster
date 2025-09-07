@@ -4,7 +4,11 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[
+        ('Campagne', 'Campagne'),
+        ('custom_levels', 'custom_levels'),
+        ('sauvegarde.json', '.'),
+    ],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

@@ -4,6 +4,7 @@ import os
 from niveau_structure import charger_niveau, NiveauConfig, TypeRestriction
 from ui_commons import UIManager, ProgressionManager
 import sauvegarde
+from utils import resource_path
 
 class Campagne:
     def __init__(self, screen):
@@ -28,11 +29,11 @@ class Campagne:
     
     def _load_campaign_structure(self):
         """Charge la structure de campagne depuis les dossiers"""
-        campaign_path = "Campagne"
+        campaign_path = resource_path("Campagne")
         chapitres = {}
         
         if not os.path.exists(campaign_path):
-            print("Dossier Campagne non trouvé!")
+            print(f"Dossier Campagne non trouvé à {campaign_path}!")
             return {}
         
         # Parcourir les dossiers de chapitres
@@ -194,7 +195,7 @@ class Campagne:
 
 def get_niveau_data(chapitre: str, numero: int) -> dict:
     """Fonction utilitaire pour récupérer les données d'un niveau au format attendu par le jeu"""
-    campaign_path = "Campagne"
+    campaign_path = resource_path("Campagne")
     
     if not os.path.exists(campaign_path):
         return None
@@ -252,7 +253,7 @@ def appliquer_recompenses_niveau(chapitre: str, numero: int):
     """Applique les récompenses d'un niveau complété"""
     # Charger la configuration du niveau
     config = None
-    campaign_path = "Campagne"
+    campaign_path = resource_path("Campagne")
     
     if os.path.exists(campaign_path):
         # Trouver le niveau comme dans get_niveau_data

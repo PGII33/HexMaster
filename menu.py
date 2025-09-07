@@ -4,7 +4,7 @@ import os
 import ia
 import unites
 from jeu import Jeu
-from utils import Button
+from utils import Button, resource_path
 from boutique import Boutique
 from inventaire import Inventaire
 from hexarene import HexArène
@@ -141,7 +141,8 @@ class HexaMaster:
     def start_campagne(self):
         """Lance le mode campagne"""
         # Créer la structure de campagne si elle n'existe pas
-        if not os.path.exists("Campagne"):
+        campaign_path = resource_path("Campagne")
+        if not os.path.exists(campaign_path):
             print("Création de la structure de campagne...")
             try:
                 from create_demo_levels import creer_niveaux_demo
