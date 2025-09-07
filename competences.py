@@ -1,6 +1,6 @@
 def sangsue(self, degats_infliges):
-    """Le vampire récupère autant de PV que de dégâts réellement infligés."""
-    self.pv = min(self.pv + degats_infliges, self.pv_max)
+    """Le vampire récupère autant de PV que de dégâts réellement infligés (peut dépasser PV max)."""
+    self.pv += degats_infliges
 
 def zombification(self, cible):
     """Transforme l'unite morte en zombie sous le contrôle du joueur de l'attaquant"""
@@ -16,10 +16,11 @@ def zombification(self, cible):
 
 def tas_d_os(self):
     from unites import Tas_D_Os
-    if not self.vivant:
-        self.__class__ = Tas_D_Os
-        self.__init__(self.equipe, self.pos)
-        self.vivant = False  # Important: garder l'état mort après transformation
+    # La transformation se fait même si l'unité est encore marquée comme vivante
+    # car cette fonction est appelée pendant le processus de mort
+    self.__class__ = Tas_D_Os
+    self.__init__(self.equipe, self.pos)
+    self.vivant = False  # Important: garder l'état mort après transformation
 
 def cases_fantomatiques(unite, toutes_unites, q_range=None, r_range=None):
     """Retourne toutes les cases accessibles en traversant les unités (traverser une unité ne coûte pas de PM, s'arrêter sur une case vide coûte 1 PM par case vide)."""

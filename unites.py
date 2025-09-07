@@ -217,7 +217,7 @@ class Unite:
                 
                 cible_tuée = False
                 if autre.pv <= 0:
-                    result = autre.mourir([])  # Utiliser la nouvelle méthode mourir
+                    result = autre.mourir(toutes_unites)  # Passer la liste complète des unités
                     cible_tuée = result  # True si l'unité était vivante et est maintenant morte
                 
                 # Compétences après l'attaque normale (quand on sait si la cible est tuée)

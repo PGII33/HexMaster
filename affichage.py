@@ -113,7 +113,8 @@ def dessiner(jeu):
 
     # unités
     for u in jeu.unites:
-        if not u.vivant:
+        # Afficher les unités vivantes ET les tas d'os
+        if not u.vivant and u.nom != "Tas d'Os":
             continue
         x,y = hex_to_pixel(jeu, u.pos[0], u.pos[1])
         
