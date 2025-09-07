@@ -83,35 +83,40 @@ Les unités du jeu sont séparés en différentes "factions" il s'agit de groupe
 
 | Nom       | Tier | Compétences       |
 |-----------|------|-------------------|
+| Cristal   | 0    |                   |
 | Esprit    | 1    |                   |
-| Driade    | 1    |                   |
-| Gnome     | 1    |                   |
+| Driade    | 1    |Enracinement       |
+| Gnome     | 1    |Cristalisation     |
 | Golem     | 2    |Armure de pierre   |
-| Ondine    | 2    |                   |
+| Ondine    | 2    |Vague apaisante    |
 | Ifrit     | 3    |Combustion Différée|
+| Phénix    | 4    |Renaissance        |
 
 ### Royaume
 
-| Nom         | Tier | Compétences  |
-|-------------|------|--------------|
-| Cheval      | 0    |              |
-| Guerrier    | 1    |              |
-| Archer      | 1    |              |
-| Cavalier    | 1    |Monture libéré|
-| Bouffon     | 2    |Divertissement|
-| Garde royal | 2    |              |
-| Roi         | 3    |Commandement  |
+| Nom          | Tier | Compétences    |
+|--------------|------|----------------|
+| Cheval       | 0    |                |
+| Guerrier     | 1    |                |
+| Archer       | 1    |Pluie de flèches|
+| Cavalier     | 1    |Monture libéré  |
+| Bouffon      | 2    |Divertissement  |
+| Garde royal  | 2    |Protection      |
+| Roi          | 3    |Commandement    |
+| Marionettiste| 4    |Manipulation    |
 
 
-### Bêtes
+### Chiméres
 
-| Nom      | Tier | Compétences |
-|----------|------|-------------|
-| Pégase   | 1    |    Vol      |
-| Cerbère  | 1    |             |
-| Centaure | 1    |             |
-| Griffon  | 2    |    Vol      |
-|Loup-Garou| 2    |    Rage     |
+| Nom       | Tier | Compétences      |
+|-----------|------|------------------|
+| Harpie    | 1    |                  |
+| Centaure  | 1    |Tir Précis        |
+| Griffon   | 1    |Vol               |
+| Lamia     | 2    |Sédition venimeuse|
+| Loup-Garou| 2    |Rage              |
+| Manticore | 3    |Venin incapacitant|
+| Basilic   | 4    |Regard Mortel     |
 
 ## Description des compétences
     
@@ -121,17 +126,27 @@ Les unités du jeu sont séparés en différentes "factions" il s'agit de groupe
     Bouclier de la foi : 2 Bouclier sur les unités autour de soi.
     Combustion Différée : Toute unité touché meurt au bout de 3 tours.
     Commandement : Une attaque supplémentaire avec des dégats additionnels (dmg) pour la cible.
+    Cristallisation : Crée un cristal 10PV sur une case adjacente sélectionnée
     Divertissement : S'il lui reste une attaque, divertis les ennemis adjacents qui perdent une attaque (fin de tour).
+    Enracinement : Gagne 2PV si aucun déplacement n'a été fait ce tour ci.
     Explosion sacrée : Se sacrifie pour infliger ses points de vie en dégats.
     Fantomatique : Se déplace au travers des unites gratuitement.
     Invocation : Invoque une unitée de tier 1 ou 2 des Morts-Vivants sur une case adjacente (chaque tour).
     Lumière Vengeresse : Regagne son attaque lorsqu'il tue un Mort-Vivant.
+    Manipulation : Toutes les unités avec 4PV ou moins passent dans votre camp (chaque tour, début du tour, pour un tour)
     Monture libéré : Descend de son cheval pour se battre en guerrier (le cheval devient indépendant).
     Nécromancie : Crée un squelette sur une case adjacente (chaque tour).
     Rage : Augemente l'attaque de 1 par morts.
+    Regard mortel : L'ennemie touché est mort s'il est de tier 2 ou moins.
+    Renaissance : 80% de chance de revivre après sa mort.
+    Pluie de flèches : Inflige ses dégats sur un rayon de 2 cellules juqu'à 3 cases de distances.
+    Protection : Si une unité allié est adjacente est attaqué, cette unité subit les dégats à sa place. (si l'unité qui subit les dégats a la même capacité, les dégats sont partagés pour équilibrer les PV)
     Tas d'os : À la mort, un tas d'os d'1PV apparaît sur la cellule.
     Sangsue : Augmente sa vie du nombre de dégâts infligés.
     Soin : Régénère 5 points de vie.
+    Tir Précis : Permet de tirer à porté + 1 en plus de son attaque tout les 2 tours.
+    Vague apaisante : Soigne 2 PV aux unités adjacentes.
+    Venin incapacitant : Une cible touchée ne peut plus se déplacer pour son prochain tour.
     Vol : Ignore la première attaque subie.
     Zombification : Transforme l'unite ennemie tuée en zombie.
 
@@ -145,14 +160,12 @@ Dinosaures
 
 
 ### Idées unitée
-
-Géants 
-Phoenix 
+ 
 Salamandre 
 
+Géants 
 Sphinx 
 Cyclopes
-Lamia
 
 | Basilic  | 4    |Regard Mortel|
 | Dragon   | 4    |             |
