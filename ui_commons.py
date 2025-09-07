@@ -25,11 +25,19 @@ class UIManager:
         self.boutons = []
     
     def add_button(self, rect: Tuple[int, int, int, int], text: str, action: Callable, 
-                   font: Optional[pygame.font.Font] = None) -> Button:
+                   font: Optional[pygame.font.Font] = None, color=None, hover_color=None) -> Button:
         """Ajoute un bouton et le retourne"""
         if font is None:
             font = self.font
-        btn = Button(rect, text, action, font)
+        
+        # Paramètres de couleur optionnels
+        kwargs = {}
+        if color is not None:
+            kwargs['base_color'] = color
+        if hover_color is not None:
+            kwargs['hover_color'] = hover_color
+            
+        btn = Button(rect, text, action, font, **kwargs)
         self.boutons.append(btn)
         return btn
     

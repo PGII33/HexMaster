@@ -4,6 +4,7 @@ import os
 from niveau_structure import charger_niveau, NiveauConfig, TypeRestriction
 from ui_commons import UIManager, ProgressionManager
 import sauvegarde
+from sauvegarde import est_chapitre_disponible, est_niveau_disponible, est_niveau_complete
 from utils import resource_path
 
 class Campagne:
@@ -93,11 +94,36 @@ class Campagne:
         
         if self.etat == "selection_chapitre":
             y = 150
-            for i, chapitre_nom in enumerate(self.chapitres.keys()):
+            chapitres_ordonnes = list(self.chapitres.keys())
+            
+            for i, chapitre_nom in enumerate(chapitres_ordonnes):
+                disponible = est_chapitre_disponible(chapitre_nom, chapitres_ordonnes)
+                progression = sauvegarde.obtenir_progression_chapitre(chapitre_nom)
+                niveaux_completes = len(progression.get("niveaux_completes", []))
+                total_niveaux = len(self.chapitres[chapitre_nom]["niveaux"])
+                
+                # Texte du bouton avec progression
+                if niveaux_completes > 0:
+                    texte = f"{chapitre_nom} ({niveaux_completes}/{total_niveaux})"
+                else:
+                    texte = chapitre_nom
+                
+                # Couleur selon la disponibilité
+                if disponible:
+                    couleur_base = (100, 150, 250)  # Bleu normal
+                    couleur_hover = (140, 190, 250)  # Bleu clair
+                    action = lambda nom=chapitre_nom: self.selectionner_chapitre(nom)
+                else:
+                    couleur_base = (150, 150, 150)  # Gris
+                    couleur_hover = (170, 170, 170)  # Gris clair
+                    action = None  # Pas d'action
+                
                 self.ui.add_button(
-                    (w//2 - 200, y + i * 70, 400, 50),
-                    chapitre_nom,
-                    lambda nom=chapitre_nom: self.selectionner_chapitre(nom)
+                    (w//2 - 250, y + i * 70, 500, 50),
+                    texte,
+                    action,
+                    color=couleur_base,
+                    hover_color=couleur_hover
                 )
             
             # Bouton retour
@@ -109,10 +135,34 @@ class Campagne:
             
             for niveau_num in sorted(niveaux.keys()):
                 config = niveaux[niveau_num]
+                disponible = est_niveau_disponible(self.chapitre_actuel, niveau_num, niveaux)
+                complete = est_niveau_complete(self.chapitre_actuel, niveau_num)
+                
+                # Texte du bouton
+                texte = f"Niveau {niveau_num}: {config.nom}"
+                if complete:
+                    texte += " [Complété]"
+                
+                # Couleur selon la disponibilité
+                if disponible:
+                    if complete:
+                        couleur_base = (100, 200, 100)  # Vert pour complété
+                        couleur_hover = (140, 240, 140)
+                    else:
+                        couleur_base = (100, 150, 250)  # Bleu normal
+                        couleur_hover = (140, 190, 250)
+                    action = lambda num=niveau_num: self.selectionner_niveau(num)
+                else:
+                    couleur_base = (150, 150, 150)  # Gris pour bloqué
+                    couleur_hover = (170, 170, 170)
+                    action = None
+                
                 self.ui.add_button(
-                    (w//2 - 200, y + (niveau_num - 1) * 70, 400, 50),
-                    f"Niveau {niveau_num}: {config.nom}",
-                    lambda num=niveau_num: self.selectionner_niveau(num)
+                    (w//2 - 250, y + (niveau_num - 1) * 70, 500, 50),
+                    texte,
+                    action,
+                    color=couleur_base,
+                    hover_color=couleur_hover
                 )
             
             # Boutons navigation
