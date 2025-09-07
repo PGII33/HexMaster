@@ -4,6 +4,7 @@ from utils import Button
 import sauvegarde
 from unites import CLASSES_UNITES
 from competences import COMPETENCES
+from faction_colors import get_faction_color
 
 class Inventaire:
     def __init__(self, screen):
@@ -31,6 +32,35 @@ class Inventaire:
         if cur:
             lines.append(cur)
         return lines or [""]
+
+    def _calculer_hauteur_max_carte(self, card_w):
+        """Calcule la hauteur maximale nécessaire pour toutes les cartes d'inventaire."""
+        max_height = 0
+        
+        for nom in self.data.get("unites", []):
+            classes_dict = {cls("joueur", (0,0)).get_nom(): cls for cls in CLASSES_UNITES}
+            cls = classes_dict.get(nom)
+            if not cls:
+                continue
+                
+            tmp = cls("joueur", (0,0))
+            comp = tmp.get_competence()
+            comp_desc = "" if not comp else COMPETENCES.get(comp, "")
+            
+            base_lines = [
+                f"{nom}",
+                f"{tmp.faction}",
+                f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
+                f"Attaques: {tmp.attaque_max} | Portée: {tmp.portee}",
+                f"Tier: {tmp.get_tier()}",
+                f"Compétence: {'Aucune' if not comp else comp}",
+            ]
+            desc_lines = self.wrap_text(comp_desc, card_w - 20)
+            card_h = 20 + len(base_lines) * 30 + len(desc_lines) * 26 + 20
+            
+            max_height = max(max_height, card_h)
+        
+        return max_height
 
     def _grid_specs(self):
         screen_w, screen_h = self.screen.get_size()
@@ -69,6 +99,9 @@ class Inventaire:
         while self.running:
             self.screen.fill((250, 245, 230))
             screen_w, screen_h, margin, cols, card_w, start_y = self._grid_specs()
+            
+            # Calculer la hauteur uniforme pour toutes les cartes
+            card_h = self._calculer_hauteur_max_carte(card_w)
 
             # --- SCROLL LIMITS ---
             total_height = start_y
@@ -77,19 +110,6 @@ class Inventaire:
                 cls = classes_dict.get(nom)
                 if not cls:
                     continue
-                tmp = cls("joueur", (0,0))
-                comp = tmp.get_competence()
-                comp_desc = "" if not comp else COMPETENCES.get(comp, "")
-                base_lines = [
-                    f"{nom}",
-                    f"{tmp.faction}",  # Faction ajoutée
-                    f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
-                    f"Attaques: {tmp.attaque_max} | Portée: {tmp.portee}",
-                    f"Tier: {tmp.get_tier()}",
-                    f"Compétence: {'Aucune' if not comp else comp}",
-                ]
-                desc_lines = self.wrap_text(comp_desc, card_w - 20)
-                card_h = 20 + len(base_lines) * 30 + len(desc_lines) * 26 + 20
                 total_height = max(total_height, y + card_h)
                 col += 1
                 if col >= cols:
@@ -123,10 +143,11 @@ class Inventaire:
                     f"Compétence: {comp_nom}",
                 ]
                 desc_lines = self.wrap_text(comp_desc, card_w - 20)
-                card_h = 20 + len(base_lines) * 30 + len(desc_lines) * 26 + 20
 
                 rect = pygame.Rect(x, y, card_w, card_h)
-                pygame.draw.rect(self.screen, (235, 235, 235), rect, border_radius=12)
+                # Utiliser la couleur de faction comme fond de carte
+                faction_color = get_faction_color(tmp.faction)
+                pygame.draw.rect(self.screen, faction_color, rect, border_radius=12)
                 pygame.draw.rect(self.screen, (0, 0, 0), rect, width=2, border_radius=12)
 
                 for i, l in enumerate(base_lines):

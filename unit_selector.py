@@ -4,6 +4,7 @@ from utils import Button
 import unites
 import sauvegarde
 from competences import COMPETENCES
+from faction_colors import get_faction_color
 
 class UnitSelector:
     def __init__(self, screen, mode, **kwargs):
@@ -291,10 +292,61 @@ class UnitSelector:
             lines.append(cur)
         return lines or [""]
     
+    def _calculer_hauteur_max_carte_predefinie(self, card_w):
+        """Calcule la hauteur maximale pour les unités prédéfinies."""
+        max_height = 0
+        
+        for cls, pos in self.config["unites_predefinies"]:
+            tmp = cls("joueur", pos)
+            comp = tmp.get_competence()
+            comp_desc = "" if not comp else COMPETENCES.get(comp, "")
+            
+            base_lines = [
+                f"{tmp.get_nom()}",
+                f"{tmp.faction}",
+                f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
+                f"Attaques: {tmp.attaque_max} | Portée: {tmp.portee}",
+                f"Tier: {tmp.get_tier()}",
+                f"Compétence: {'Aucune' if not comp else comp}",
+            ]
+            desc_lines = self.wrap_text(comp_desc, card_w - 20)
+            card_h = 20 + len(base_lines) * 30 + len(desc_lines) * 26 + 20
+            
+            max_height = max(max_height, card_h)
+        
+        return max_height
+    
+    def _calculer_hauteur_max_carte_disponible(self, card_w):
+        """Calcule la hauteur maximale pour les unités disponibles."""
+        max_height = 0
+        
+        for cls in self.config["unites_disponibles"]:
+            tmp = cls("joueur", (0,0))
+            comp = tmp.get_competence()
+            comp_desc = "" if not comp else COMPETENCES.get(comp, "")
+            
+            base_lines = [
+                f"{tmp.get_nom()}",
+                f"{tmp.faction}",
+                f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
+                f"Attaques: {tmp.attaque_max} | Portée: {tmp.portee}",
+                f"Tier: {tmp.get_tier()} (CP: {tmp.tier})",
+                f"Compétence: {'Aucune' if not comp else comp}",
+            ]
+            desc_lines = self.wrap_text(comp_desc, card_w - 20)
+            card_h = 20 + len(base_lines) * 30 + len(desc_lines) * 26 + 60
+            
+            max_height = max(max_height, card_h)
+        
+        return max_height
+    
     def afficher_campagne(self):
         """Affichage spécial pour le mode campagne (unités prédéfinies)"""
         self.screen.fill(self.config["background"])
         screen_w, screen_h, margin, cols, card_w, start_y = self._grid_specs()
+        
+        # Calculer la hauteur uniforme pour toutes les cartes
+        card_h = self._calculer_hauteur_max_carte_predefinie(card_w)
         
         titre = self.title_font.render(self.config["titre"], True, (30, 30, 60))
         self.screen.blit(titre, (margin, 30))
@@ -318,10 +370,10 @@ class UnitSelector:
                 f"Compétence: {'Aucune' if not comp else comp}",
             ]
             desc_lines = self.wrap_text(comp_desc, card_w - 20)
-            card_h = 20 + len(base_lines) * 30 + len(desc_lines) * 26 + 20
             
             rect = pygame.Rect(x, y, card_w, card_h)
-            pygame.draw.rect(self.screen, (220, 240, 220), rect, border_radius=12)
+            faction_color = get_faction_color(tmp.faction)
+            pygame.draw.rect(self.screen, faction_color, rect, border_radius=12)
             pygame.draw.rect(self.screen, (0, 0, 0), rect, width=2, border_radius=12)
             
             for i, l in enumerate(base_lines):
@@ -351,6 +403,9 @@ class UnitSelector:
         self.screen.fill(self.config["background"])
         screen_w, screen_h, margin, cols, card_w, start_y = self._grid_specs()
         
+        # Calculer la hauteur uniforme pour toutes les cartes
+        card_h = self._calculer_hauteur_max_carte_disponible(card_w)
+        
         titre = self.title_font.render(self.config["titre"], True, (30, 30, 60))
         self.screen.blit(titre, (margin, 30))
         
@@ -367,19 +422,6 @@ class UnitSelector:
         total_height = start_y
         x, y, col = margin, start_y, 0
         for cls in self.config["unites_disponibles"]:
-            tmp = cls("joueur", (0,0))
-            comp = tmp.get_competence()
-            comp_desc = "" if not comp else COMPETENCES.get(comp, "")
-            base_lines = [
-                f"{tmp.get_nom()}",
-                f"{tmp.faction}",
-                f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
-                f"Attaques: {tmp.attaque_max} | Portée: {tmp.portee}",
-                f"Tier: {tmp.get_tier()} (CP: {tmp.tier})",
-                f"Compétence: {'Aucune' if not comp else comp}",
-            ]
-            desc_lines = self.wrap_text(comp_desc, card_w - 20)
-            card_h = 20 + len(base_lines) * 30 + len(desc_lines) * 26 + 60
             total_height = max(total_height, y + card_h)
             col += 1
             if col >= cols:
@@ -413,15 +455,16 @@ class UnitSelector:
                 f"Compétence: {comp_nom}",
             ]
             desc_lines = self.wrap_text(comp_desc, card_w - 20)
-            card_h = 20 + len(base_lines) * 30 + len(desc_lines) * 26 + 60
             
             rect = pygame.Rect(x, y, card_w, card_h)
             
-            # Couleur de fond selon la disponibilité
+            # Couleur de fond selon la disponibilité et la faction
+            faction_color = get_faction_color(tmp.faction)
             if can_add or count_selected > 0:
-                bg_color = (220, 220, 220)
+                bg_color = faction_color
             else:
-                bg_color = (180, 180, 180)
+                # Version plus sombre/grisée pour les unités non disponibles
+                bg_color = tuple(int(c * 0.7) for c in faction_color)
             
             pygame.draw.rect(self.screen, bg_color, rect, border_radius=12)
             pygame.draw.rect(self.screen, (0, 0, 0), rect, width=2, border_radius=12)

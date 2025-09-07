@@ -4,6 +4,7 @@ from utils import Button
 import sauvegarde
 from unites import CLASSES_UNITES
 from competences import COMPETENCES
+from faction_colors import get_faction_color
 
 class Boutique:
     def __init__(self, screen):
@@ -31,6 +32,35 @@ class Boutique:
                 if tmp.get_nom() == nom_unite and tmp.faction == faction:
                     return True
         return False
+
+    def _calculer_hauteur_max_carte(self, card_w):
+        """Calcule la hauteur maximale nécessaire pour toutes les cartes visibles."""
+        max_height = 0
+        
+        for cls in CLASSES_UNITES:
+            tmp = cls("joueur", (0,0))
+            
+            # Vérifier si la faction est débloquée
+            if not self.est_faction_debloquee(tmp.faction):
+                continue
+            
+            comp = tmp.get_competence()
+            comp_desc = "" if not comp else COMPETENCES.get(comp, "")
+            
+            base_lines = [
+                f"{tmp.get_nom()}",
+                f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
+                f"Attaques: {tmp.attaque_max} | Portée: {tmp.portee}",
+                f"Faction: {tmp.faction}",
+                f"Tier: {tmp.get_tier()}",
+                f"Compétence: {'Aucune' if not comp else comp}",
+            ]
+            desc_lines = self.wrap_text(comp_desc, card_w - 20)
+            card_h = 20 + len(base_lines) * 30 + len(desc_lines) * 26 + 60
+            
+            max_height = max(max_height, card_h)
+        
+        return max_height
 
     def _grid_specs(self):
         screen_w, screen_h = self.screen.get_size()
@@ -129,9 +159,14 @@ class Boutique:
             bouton_retour = Button((20, screen_h - 70, 160, 44), "Retour", self.retour_menu, self.font)
             self.boutons.append(bouton_retour)
 
+            # Calculer la hauteur maximale des cartes pour l'uniformité
+            card_h = self._calculer_hauteur_max_carte(card_w)
+
             # --- SCROLL LIMITS ---
             total_height = start_y
             x, y, col = margin, start_y, 0
+            unites_visibles = []
+            
             for cls in CLASSES_UNITES:
                 tmp = cls("joueur", (0,0))
                 
@@ -139,18 +174,7 @@ class Boutique:
                 if not self.est_faction_debloquee(tmp.faction):
                     continue
                 
-                comp = tmp.get_competence()
-                comp_desc = "" if not comp else COMPETENCES.get(comp, "")
-                base_lines = [
-                    f"{tmp.get_nom()}",
-                    f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
-                    f"Attaques: {tmp.attaque_max} | Portée: {tmp.portee}",
-                    f"Faction: {tmp.faction}",
-                    f"Tier: {tmp.get_tier()}",
-                    f"Compétence: {'Aucune' if not comp else comp}",
-                ]
-                desc_lines = self.wrap_text(comp_desc, card_w - 20)
-                card_h = 20 + len(base_lines) * 30 + len(desc_lines) * 26 + 60
+                unites_visibles.append(cls)
                 total_height = max(total_height, y + card_h)
                 col += 1
                 if col >= cols:
@@ -166,12 +190,8 @@ class Boutique:
             self.screen.blit(titre, (margin, 30))
 
             x, y, col = margin, start_y - self.scroll_y, 0
-            for cls in CLASSES_UNITES:
+            for cls in unites_visibles:
                 tmp = cls("joueur", (0,0))
-                
-                # Vérifier si la faction est débloquée
-                if not self.est_faction_debloquee(tmp.faction):
-                    continue
                 
                 nom = tmp.get_nom()
                 prix = tmp.get_prix()
@@ -190,10 +210,12 @@ class Boutique:
                     f"Compétence: {comp_nom}",
                 ]
                 desc_lines = self.wrap_text(comp_desc, card_w - 20)
-                card_h = 20 + len(base_lines) * 30 + len(desc_lines) * 26 + 60
 
+                # Couleur de fond selon la faction
+                faction_color = get_faction_color(tmp.faction)
+                
                 rect = pygame.Rect(x, y, card_w, card_h)
-                pygame.draw.rect(self.screen, (220,220,220), rect, border_radius=12)
+                pygame.draw.rect(self.screen, faction_color, rect, border_radius=12)
                 pygame.draw.rect(self.screen, (0,0,0), rect, width=2, border_radius=12)
 
                 for i, l in enumerate(base_lines):
