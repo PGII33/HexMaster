@@ -289,6 +289,17 @@ class Jeu:
 
     def changer_tour(self):
         """Passe au tour suivant et réinitialise les actions/compétences passives."""
+        # Appeler fin_tour pour toutes les unités de l'équipe qui termine son tour
+        for u in self.unites:
+            if u.equipe == self.tour and u.vivant and hasattr(u, 'fin_tour'):
+                u.fin_tour()
+        
+        # Gérer la combustion différée en fin de tour ennemi
+        if self.tour == "ennemi":
+            for u in self.unites:
+                if u.vivant and hasattr(u, 'fin_tour_ennemi'):
+                    u.fin_tour_ennemi(self.unites)
+        
         if getattr(self, 'versus_mode', False):
             # En mode versus, alterner entre "joueur" et "joueur2"
             self.tour = "joueur2" if self.tour == "joueur" else "joueur"

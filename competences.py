@@ -1,6 +1,6 @@
-def sangsue(self):
-    """Le vampire récupère autant de PV que de dégâts infligés."""
-    self.pv = min(self.pv + self.dmg, self.pv_max)
+def sangsue(self, degats_infliges):
+    """Le vampire récupère autant de PV que de dégâts réellement infligés."""
+    self.pv = min(self.pv + degats_infliges, self.pv_max)
 
 def zombification(self, cible):
     """Transforme l'unite morte en zombie sous le contrôle du joueur de l'attaquant"""
@@ -208,6 +208,76 @@ def aura_sacrée(self, toutes_unites):
                         unite.dmg += 3
                     break
 
+# ========== COMPÉTENCES ÉLÉMENTAIRES ==========
+
+def enracinement(self):
+    """Si l'unité n'a pas bougé en fin de tour, régénère 2 PV."""
+    # L'enracinement se déclenche si l'unité n'a pas dépensé de PM (pas bougé)
+    if self.pm == self.mv:  # N'a pas bougé (PM restants = MV max)
+        if self.pv + 2 <= self.pv_max:
+            self.pv += 2
+        else:
+            self.pv = self.pv_max
+
+def vague_apaisante(self, toutes_unites):
+    """Soigne les unités alliées adjacentes de 2 PV (comme bouclier de la foi mais avec soin)."""
+    directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
+    q, r = self.pos
+    
+    for unite in toutes_unites:
+        if unite.equipe == self.equipe and unite != self and unite.vivant:
+            unite_q, unite_r = unite.pos
+            for dq, dr in directions:
+                if (q+dq, r+dr) == (unite_q, unite_r):
+                    # Soigner l'unité adjacente
+                    if unite.pv + 2 <= unite.pv_max:
+                        unite.pv += 2
+                    else:
+                        unite.pv = unite.pv_max
+                    break
+
+def renaissance(self, toutes_unites):
+    """80% de chance de revenir à la vie avec tous ses PV."""
+    import random
+    
+    # La renaissance se déclenche quand l'unité est sur le point de mourir (PV <= 0)
+    if self.vivant and self.pv <= 0 and random.random() < 0.8:  # 80% de chance
+        self.pv = self.pv_max
+        # Réinitialiser les actions pour le tour suivant
+        self.pm = self.mv
+        self.attaque_restantes = self.attaque_max
+        return True  # Indique que la renaissance a eu lieu
+    
+    return False
+
+def armure_de_pierre(degats_recus):
+    """Réduit tous les dégâts reçus de 2 points (minimum 0)."""
+    degats_reduits = max(0, degats_recus - 2)
+    return degats_reduits
+
+def combustion_differee(attaquant, cible):
+    """Marque la cible pour mourir dans 3 tours."""
+    if not hasattr(cible, 'combustion_tours_restants'):
+        cible.combustion_tours_restants = 3
+        cible.combustion_attaquant = attaquant.equipe
+        print(f"🔥 {cible.nom} est marqué par la combustion différée! Mort dans 3 tours.")
+    
+def gerer_combustion_differee(unite, toutes_unites):
+    """Vérifie et applique la combustion différée en fin de tour ennemi."""
+    if hasattr(unite, 'combustion_tours_restants') and unite.combustion_tours_restants > 0:
+        unite.combustion_tours_restants -= 1
+        print(f"🔥 {unite.nom} - Combustion: {unite.combustion_tours_restants} tours restants")
+        
+        if unite.combustion_tours_restants == 0:
+            print(f"💥 {unite.nom} succombe à la combustion différée!")
+            unite.pv = 0
+            unite.mourir(toutes_unites)
+            # Nettoyer l'effet
+            if hasattr(unite, 'combustion_tours_restants'):
+                delattr(unite, 'combustion_tours_restants')
+            if hasattr(unite, 'combustion_attaquant'):
+                delattr(unite, 'combustion_attaquant')
+
 # Fonction utilitaire pour déterminer si une compétence est active
 def est_competence_active(nom_competence):
     """Retourne True si la compétence nécessite une cible."""
@@ -257,4 +327,11 @@ COMPETENCES = {
     "bénédiction": "Augmente l'attaque et donne 1 bouclier à un allié.",
     "lumière vengeresse": "Regagne son attaque lorsqu'il tue un Mort-Vivant (passif).",
     "aura sacrée": "Bonus de dégâts pour tout les alliés adjacents (chaque tour).",
+    
+    # Élémentaires
+    "enracinement": "Si l'unité n'a pas bougé en fin de tour, régénère 2 PV.",
+    "vague apaisante": "Soigne les unités alliées adjacentes de 2 PV (chaque tour).",
+    "renaissance": "80% de chance de revenir à la vie avec tous ses PV à la mort.",
+    "armure de pierre": "Réduit tous les dégâts reçus de 2 points (minimum 0).",
+    "combustion différée": "Les cibles touchées meurent au bout de 3 tours ennemis.",
 }

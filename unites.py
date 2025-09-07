@@ -86,6 +86,11 @@ class Unite:
             "invocation": 0,  # Passive au début du tour
             "tas d'os": 0,  # Passive à la mort
             "fantomatique": 0,  # Passive de déplacement
+            "enracinement": 0,  # Passive de fin de tour
+            "vague apaisante": 0,  # Passive au début du tour
+            "renaissance": 0,  # Passive à la mort
+            "armure de pierre": 0,  # Passive de défense
+            "combustion différée": 0,  # Passive d'attaque
         }
         
         return cooldowns.get(self.comp, 0)  # Par défaut : 0 tour de cooldown (utilisable chaque tour)
@@ -154,23 +159,33 @@ class Unite:
 
     # ---------- Combat ----------
     def subir_degats(self, degats):
-        """Subit des dégâts en tenant compte du bouclier."""
+        """Subit des dégâts en tenant compte du bouclier et de l'armure de pierre."""
         if not hasattr(self, 'bouclier'):
             self.bouclier = 0
         
-        # Le bouclier absorbe d'abord les dégâts
+        degats_originaux = degats
+        
+        # Appliquer l'armure de pierre si l'unité a cette compétence
+        if self.comp == "armure de pierre":
+            degats = co.armure_de_pierre(degats)
+        
+        # Le bouclier absorbe d'abord les dégâts (après armure de pierre)
         if self.bouclier > 0:
             if degats <= self.bouclier:
                 # Le bouclier absorbe tous les dégâts
                 self.bouclier -= degats
-                return
+                return degats  # Retourner les dégâts réellement subis (après armure)
             else:
                 # Le bouclier absorbe une partie, le reste va aux PV
-                degats -= self.bouclier
+                degats_aux_pv = degats - self.bouclier
                 self.bouclier = 0
+                # Les dégâts restants vont aux PV
+                self.pv -= degats_aux_pv
+                return degats  # Retourner les dégâts réellement subis (après armure)
         
-        # Les dégâts restants vont aux PV
+        # Les dégâts vont directement aux PV
         self.pv -= degats
+        return degats  # Retourner les dégâts réellement subis (après armure)
     
     def attaquer(self, autre, toutes_unites=None):
         """Applique l'animation et les dégâts séparément."""
@@ -179,9 +194,6 @@ class Unite:
             
         if self.attaque_restantes > 0 and self.est_a_portee(autre) and autre.vivant:
             self.attaque_restantes -= 1
-
-            if self.comp == "sangsue":
-                co.sangsue(self)
 
             # Animation
             self.anim = animations.Animation("attack", 250, self, cible=autre)
@@ -192,8 +204,17 @@ class Unite:
                 co.explosion_sacrée(self, toutes_unites, autre)  # Passer toutes les unités et la cible
                 # Ne pas faire l'attaque normale, l'explosion sacrée remplace tout
             else:
-                # Attaque normale
-                autre.subir_degats(self.dmg)
+                # Attaque normale - calculer les dégâts réellement infligés
+                degats_infliges = autre.subir_degats(self.dmg)
+                
+                # Compétence sangsue après l'attaque (avec les vrais dégâts)
+                if self.comp == "sangsue":
+                    co.sangsue(self, degats_infliges)
+                
+                # Combustion différée : marquer la cible
+                if self.comp == "combustion différée" and autre.vivant:
+                    co.combustion_differee(self, autre)
+                
                 cible_tuée = False
                 if autre.pv <= 0:
                     result = autre.mourir([])  # Utiliser la nouvelle méthode mourir
@@ -210,6 +231,11 @@ class Unite:
         """Gère la mort de l'unité et les compétences déclenchées.
         Retourne True si l'unité était vivante et est maintenant morte."""
         if self.vivant:
+            # Compétence de renaissance : tentative de résurrection avant la mort
+            if self.comp == "renaissance":
+                if co.renaissance(self, toutes_unites):
+                    return False  # L'unité a été ressuscitée, elle n'est pas morte
+            
             self.vivant = False
             
             # Appeler le callback de kill si défini (pour le mode hexarene)
@@ -244,7 +270,21 @@ class Unite:
             co.bouclier_de_la_foi(self, toutes_unites)
         elif self.comp == "aura sacrée":
             co.aura_sacrée(self, toutes_unites)
+        elif self.comp == "vague apaisante":
+            co.vague_apaisante(self, toutes_unites)
         # Ajoute ici d'autres compétences passives si besoin
+    
+    def fin_tour(self):
+        """À appeler en fin de tour de l'unité pour déclencher les compétences de fin de tour."""
+        # Compétence d'enracinement : régénère si l'unité n'a pas bougé
+        if self.comp == "enracinement":
+            co.enracinement(self)
+    
+    def fin_tour_ennemi(self, toutes_unites):
+        """À appeler en fin de tour ennemi pour gérer la combustion différée."""
+        # Gérer la combustion différée (compte à rebours en fin de tour ennemi)
+        if hasattr(self, 'combustion_tours_restants'):
+            co.gerer_combustion_differee(self, toutes_unites)
     
     def a_competence_active(self):
         """Retourne True si l'unité a une compétence active utilisable (pas en cooldown)."""
