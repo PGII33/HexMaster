@@ -33,7 +33,18 @@ jobs:
           if (-not (Test-Path "custom_levels/.keep")) { 
             "# Placeholder file" | Out-File -FilePath "custom_levels/.keep" -Encoding UTF8 
           }
+          
+          Write-Host "Running PyInstaller..."
           pyinstaller main.spec
+          
+          # Vérifier que le fichier EXE a été créé
+          if (-not (Test-Path "dist/HexMaster.exe")) {
+            Write-Host "❌ Build failed: HexMaster.exe not found in dist/"
+            exit 1
+          }
+          
+          $size = (Get-Item "dist/HexMaster.exe").Length
+          Write-Host "✅ Build successful: HexMaster.exe created ($([math]::Round($size/1MB, 2)) MB)"
 
       - name: Generate version and release info
         id: version
@@ -43,35 +54,99 @@ jobs:
           $commit_short = "${{ github.sha }}".Substring(0, 7)
           echo "VERSION=$version" >> $env:GITHUB_OUTPUT
           echo "COMMIT_SHORT=$commit_short" >> $env:GITHUB_OUTPUT
-          echo "Generated version: $version"
+          Write-Host "Generated version: $version"
+          Write-Host "Commit short: $commit_short"
+
+      - name: Debug build output
+        run: |
+          Write-Host "=== Debugging build output ==="
+          Write-Host "Current directory: $(Get-Location)"
+          Write-Host "Contents of current directory:"
+          Get-ChildItem -Force | Format-Table Name, Length, LastWriteTime
+          
+          if (Test-Path "dist") {
+            Write-Host "`nContents of dist directory:"
+            Get-ChildItem "dist" -Force | Format-Table Name, Length, LastWriteTime
+          } else {
+            Write-Host "`n❌ dist directory does not exist"
+          }
+          
+          if (Test-Path "dist/HexMaster.exe") {
+            $size = (Get-Item "dist/HexMaster.exe").Length
+            Write-Host "`n✅ HexMaster.exe found: $([math]::Round($size/1MB, 2)) MB"
+          } else {
+            Write-Host "`n❌ HexMaster.exe not found"
+          }
 
       - name: Check if release exists
         id: check_release
         run: |
-          $exists = $false
+          $ErrorActionPreference = 'SilentlyContinue'
+          $exists = "false"
           try {
-            gh release view ${{ steps.version.outputs.VERSION }} 2>$null
-            if ($LASTEXITCODE -eq 0) {
-              $exists = $true
+            $headers = @{
+              'Authorization' = 'Bearer ${{ secrets.GITHUB_TOKEN }}'
+              'Accept' = 'application/vnd.github.v3+json'
+            }
+            $uri = "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ steps.version.outputs.VERSION }}"
+            
+            Write-Host "Checking if release ${{ steps.version.outputs.VERSION }} exists..."
+            $response = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get -ErrorAction SilentlyContinue
+            if ($response) {
+              $exists = "true"
               Write-Host "Release already exists"
             }
           } catch {
             Write-Host "Release does not exist (normal)"
+            $exists = "false"
           }
           echo "EXISTS=$exists" >> $env:GITHUB_OUTPUT
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          Write-Host "Set EXISTS to: $exists"
 
       - name: Delete existing release if needed
         if: steps.check_release.outputs.EXISTS == 'true'
         run: |
+          $ErrorActionPreference = 'Continue'
           Write-Host "Deleting existing release ${{ steps.version.outputs.VERSION }}"
-          gh release delete ${{ steps.version.outputs.VERSION }} --yes --cleanup-tag
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          $headers = @{
+            'Authorization' = 'Bearer ${{ secrets.GITHUB_TOKEN }}'
+            'Accept' = 'application/vnd.github.v3+json'
+          }
+          
+          try {
+            # Get release info first
+            $uri = "https://api.github.com/repos/${{ github.repository }}/releases/tags/${{ steps.version.outputs.VERSION }}"
+            $release = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get
+            
+            # Delete the release
+            $deleteUri = "https://api.github.com/repos/${{ github.repository }}/releases/$($release.id)"
+            Invoke-RestMethod -Uri $deleteUri -Headers $headers -Method Delete
+            Write-Host "✅ Release deleted"
+            
+            # Delete the tag
+            $tagUri = "https://api.github.com/repos/${{ github.repository }}/git/refs/tags/${{ steps.version.outputs.VERSION }}"
+            try {
+              Invoke-RestMethod -Uri $tagUri -Headers $headers -Method Delete
+              Write-Host "✅ Tag deleted"
+            } catch {
+              Write-Host "⚠️ Could not delete tag (might not exist): $($_.Exception.Message)"
+            }
+          } catch {
+            Write-Host "⚠️ Error deleting release: $($_.Exception.Message)"
+            # Continue anyway, we'll create a new release
+          }
 
       - name: Create new release
         run: |
+          $ErrorActionPreference = 'Stop'
+          Write-Host "Creating release ${{ steps.version.outputs.VERSION }}..."
+          
+          # Verify the EXE exists before proceeding
+          if (-not (Test-Path "dist/HexMaster.exe")) {
+            Write-Host "❌ HexMaster.exe not found in dist/"
+            exit 1
+          }
+          
           $notes = @"
           🎮 HexMaster - Build automatique
           
@@ -87,27 +162,78 @@ jobs:
           Note: Cette version a été générée automatiquement depuis le dernier code source.
           "@
           
-          gh release create ${{ steps.version.outputs.VERSION }} --title "HexMaster ${{ steps.version.outputs.VERSION }}" --notes $notes --latest dist/HexMaster.exe
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          $headers = @{
+            'Authorization' = 'Bearer ${{ secrets.GITHUB_TOKEN }}'
+            'Accept' = 'application/vnd.github.v3+json'
+            'Content-Type' = 'application/json'
+          }
+          
+          $body = @{
+            'tag_name' = '${{ steps.version.outputs.VERSION }}'
+            'target_commitish' = '${{ github.sha }}'
+            'name' = 'HexMaster ${{ steps.version.outputs.VERSION }}'
+            'body' = $notes
+            'draft' = $false
+            'prerelease' = $false
+          } | ConvertTo-Json -Depth 10
+          
+          $uri = "https://api.github.com/repos/${{ github.repository }}/releases"
+          try {
+            $release = Invoke-RestMethod -Uri $uri -Headers $headers -Method Post -Body $body
+            Write-Host "✅ Release created with ID: $($release.id)"
+            
+            # Upload the asset
+            Write-Host "Uploading HexMaster.exe..."
+            $uploadUri = "https://uploads.github.com/repos/${{ github.repository }}/releases/$($release.id)/assets?name=HexMaster.exe"
+            $headers['Content-Type'] = 'application/octet-stream'
+            
+            $fileBytes = [System.IO.File]::ReadAllBytes("dist/HexMaster.exe")
+            $asset = Invoke-RestMethod -Uri $uploadUri -Headers $headers -Method Post -Body $fileBytes
+            Write-Host "✅ HexMaster.exe uploaded successfully (ID: $($asset.id))"
+          } catch {
+            Write-Host "❌ Error creating release: $($_.Exception.Message)"
+            if ($_.Exception.Response) {
+              $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
+              $responseBody = $reader.ReadToEnd()
+              Write-Host "Response: $responseBody"
+            }
+            exit 1
+          }
 
       - name: Clean up old releases (safe)
         continue-on-error: true
         run: |
           Write-Host "Starting cleanup of old releases..."
           try {
-            $releases = gh release list --limit 20 --json tagName,createdAt | ConvertFrom-Json
+            $headers = @{
+              'Authorization' = 'Bearer ${{ secrets.GITHUB_TOKEN }}'
+              'Accept' = 'application/vnd.github.v3+json'
+            }
+            
+            $uri = "https://api.github.com/repos/${{ github.repository }}/releases?per_page=20"
+            $releases = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get
+            
             if ($releases.Count -gt 5) {
-              $toDelete = $releases | Sort-Object createdAt | Select-Object -First ($releases.Count - 5)
+              $toDelete = $releases | Sort-Object created_at | Select-Object -First ($releases.Count - 5)
               Write-Host "Found $($toDelete.Count) old releases to delete"
               
               foreach ($release in $toDelete) {
                 try {
-                  Write-Host "Attempting to delete: $($release.tagName)"
-                  gh release delete $release.tagName --yes --cleanup-tag
-                  Write-Host "✅ Successfully deleted: $($release.tagName)"
+                  Write-Host "Attempting to delete: $($release.tag_name)"
+                  $deleteUri = "https://api.github.com/repos/${{ github.repository }}/releases/$($release.id)"
+                  Invoke-RestMethod -Uri $deleteUri -Headers $headers -Method Delete
+                  
+                  # Try to delete the tag too
+                  $tagUri = "https://api.github.com/repos/${{ github.repository }}/git/refs/tags/$($release.tag_name)"
+                  try {
+                    Invoke-RestMethod -Uri $tagUri -Headers $headers -Method Delete
+                  } catch {
+                    Write-Host "Could not delete tag $($release.tag_name)"
+                  }
+                  
+                  Write-Host "✅ Successfully deleted: $($release.tag_name)"
                 } catch {
-                  Write-Host "⚠️ Could not delete $($release.tagName): $($_.Exception.Message)"
+                  Write-Host "⚠️ Could not delete $($release.tag_name): $($_.Exception.Message)"
                 }
               }
             } else {
@@ -116,5 +242,3 @@ jobs:
           } catch {
             Write-Host "⚠️ Cleanup failed but continuing: $($_.Exception.Message)"
           }
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
