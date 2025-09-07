@@ -23,18 +23,28 @@ class Jeu:
     def __init__(self, ia_strategy=ia.cible_faible, screen=None,
                  initial_player_units=None, initial_enemy_units=None, 
                  enable_placement=False, versus_mode=False, niveau_config=None, 
-                 mode_hexarene=False):
+                 mode_hexarene=False, hexarene_mode_type=None, faction_hexarene=None,
+                 chapitre_nom=None, niveau_nom=None):
         self.screen = screen if screen is not None else pygame.display.set_mode((1200, 900), pygame.RESIZABLE)
         self.clock = pygame.time.Clock()
 
         # Mode et configuration
         self.mode_hexarene = mode_hexarene
+        self.hexarene_mode_type = hexarene_mode_type  # "faction" ou "libre"
+        self.faction_hexarene = faction_hexarene
+        self.chapitre_nom = chapitre_nom
+        self.niveau_nom = niveau_nom
         self.niveau_config = niveau_config
 
-        # État du jeu
+        # État du jeu et résultats
         self.unites = []
         self.enable_placement = enable_placement
         self.versus_mode = versus_mode  # Nouveau : mode joueur vs joueur
+        
+        # Menu de fin de combat
+        self.show_end_menu = False
+        self.end_menu_processed = False  # Nouveau flag pour éviter les re-activations
+        self.recompenses = {"pa": 0, "cp": 0, "unites": []}
         
         # Variables pour le système de compétences actives
         self.mode_selection_competence = False
@@ -173,9 +183,9 @@ class Jeu:
 
     def abandonner_combat(self):
         """Abandonne le combat en cours - défaite du joueur"""
-        print("🏳️ Combat abandonné par le joueur")
         self.finished = True
         self.player_victory = False  # Défaite par abandon
+        self.activer_menu_fin_combat(False)
 
     def update(self, dt_ms):
         # Mettre à jour les animations
@@ -203,6 +213,10 @@ class Jeu:
             # Déterminer si c'est une victoire du joueur
             if joueurs and not adversaires:  # Joueur a des unités vivantes, adversaires non
                 self.player_victory = True
+                self.activer_menu_fin_combat(True)
+            else:
+                self.player_victory = False
+                self.activer_menu_fin_combat(False)
             
             # Nettoyer le callback en mode hexarene
             if self.mode_hexarene:
@@ -314,6 +328,96 @@ class Jeu:
             self.tour = "ennemi" if self.tour == "joueur" else "joueur"
         
         reset_actions_tour(self)
+
+    def activer_menu_fin_combat(self, victoire):
+        """Active le menu de fin de combat avec les récompenses"""
+        self.show_end_menu = True
+        self.end_menu_processed = True  # Marquer comme traité pour éviter la ré-activation
+        self.victoire = victoire
+        
+        # Calculer les récompenses basées sur la victoire et le mode de jeu
+        if victoire:
+            self.recompenses = self.calculer_recompenses()
+        else:
+            # Récompenses minimales en cas de défaite
+            self.recompenses = {"pa": 1, "cp": 0, "unites": []}
+        
+        # Sauvegarder les récompenses
+        self.sauvegarder_recompenses()
+
+    def calculer_recompenses(self):
+        """Calcule les récompenses basées sur le mode de jeu et la performance"""
+        recompenses = {"pa": 0, "cp": 0, "unites": []}
+        
+        # Base des récompenses selon le mode
+        if self.mode_hexarene:
+            # HexArène donne plus de PA
+            recompenses["pa"] = 5
+            recompenses["cp"] = 2
+        elif self.versus_mode:
+            # Mode versus donne des récompenses équilibrées
+            recompenses["pa"] = 3
+            recompenses["cp"] = 3
+        else:
+            # Mode campagne - récompenses selon le niveau
+            recompenses["pa"] = 4
+            recompenses["cp"] = 1
+        
+        # Bonus selon les unités survivantes
+        joueur_unites = [u for u in self.unites if u.equipe == "joueur" and u.vivant]
+        bonus_survie = len(joueur_unites)
+        recompenses["pa"] += bonus_survie
+        
+        # Parfois une nouvelle unité (chance de 30%)
+        import random
+        if random.random() < 0.3:
+            unites_possibles = ["Guerrier", "Archer", "Mage"]
+            nouvelle_unite = random.choice(unites_possibles)
+            recompenses["unites"].append(nouvelle_unite)
+        
+        return recompenses
+
+    def sauvegarder_recompenses(self):
+        """Sauvegarde les récompenses dans le fichier de sauvegarde"""
+        try:
+            from sauvegarde import charger, sauvegarder
+            progression = charger()
+            
+            # Ajouter les récompenses à la progression
+            progression["pa"] = progression.get("pa", 0) + self.recompenses["pa"]
+            progression["cp"] = progression.get("cp", 0) + self.recompenses["cp"]
+            
+            # Ajouter les nouvelles unités
+            if "unites_dispo" not in progression:
+                progression["unites_dispo"] = []
+            progression["unites_dispo"].extend(self.recompenses["unites"])
+            
+            sauvegarder(progression)
+            print(f"Récompenses sauvegardées: {self.recompenses}")
+            
+        except Exception as e:
+            print(f"Erreur lors de la sauvegarde des récompenses: {e}")
+
+    def get_titre_fin_combat(self):
+        """Retourne le titre approprié pour le menu de fin de combat"""
+        statut = "Victoire" if self.victoire else "Défaite"
+        
+        if self.mode_hexarene:
+            # Mode HexArène
+            if self.hexarene_mode_type == "faction":
+                return f"{statut} - HexArène {self.faction_hexarene}"
+            else:
+                return f"{statut} - HexArène Libre"
+        elif self.versus_mode:
+            # Mode Versus
+            gagnant = "Joueur 1" if self.victoire else "Joueur 2"
+            return f"{statut} - {gagnant}"
+        else:
+            # Mode Campagne
+            if self.chapitre_nom and self.niveau_nom:
+                return f"{statut} - {self.chapitre_nom} {self.niveau_nom}"
+            else:
+                return f"{statut} - Campagne"
         self.selection = None
         self.deplacement_possibles = {}
 

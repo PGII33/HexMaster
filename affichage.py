@@ -297,6 +297,9 @@ def dessiner(jeu):
         jeu.screen.blit(txt_abandon, (jeu.btn_abandonner.centerx - txt_abandon.get_width() // 2,
                                      jeu.btn_abandonner.centery - txt_abandon.get_height() // 2))
 
+    # Menu de fin de combat (affiché par-dessus tout le reste)
+    dessiner_menu_fin_combat(jeu)
+
 def dessiner_hex(jeu, q, r, couleur, largeur=1):
     x,y = hex_to_pixel(jeu, q, r)
     pts = []
@@ -306,3 +309,66 @@ def dessiner_hex(jeu, q, r, couleur, largeur=1):
         py = y + jeu.taille_hex * math.sin(ang)
         pts.append((px, py))
     pygame.draw.polygon(jeu.screen, couleur, pts, largeur)
+
+def dessiner_menu_fin_combat(jeu):
+    """Dessine le menu de fin de combat avec les résultats et récompenses"""
+    if not hasattr(jeu, 'show_end_menu') or not jeu.show_end_menu:
+        return
+    
+    # Overlay semi-transparent
+    overlay = pygame.Surface((jeu.largeur, jeu.hauteur))
+    overlay.set_alpha(180)
+    overlay.fill((0, 0, 0))
+    jeu.screen.blit(overlay, (0, 0))
+    
+    # Fenêtre principale du menu
+    menu_width = 500
+    menu_height = 400
+    menu_x = (jeu.largeur - menu_width) // 2
+    menu_y = (jeu.hauteur - menu_height) // 2
+    
+    menu_rect = pygame.Rect(menu_x, menu_y, menu_width, menu_height)
+    pygame.draw.rect(jeu.screen, (250, 250, 250), menu_rect, border_radius=15)
+    pygame.draw.rect(jeu.screen, (100, 100, 100), menu_rect, width=3, border_radius=15)
+    
+    # Titre du menu
+    titre = jeu.get_titre_fin_combat()
+    couleur_titre = (50, 150, 50) if jeu.victoire else (200, 50, 50)
+    txt_titre = jeu.font_big.render(titre, True, couleur_titre)
+    titre_y = menu_y + 30
+    jeu.screen.blit(txt_titre, (menu_x + (menu_width - txt_titre.get_width()) // 2, titre_y))
+    
+    # Section récompenses
+    recomp_y = titre_y + 60
+    txt_recomp = jeu.font_norm.render("Récompenses :", True, NOIR)
+    jeu.screen.blit(txt_recomp, (menu_x + 50, recomp_y))
+    
+    # PA
+    pa_y = recomp_y + 40
+    txt_pa = jeu.font_norm.render(f"🏆 PA : +{jeu.recompenses['pa']}", True, (0, 100, 200))
+    jeu.screen.blit(txt_pa, (menu_x + 70, pa_y))
+    
+    # CP
+    cp_y = pa_y + 30
+    txt_cp = jeu.font_norm.render(f"⚡ CP : +{jeu.recompenses['cp']}", True, (200, 100, 0))
+    jeu.screen.blit(txt_cp, (menu_x + 70, cp_y))
+    
+    # Nouvelles unités
+    if jeu.recompenses['unites']:
+        unites_y = cp_y + 30
+        for i, unite in enumerate(jeu.recompenses['unites']):
+            txt_unite = jeu.font_norm.render(f"🎖️ Nouvelle unité : {unite}", True, (100, 150, 100))
+            jeu.screen.blit(txt_unite, (menu_x + 70, unites_y + i * 25))
+    
+    # Bouton Retour au menu principal
+    btn_width = 200
+    btn_height = 50
+    btn_x = menu_x + (menu_width - btn_width) // 2
+    btn_y = menu_y + menu_height - 80
+    
+    jeu.btn_retour_menu = pygame.Rect(btn_x, btn_y, btn_width, btn_height)
+    pygame.draw.rect(jeu.screen, (100, 150, 200), jeu.btn_retour_menu, border_radius=8)
+    
+    txt_btn = jeu.font_norm.render("Menu Principal", True, BLANC)
+    jeu.screen.blit(txt_btn, (jeu.btn_retour_menu.centerx - txt_btn.get_width() // 2,
+                             jeu.btn_retour_menu.centery - txt_btn.get_height() // 2))

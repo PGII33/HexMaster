@@ -299,7 +299,9 @@ class HexaMaster:
             initial_enemy_units=config.unites_ennemis,
             enable_placement=enable_placement,
             versus_mode=False,
-            niveau_config=config  # Passer la configuration du niveau
+            niveau_config=config,  # Passer la configuration du niveau
+            chapitre_nom=chapitre,  # Utiliser le nom du chapitre réel
+            niveau_nom=config.nom if hasattr(config, 'nom') else f"Niveau {numero}"  # Utiliser le nom du niveau
         )
         self.etat = "jeu"
 
@@ -329,7 +331,9 @@ class HexaMaster:
             initial_player_units=player_units,
             initial_enemy_units=ia_units,
             enable_placement=True,
-            mode_hexarene=True  # Activer le mode hexarene
+            mode_hexarene=True,  # Activer le mode hexarene
+            hexarene_mode_type="faction",
+            faction_hexarene=player_units[0]("joueur", (0,0)).faction if player_units else "Inconnue"
         )
         self.etat = "jeu"
 
@@ -354,7 +358,8 @@ class HexaMaster:
             initial_player_units=player_units,
             initial_enemy_units=ia_units,
             enable_placement=True,
-            mode_hexarene=True  # Activer le mode hexarene aussi pour le mode libre
+            mode_hexarene=True,  # Activer le mode hexarene aussi pour le mode libre
+            hexarene_mode_type="libre"
         )
         self.etat = "jeu"
 
@@ -493,17 +498,31 @@ class HexaMaster:
                 if self.jeu:
                     # Vérifier si le jeu est terminé
                     if hasattr(self.jeu, 'finished') and self.jeu.finished:
-                        # Si c'est une victoire en campagne, appliquer les récompenses
-                        if (hasattr(self.jeu, 'player_victory') and self.jeu.player_victory and
-                            hasattr(self.jeu, 'niveau_config') and self.jeu.niveau_config):
-                            # Appliquer les récompenses du niveau
-                            niveau_config = self.jeu.niveau_config
-                            if hasattr(niveau_config, 'chapitre') and hasattr(niveau_config, 'numero'):
-                                from sauvegarde import appliquer_recompenses_niveau
-                                appliquer_recompenses_niveau(niveau_config, niveau_config.chapitre, niveau_config.numero)
+                        # Si le menu de fin de combat n'est pas encore affiché ET pas encore traité, l'activer
+                        if (not getattr(self.jeu, 'show_end_menu', False) and 
+                            not getattr(self.jeu, 'end_menu_processed', False)):
+                            # Activer le menu de fin de combat avec le bon résultat
+                            victoire = getattr(self.jeu, 'player_victory', False)
+                            self.jeu.activer_menu_fin_combat(victoire)
                         
-                        self.etat = "menu"
-                        self.jeu = None
+                        # Si le menu de fin de combat est affiché, continuer à dessiner le jeu
+                        if getattr(self.jeu, 'show_end_menu', False):
+                            self.jeu.update(dt)
+                            self.jeu.dessiner()
+                        else:
+                            # Le menu a été fermé ET déjà traité, retourner au menu principal
+                            if getattr(self.jeu, 'end_menu_processed', False):
+                                # Si c'est une victoire en campagne, appliquer récompenses 
+                                if (hasattr(self.jeu, 'player_victory') and self.jeu.player_victory and
+                                    hasattr(self.jeu, 'niveau_config') and self.jeu.niveau_config):
+                                    # Appliquer les récompenses du niveau (campagne)
+                                    niveau_config = self.jeu.niveau_config
+                                    if hasattr(niveau_config, 'chapitre') and hasattr(niveau_config, 'numero'):
+                                        from sauvegarde import appliquer_recompenses_niveau
+                                        appliquer_recompenses_niveau(niveau_config, niveau_config.chapitre, niveau_config.numero)
+                                
+                                self.etat = "menu"
+                                self.jeu = None
                     else:
                         self.jeu.update(dt)
                         self.jeu.dessiner()

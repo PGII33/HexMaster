@@ -4,6 +4,13 @@ from tour import reset_actions_tour
 import competences as co
 
 def handle_click(jeu, mx, my):
+    # Bouton retour au menu principal (priorité absolue si menu fin de combat affiché)
+    if (hasattr(jeu, 'show_end_menu') and jeu.show_end_menu and 
+        hasattr(jeu, 'btn_retour_menu') and jeu.btn_retour_menu.collidepoint(mx, my)):
+        jeu.show_end_menu = False  # Fermer le menu de fin de combat
+        retourner_menu_principal()
+        return
+
     # clic bouton abandonner - TOUJOURS ACCESSIBLE
     if hasattr(jeu, 'btn_abandonner') and jeu.btn_abandonner.collidepoint(mx, my):
         jeu.abandonner_combat()
@@ -249,3 +256,9 @@ def _are_enemies(equipe1, equipe2, versus_mode):
     else:
         # Mode normal : joueur vs ennemi
         return (equipe1 == "joueur" and equipe2 == "ennemi") or (equipe1 == "ennemi" and equipe2 == "joueur")
+
+def retourner_menu_principal():
+    """Signal que l'utilisateur veut retourner au menu principal"""
+    # Ne pas quitter pygame, juste signaler que le menu de fin doit se fermer
+    # Le système principal dans menu.py gèrera le retour au menu
+    pass
