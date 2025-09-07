@@ -4,6 +4,11 @@ from tour import reset_actions_tour
 import competences as co
 
 def handle_click(jeu, mx, my):
+    # clic bouton abandonner - TOUJOURS ACCESSIBLE
+    if hasattr(jeu, 'btn_abandonner') and jeu.btn_abandonner.collidepoint(mx, my):
+        jeu.abandonner_combat()
+        return
+
     # clic bouton fin de tour - TOUJOURS ACCESSIBLE
     if hasattr(jeu, 'btn_fin_tour') and jeu.btn_fin_tour.collidepoint(mx, my):
         jeu.changer_tour()

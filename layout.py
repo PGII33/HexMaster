@@ -83,6 +83,10 @@ def recalculer_layout(jeu):
     btn_y = jeu.hauteur - btn_h - MARGE
     jeu.btn_fin_tour = pygame.Rect(btn_x, btn_y, btn_w, btn_h)
 
+    # Bouton Abandonner au-dessus du bouton Fin de tour
+    btn_y_abandon = btn_y - btn_h - 10  # 10 pixels d'espacement
+    jeu.btn_abandonner = pygame.Rect(btn_x, btn_y_abandon, btn_w, btn_h)
+
     jeu.info_panel = pygame.Rect(jeu.largeur - jeu.sidebar_w + MARGE,
                                   jeu.top_h + MARGE,
                                   jeu.sidebar_w - 2 * MARGE,

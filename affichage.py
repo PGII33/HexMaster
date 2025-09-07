@@ -290,6 +290,13 @@ def dessiner(jeu):
     jeu.screen.blit(txt_btn, (jeu.btn_fin_tour.centerx - txt_btn.get_width() // 2,
                                jeu.btn_fin_tour.centery - txt_btn.get_height() // 2))
 
+    # bouton abandonner
+    if hasattr(jeu, 'btn_abandonner'):
+        pygame.draw.rect(jeu.screen, (200,50,50), jeu.btn_abandonner, border_radius=8)
+        txt_abandon = jeu.font_norm.render("Abandonner", True, (255,255,255))
+        jeu.screen.blit(txt_abandon, (jeu.btn_abandonner.centerx - txt_abandon.get_width() // 2,
+                                     jeu.btn_abandonner.centery - txt_abandon.get_height() // 2))
+
 def dessiner_hex(jeu, q, r, couleur, largeur=1):
     x,y = hex_to_pixel(jeu, q, r)
     pts = []

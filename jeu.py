@@ -171,6 +171,12 @@ class Jeu:
                 mx, my = event.pos
                 handle_click(self, mx, my)
 
+    def abandonner_combat(self):
+        """Abandonne le combat en cours - défaite du joueur"""
+        print("🏳️ Combat abandonné par le joueur")
+        self.finished = True
+        self.player_victory = False  # Défaite par abandon
+
     def update(self, dt_ms):
         # Mettre à jour les animations
         for u in self.unites:
