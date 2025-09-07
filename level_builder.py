@@ -46,10 +46,15 @@ class LevelBuilder:
         if self.etat == "main_menu":
             self.ui.add_button((center_x-140, h//2-180, 280, 50), "Créer Niveau", self.nouveau_niveau)
             self.ui.add_button((center_x-140, h//2-120, 280, 50), "Modifier Niveau", self.modifier_niveau)
+            self.ui.add_button((center_x-140, h//2-60, 280, 50), "Jouer Niveau", self.charger_niveau_custom)
             self.ui.add_button((20, h-70, 150, 50), "Retour", self.retour)
         
         elif self.etat == "selection_niveau":
             # Interface de sélection de niveau à modifier
+            self.ui.add_button((20, h-70, 150, 50), "Retour", self.retour_menu)
+            
+        elif self.etat == "selection_niveau_custom":
+            # Interface de sélection de niveau custom à charger
             self.ui.add_button((20, h-70, 150, 50), "Retour", self.retour_menu)
         
         elif self.etat == "config_generale":
@@ -185,11 +190,21 @@ class LevelBuilder:
     def modifier_niveau(self):
         """Lance l'interface de sélection de niveau à modifier"""
         self.etat = "selection_niveau"
-        self.niveaux_disponibles = self._charger_liste_niveaux()
+        # Inclure à la fois les niveaux de campagne et les niveaux custom
+        niveaux_campagne = self._charger_liste_niveaux_campagne()
+        niveaux_custom = self._charger_liste_niveaux_custom()
+        self.niveaux_disponibles = niveaux_campagne + niveaux_custom
         self.niveau_selectionne = None
         self.creer_boutons()
-    
-    def _charger_liste_niveaux(self):
+        
+    def charger_niveau_custom(self):
+        """Lance l'interface de sélection de niveau custom à jouer"""
+        self.etat = "selection_niveau_custom"
+        self.niveaux_disponibles = self._charger_liste_niveaux_custom()
+        self.niveau_selectionne = None
+        self.creer_boutons()
+
+    def _charger_liste_niveaux_campagne(self):
         """Charge la liste des niveaux disponibles dans le dossier Campagne"""
         niveaux = []
         campagne_path = "Campagne"
@@ -226,12 +241,75 @@ class LevelBuilder:
                                 "chapitre": chapitre_nom,
                                 "numero": config.numero,
                                 "chemin": niveau_file,
-                                "config": config
+                                "config": config,
+                                "type": "campagne"
                             })
                     except Exception as e:
                         print(f"Erreur lors du chargement de {niveau_file}: {e}")
         
         return niveaux
+        
+    def _charger_liste_niveaux_custom(self):
+        """Charge la liste des niveaux custom disponibles"""
+        niveaux = []
+        custom_path = "custom_levels"
+        
+        if not os.path.exists(custom_path):
+            os.makedirs(custom_path)
+            return niveaux
+        
+        # Parcourir les dossiers dans custom_levels (comme pour la campagne)
+        for niveau_folder in sorted(os.listdir(custom_path)):
+            niveau_folder_path = os.path.join(custom_path, niveau_folder)
+            if not os.path.isdir(niveau_folder_path):
+                continue
+                
+            # Chercher le fichier niveau.json dans le dossier
+            niveau_file = os.path.join(niveau_folder_path, "niveau.json")
+            if os.path.exists(niveau_file):
+                try:
+                    from niveau_structure import charger_niveau
+                    config = charger_niveau(niveau_file)
+                    if config:
+                        # Utiliser le nom du dossier si pas de nom dans la config
+                        nom_dossier = niveau_folder
+                        niveaux.append({
+                            "nom": config.nom or nom_dossier,
+                            "chapitre": "Niveaux Custom",
+                            "numero": getattr(config, 'numero', 0),
+                            "chemin": niveau_file,
+                            "config": config,
+                            "type": "custom"
+                        })
+                except Exception as e:
+                    print(f"Erreur lors du chargement du niveau custom {niveau_file}: {e}")
+            
+        # Aussi chercher les fichiers .json directement (pour compatibilité)
+        for filename in sorted(os.listdir(custom_path)):
+            if filename.endswith(".json"):
+                niveau_file = os.path.join(custom_path, filename)
+                try:
+                    from niveau_structure import charger_niveau
+                    config = charger_niveau(niveau_file)
+                    if config:
+                        # Utiliser le nom du fichier si pas de nom dans la config
+                        nom_fichier = filename[:-5]  # Enlever .json
+                        niveaux.append({
+                            "nom": config.nom or nom_fichier,
+                            "chapitre": "Niveaux Custom",
+                            "numero": getattr(config, 'numero', 0),
+                            "chemin": niveau_file,
+                            "config": config,
+                            "type": "custom"
+                        })
+                except Exception as e:
+                    print(f"Erreur lors du chargement du niveau custom {niveau_file}: {e}")
+        
+        return niveaux
+
+    def _charger_liste_niveaux(self):
+        """Ancienne fonction - maintenant appelle la version campagne pour compatibilité"""
+        return self._charger_liste_niveaux_campagne()
     
     def charger_niveau_pour_modification(self, niveau_info):
         """Charge un niveau existant pour modification"""
@@ -825,14 +903,146 @@ class LevelBuilder:
         
         self.ui.draw_buttons()
     
+    def afficher_selection_niveau_custom(self):
+        """Affiche l'interface de sélection de niveau custom à jouer"""
+        self.screen.fill((255, 255, 255))
+        self.ui.draw_title("Jouer un Niveau Custom", 50)
+        
+        y = 120
+        
+        if not hasattr(self, 'niveaux_disponibles') or not self.niveaux_disponibles:
+            self.ui.draw_text("Aucun niveau custom trouvé dans le dossier custom_levels/", 50, y, color=(255, 0, 0))
+            self.ui.draw_text("Créez d'abord des niveaux et sauvegardez-les dans custom_levels/", 50, y + 30, color=(100, 100, 100))
+            self.ui.draw_buttons()
+            return
+        
+        self.ui.draw_text("Sélectionnez un niveau custom à jouer:", 50, y)
+        y += 40
+        
+        # Afficher la liste des niveaux
+        max_visible = 12  # Nombre maximum de niveaux visibles
+        start_index = getattr(self, 'scroll_offset', 0)
+        end_index = min(start_index + max_visible, len(self.niveaux_disponibles))
+        
+        for i in range(start_index, end_index):
+            niveau = self.niveaux_disponibles[i]
+            
+            # Couleur alternée pour la lisibilité
+            bg_color = (240, 255, 240) if i % 2 == 0 else (255, 255, 255)  # Teinte verte pour les customs
+            
+            # Rectangle de fond
+            niveau_rect = pygame.Rect(50, y, 700, 35)
+            pygame.draw.rect(self.screen, bg_color, niveau_rect)
+            pygame.draw.rect(self.screen, (150, 200, 150), niveau_rect, 1)  # Bordure verte
+            
+            # Texte du niveau avec indication custom
+            text = f"[CUSTOM] {niveau['nom']}"
+            if niveau.get('config') and hasattr(niveau['config'], 'description') and niveau['config'].description:
+                text += f" - {niveau['config'].description[:50]}..."
+            
+            self.ui.draw_text(text, 60, y + 8, color=(0, 100, 0))  # Texte vert foncé
+            
+            # Stocker le rectangle pour la détection de clic
+            if not hasattr(self, 'niveau_rects'):
+                self.niveau_rects = {}
+            self.niveau_rects[i] = niveau_rect
+            
+            y += 40
+        
+        # Indicateurs de scroll si nécessaire
+        if len(self.niveaux_disponibles) > max_visible:
+            total_pages = (len(self.niveaux_disponibles) - 1) // max_visible + 1
+            current_page = start_index // max_visible + 1
+            self.ui.draw_text(f"Page {current_page}/{total_pages} - Utilisez la molette pour défiler", 
+                            50, y + 20, color=(100, 100, 100))
+        
+        self.ui.draw_buttons()
+
     def _handle_niveau_selection_click(self, pos):
         """Gère les clics sur la liste de niveaux"""
         if hasattr(self, 'niveau_rects'):
             for index, rect in self.niveau_rects.items():
                 if rect.collidepoint(pos):
                     niveau_info = self.niveaux_disponibles[index]
-                    self.charger_niveau_pour_modification(niveau_info)
+                    
+                    # Distinguer entre modification et jeu
+                    if self.etat == "selection_niveau_custom":
+                        # Mode jeu : lancer le niveau directement
+                        self.lancer_niveau_custom(niveau_info)
+                    else:
+                        # Mode modification : charger pour édition
+                        self.charger_niveau_pour_modification(niveau_info)
                     break
+    
+    def lancer_niveau_custom(self, niveau_info):
+        """Lance un niveau custom pour y jouer"""
+        try:
+            config = niveau_info['config']
+            
+            # Pour les niveaux custom, permettre au joueur de choisir ses unités
+            # Si des unités sont imposées, les utiliser, sinon lancer la sélection
+            if config.unites_imposees:
+                # Utiliser les unités imposées (extraire juste les classes)
+                unites_joueur = [unite[0] for unite in config.unites_imposees]
+                enable_placement = not config.placement_impose
+            else:
+                # Lancer la sélection d'unités selon le type de restriction
+                if config.type_restriction.value == "faction_libre":
+                    selector = UnitSelector(self.screen, "campagne_libre", 
+                                          cp_max=config.cp_disponible,
+                                          max_units=config.max_unites,
+                                          faction_unique=config.faction_unique_requise,
+                                          faction_imposee=config.faction_imposee)
+                elif config.type_restriction.value == "faction_unique":
+                    selector = UnitSelector(self.screen, "campagne_faction",
+                                          cp_max=config.cp_disponible,
+                                          max_units=config.max_unites,
+                                          faction_unique=True,
+                                          faction_imposee=config.faction_imposee)
+                elif config.type_restriction.value == "factions_definies":
+                    selector = UnitSelector(self.screen, "campagne_definies",
+                                          cp_max=config.cp_disponible,
+                                          max_units=config.max_unites,
+                                          factions_autorisees=config.factions_autorisees,
+                                          faction_unique=config.faction_unique_requise,
+                                          faction_imposee=config.faction_imposee)
+                else:
+                    # Par défaut, sélection libre
+                    selector = UnitSelector(self.screen, "campagne_libre", 
+                                          cp_max=config.cp_disponible,
+                                          max_units=config.max_unites)
+                
+                unites_joueur = selector.run()
+                
+                if unites_joueur is None:  # Annulé
+                    print("Sélection d'unités annulée")
+                    return
+                
+                enable_placement = True
+            
+            # Créer le jeu avec la configuration du niveau
+            from jeu import Jeu
+            import ia
+            
+            jeu = Jeu(
+                ia_strategy=ia.ia_tactique_avancee,
+                screen=self.screen,
+                initial_player_units=unites_joueur,
+                initial_enemy_units=config.unites_ennemis,
+                enable_placement=enable_placement,
+                niveau_config=config
+            )
+            
+            # Fermer le level builder et retourner le jeu
+            self.running = False
+            self.jeu_cree = jeu
+            print(f"Lancement du niveau custom: {niveau_info['nom']}")
+            
+        except Exception as e:
+            print(f"Erreur lors du lancement du niveau custom: {e}")
+            import traceback
+            traceback.print_exc()
+            # Continuer dans le level builder en cas d'erreur
     
     def _handle_scroll(self, direction):
         """Gère le scroll dans la liste de niveaux"""
@@ -1088,13 +1298,15 @@ class LevelBuilder:
                         # Gestion des clics sur la liste de niveaux
                         elif self.etat == "selection_niveau":
                             self._handle_niveau_selection_click(event.pos)
+                        elif self.etat == "selection_niveau_custom":
+                            self._handle_niveau_selection_click(event.pos)
                 
                 elif event.type == pygame.KEYDOWN:
                     if self.etat == "config_generale":
                         self.ui.handle_text_input(event, self.text_data, self.ui.champ_actif)
                 
                 elif event.type == pygame.MOUSEWHEEL:
-                    if self.etat == "selection_niveau":
+                    if self.etat == "selection_niveau" or self.etat == "selection_niveau_custom":
                         self._handle_scroll(event.y)
             
             # Affichage selon l'état
@@ -1102,6 +1314,8 @@ class LevelBuilder:
                 self.afficher_main_menu()
             elif self.etat == "selection_niveau":
                 self.afficher_selection_niveau()
+            elif self.etat == "selection_niveau_custom":
+                self.afficher_selection_niveau_custom()
             elif self.etat == "config_generale":
                 self.afficher_config_generale()
             elif self.etat == "restrictions_config":
@@ -1115,8 +1329,10 @@ class LevelBuilder:
             
             pygame.display.flip()
         
-        # Retourner le jeu de test si créé
-        if hasattr(self, 'test_game'):
+        # Retourner le jeu créé si disponible
+        if hasattr(self, 'jeu_cree'):
+            return self.jeu_cree
+        elif hasattr(self, 'test_game'):
             return self.test_game
         
         return None
