@@ -116,12 +116,18 @@ class Boutique:
         return lines or [""]
 
     def afficher(self):
-        self.creer_boutons()
         self.running = True
         self.scroll_y = 0
         while self.running:
             self.screen.fill((240,240,250))
             screen_w, screen_h, margin, cols, card_w, start_y = self._grid_specs()
+
+            # Recréer les boutons à chaque frame pour éviter l'accumulation
+            self.boutons = []
+            
+            # Bouton retour (ajouté en premier)
+            bouton_retour = Button((20, screen_h - 70, 160, 44), "Retour", self.retour_menu, self.font)
+            self.boutons.append(bouton_retour)
 
             # --- SCROLL LIMITS ---
             total_height = start_y
@@ -232,7 +238,8 @@ class Boutique:
                     x = margin
                     y += card_h + margin
 
-            self.boutons[0].draw(self.screen)  # bouton retour
+            # Dessiner le bouton retour par-dessus
+            bouton_retour.draw(self.screen)
 
             solde = self.font.render(f"Points d'âmes : {self.data['pa']}", True, (0,0,0))
             solde_rect = pygame.Rect(self.screen.get_width() - solde.get_width() - 20, 20, solde.get_width(), solde.get_height())
@@ -257,9 +264,20 @@ class Boutique:
                             self.debloquer_tier4_secret()
                             self.secret_clicks = 0  # Reset compteur
                     else:
-                        # Gérer les clics normaux sur les boutons
-                        for b in self.boutons:
-                            b.handle_event(event)
+                        # Gérer les clics normaux sur les boutons avec priorité au bouton retour
+                        button_clicked = False
+                        
+                        # D'abord vérifier le bouton retour (priorité absolue)
+                        if self.boutons[0].rect.collidepoint(event.pos):
+                            self.boutons[0].handle_event(event)
+                            button_clicked = True
+                        
+                        # Seulement si le bouton retour n'est pas cliqué, vérifier les boutons d'achat
+                        if not button_clicked:
+                            for i in range(1, len(self.boutons)):
+                                if self.boutons[i].rect.collidepoint(event.pos):
+                                    self.boutons[i].handle_event(event)
+                                    break
                 elif event.type == pygame.MOUSEWHEEL:
                     self.scroll_y -= event.y * self.scroll_speed
                     self.scroll_y = max(0, min(self.scroll_y, max_scroll))

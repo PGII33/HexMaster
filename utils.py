@@ -47,3 +47,5 @@ class Button:
             if self.rect.collidepoint(event.pos):
                 if self.action:
                     self.action()
+                return True
+        return False
