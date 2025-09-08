@@ -338,6 +338,12 @@ class Jeu:
         # Calculer les récompenses basées sur la victoire et le mode de jeu
         if victoire:
             self.recompenses = self.calculer_recompenses()
+            
+            # Ajouter les unités débloquées par le niveau pour l'affichage
+            if self.niveau_config and hasattr(self.niveau_config, 'unites_debloquees'):
+                if not self.recompenses['unites']:
+                    self.recompenses['unites'] = []
+                self.recompenses['unites'].extend(self.niveau_config.unites_debloquees)
         else:
             # Récompenses minimales en cas de défaite
             self.recompenses = {"pa": 1, "cp": 0, "unites": []}

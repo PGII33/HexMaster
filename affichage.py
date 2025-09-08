@@ -119,8 +119,8 @@ def dessiner(jeu):
 
     # unités
     for u in jeu.unites:
-        # Afficher les unités vivantes ET les tas d'os
-        if not u.vivant and u.nom != "Tas d'Os":
+        # Afficher seulement les unités vivantes
+        if not u.vivant:
             continue
         x,y = hex_to_pixel(jeu, u.pos[0], u.pos[1])
         
@@ -351,19 +351,19 @@ def dessiner_menu_fin_combat(jeu):
     
     # PA
     pa_y = recomp_y + 40
-    txt_pa = jeu.font_norm.render(f"🏆 PA : +{jeu.recompenses['pa']}", True, (0, 100, 200))
+    txt_pa = jeu.font_norm.render(f"PA : +{jeu.recompenses['pa']}", True, (0, 100, 200))
     jeu.screen.blit(txt_pa, (menu_x + 70, pa_y))
     
     # CP
     cp_y = pa_y + 30
-    txt_cp = jeu.font_norm.render(f"⚡ CP : +{jeu.recompenses['cp']}", True, (200, 100, 0))
+    txt_cp = jeu.font_norm.render(f"CP : +{jeu.recompenses['cp']}", True, (200, 100, 0))
     jeu.screen.blit(txt_cp, (menu_x + 70, cp_y))
     
     # Nouvelles unités
     if jeu.recompenses['unites']:
         unites_y = cp_y + 30
         for i, unite in enumerate(jeu.recompenses['unites']):
-            txt_unite = jeu.font_norm.render(f"🎖️ Nouvelle unité : {unite}", True, (100, 150, 100))
+            txt_unite = jeu.font_norm.render(f"Nouvelle unité : {unite}", True, (100, 150, 100))
             jeu.screen.blit(txt_unite, (menu_x + 70, unites_y + i * 25))
     
     # Bouton Retour au menu principal
