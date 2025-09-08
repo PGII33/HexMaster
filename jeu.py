@@ -368,12 +368,8 @@ class Jeu:
         bonus_survie = len(joueur_unites)
         recompenses["pa"] += bonus_survie
         
-        # Parfois une nouvelle unité (chance de 30%)
-        import random
-        if random.random() < 0.3:
-            unites_possibles = ["Guerrier", "Archer", "Mage"]
-            nouvelle_unite = random.choice(unites_possibles)
-            recompenses["unites"].append(nouvelle_unite)
+        # Les unités sont débloquées via le système de niveau (niveau_config.unites_debloquees)
+        # Pas de récompenses aléatoires d'unités ici
         
         return recompenses
 

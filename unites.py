@@ -110,6 +110,19 @@ class Unite:
         directions = [(1,0), (-1,0), (0,1), (0,-1), (1,-1), (-1,1)]
         return any((q1+dx, r1+dy) == (q2, r2) for dx, dy in directions)
 
+    def get_attaque_totale(self):
+        """Calcule l'attaque totale incluant les boosts temporaires."""
+        attaque_base = self.dmg
+        
+        # Ajouter les boosts temporaires
+        boost_attaque = getattr(self, 'boost_attaque_temporaire', 0)
+        
+        return attaque_base + boost_attaque
+
+    def get_degats_supplementaires(self):
+        """Calcule les dégâts supplémentaires temporaires."""
+        return getattr(self, 'boost_degats_temporaire', 0)
+
     def cases_accessibles(self, toutes_unites, q_range=None, r_range=None):
         if self.pm <= 0:
             return {}
@@ -204,8 +217,12 @@ class Unite:
                 co.explosion_sacrée(self, toutes_unites, autre)  # Passer toutes les unités et la cible
                 # Ne pas faire l'attaque normale, l'explosion sacrée remplace tout
             else:
-                # Attaque normale - calculer les dégâts réellement infligés
-                degats_infliges = autre.subir_degats(self.dmg)
+                # Attaque normale - calculer les dégâts avec boosts
+                degats_base = self.get_attaque_totale()
+                degats_supplementaires = self.get_degats_supplementaires()
+                degats_totaux = degats_base + degats_supplementaires
+                
+                degats_infliges = autre.subir_degats(degats_totaux)
                 
                 # Compétence sangsue après l'attaque (avec les vrais dégâts)
                 if self.comp == "sangsue":

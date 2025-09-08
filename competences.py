@@ -209,6 +209,111 @@ def aura_sacrée(self, toutes_unites):
                         unite.dmg += 3
                     break
 
+# ========== COMPÉTENCES ROYAUME ==========
+
+def pluie_de_fleches(self, cible_pos, toutes_unites):
+    """Attaque AOE sur la case cible et toutes les cases adjacentes."""
+    # Vérifier que la case cible est à portée (jusqu'à 3 cases)
+    q_self, r_self = self.pos
+    q_cible, r_cible = cible_pos
+    distance = max(abs(q_self - q_cible), abs(r_self - r_cible), abs((q_self + r_self) - (q_cible + r_cible)))
+    
+    if distance > 3:
+        return False
+    
+    # Cases affectées : la case cible + ses adjacentes
+    directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
+    cases_affectees = [cible_pos]  # Case cible
+    
+    # Ajouter les cases adjacentes à la cible
+    for dq, dr in directions:
+        case_adjacente = (q_cible + dq, r_cible + dr)
+        cases_affectees.append(case_adjacente)
+    
+    # Attaquer toutes les unités ennemies dans les cases affectées
+    unites_touchees = []
+    for unite in toutes_unites:
+        if unite.pos in cases_affectees and unite.equipe != self.equipe and unite.vivant:
+            degats_infliges = unite.subir_degats(self.dmg)
+            unites_touchees.append(unite)
+            
+            # Vérifier si l'unité meurt
+            if unite.pv <= 0:
+                unite.mourir(toutes_unites)
+    
+    return len(unites_touchees) > 0
+
+def monture_libere(self, case_pos, toutes_unites):
+    """Transforme le cavalier en guerrier et place un cheval sur sa position actuelle."""
+    from unites import Guerrier, Cheval
+    
+    # Vérifier que la case est adjacente
+    directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
+    q, r = self.pos
+    case_adjacente = False
+    
+    for dq, dr in directions:
+        if (q + dq, r + dr) == case_pos:
+            case_adjacente = True
+            break
+    
+    if not case_adjacente:
+        return False
+    
+    # Vérifier que la case de destination est libre
+    for unite in toutes_unites:
+        if unite.pos == case_pos and unite.vivant:
+            return False
+    
+    # Créer un cheval sur la position actuelle du cavalier
+    cheval = Cheval(self.equipe, self.pos)
+    toutes_unites.append(cheval)
+    
+    # Transformer le cavalier en guerrier à la nouvelle position
+    ancienne_pos = self.pos
+    self.pos = case_pos
+    
+    # Changer les stats pour devenir un guerrier (garder les PV actuels)
+    pv_actuels = self.pv
+    self.__class__ = Guerrier
+    self.__init__(self.equipe, self.pos)
+    self.pv = pv_actuels  # Conserver les PV du cavalier
+    self.pm = 0  # Plus de mouvement après la transformation
+    self.attaque_restantes = self.attaque_max  # Peut attaquer après transformation
+    
+    return True
+
+def commandement(unite, cible, toutes_unites):
+    """Augmente l'attaque d'un allié de +3 et lui donne +2 dégâts pour le prochain tour."""
+    from ia import hex_distance
+    
+    # Vérifier si c'est un allié
+    if not isinstance(cible, (tuple, list)):
+        # Si c'est une unité directement
+        if cible.equipe != unite.equipe or not cible.vivant:
+            return False
+        
+        # Vérifier la portée (2 cases)
+        if hex_distance(unite.pos, cible.pos) > 2:
+            return False
+        
+        # Appliquer les boosts
+        cible.boost_attaque_temporaire = getattr(cible, 'boost_attaque_temporaire', 0) + 3
+        cible.boost_degats_temporaire = getattr(cible, 'boost_degats_temporaire', 0) + 2
+        
+        return True
+    
+    return False
+
+# Fonction pour appliquer le bonus de commandement lors d'une attaque
+def appliquer_bonus_commandement(unite):
+    """Retourne les dégâts avec bonus de commandement et consomme le bonus."""
+    if hasattr(unite, 'bonus_commandement') and unite.bonus_commandement > 0:
+        bonus = unite.bonus_commandement
+        unite.bonus_commandement = 0  # Consommer le bonus après utilisation
+        return unite.dmg + bonus
+    return unite.dmg
+
 # ========== COMPÉTENCES ÉLÉMENTAIRES ==========
 
 def enracinement(self):
@@ -282,12 +387,12 @@ def gerer_combustion_differee(unite, toutes_unites):
 # Fonction utilitaire pour déterminer si une compétence est active
 def est_competence_active(nom_competence):
     """Retourne True si la compétence nécessite une cible."""
-    competences_actives = ["soin", "bénédiction", "cristalisation"]
+    competences_actives = ["soin", "bénédiction", "cristalisation", "pluie de flèches", "monture libéré", "commandement"]
     return nom_competence in competences_actives
 
 def peut_cibler_allie(nom_competence):
     """Retourne True si la compétence peut cibler des alliés."""
-    competences_alliés = ["soin", "bénédiction"]
+    competences_alliés = ["soin", "bénédiction", "commandement"]
     return nom_competence in competences_alliés
 
 def peut_cibler_ennemi(nom_competence):
@@ -297,7 +402,7 @@ def peut_cibler_ennemi(nom_competence):
 
 def peut_cibler_case_vide(nom_competence):
     """Retourne True si la compétence peut cibler des cases vides."""
-    competences_cases = ["cristalisation"]
+    competences_cases = ["cristalisation", "pluie de flèches", "monture libéré"]
     return nom_competence in competences_cases
 
 def utiliser_competence_active(unite, nom_competence, cible, toutes_unites=None):
@@ -308,6 +413,12 @@ def utiliser_competence_active(unite, nom_competence, cible, toutes_unites=None)
         return bénédiction(unite, cible)
     elif nom_competence == "cristalisation":
         return cristalisation(unite, cible, toutes_unites)
+    elif nom_competence == "pluie de flèches":
+        return pluie_de_fleches(unite, cible, toutes_unites)
+    elif nom_competence == "monture libéré":
+        return monture_libere(unite, cible, toutes_unites)
+    elif nom_competence == "commandement":
+        return commandement(unite, cible, toutes_unites)
     return False
 
 
@@ -335,4 +446,9 @@ COMPETENCES = {
     "renaissance": "80% de chance de revenir à la vie avec tous ses PV à la mort.",
     "armure de pierre": "Réduit tous les dégâts reçus de 2 points (minimum 0).",
     "combustion différée": "Les cibles touchées meurent au bout de 3 tours ennemis.",
+    
+    # Nouvelles compétences actives
+    "pluie de flèches": "Attaque de zone : inflige des dégâts à la cible et toutes les unités adjacentes.",
+    "monture libéré": "Se transforme en Guerrier et invoque un Cheval allié sur une case adjacente.",
+    "commandement": "Augmente l'attaque d'un allié de +3 et lui donne +2 dégâts pour le prochain tour.",
 }

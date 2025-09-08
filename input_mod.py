@@ -56,7 +56,7 @@ def handle_click(jeu, mx, my):
                 return
             
             # Compétences qui nécessitent une cible
-            elif comp_name in ["soin", "bénédiction", "cristalisation"]:
+            elif comp_name in ["soin", "bénédiction", "cristalisation", "pluie de flèches", "monture libéré", "commandement"]:
                 print(f"🔸 DEBUG: Activation {comp_name} pour {jeu.selection.nom}")
                 print(f"   - Mode sélection: {getattr(jeu, 'mode_selection_competence', False)}")
                 print(f"   - Attaques restantes: {jeu.selection.attaque_restantes}")
@@ -203,10 +203,16 @@ def _get_valid_targets(jeu, comp_name, unite_source):
     valid_targets = []
     
     if co.peut_cibler_allie(comp_name):
-        # Peut cibler les alliés
+        # Peut cibler les alliés (soin, bénédiction, commandement)
         for u in jeu.unites:
             if u.vivant and u.equipe == unite_source.equipe:
-                valid_targets.append(u)
+                # Vérifier la portée pour chaque compétence
+                if comp_name == "soin" and _is_in_range(unite_source, u, 2):
+                    valid_targets.append(u)
+                elif comp_name == "bénédiction" and _is_in_range(unite_source, u, 3):
+                    valid_targets.append(u)
+                elif comp_name == "commandement" and _is_in_range(unite_source, u, 2):
+                    valid_targets.append(u)
     
     if co.peut_cibler_ennemi(comp_name):
         # Peut cibler les ennemis
@@ -215,38 +221,56 @@ def _get_valid_targets(jeu, comp_name, unite_source):
                 valid_targets.append(u)
     
     if co.peut_cibler_case_vide(comp_name):
-        # Peut cibler des cases vides adjacentes (pour cristalisation)
-        print(f"   🔸 DEBUG: Recherche cases vides pour {comp_name}")
-        print(f"   Position source: {unite_source.pos}")
-        directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
-        q, r = unite_source.pos
-        print(f"   Coordonnées source: q={q}, r={r}")
-        
-        for dq, dr in directions:
-            case_pos = (q+dq, r+dr)
-            case_q, case_r = case_pos
-            print(f"   Vérification case: {case_pos}")
-            # Vérifier que la case est dans les limites du jeu
-            if (case_q in jeu.q_range and case_r in jeu.r_range):
-                print(f"     - Dans les limites ✓")
-                # Vérifier que la case est vide
-                case_libre = True
-                for u in jeu.unites:
-                    if u.pos == case_pos and u.vivant:
-                        case_libre = False
-                        print(f"     - Occupée par {u.nom} ✗")
-                        break
-                
-                if case_libre:
-                    # Ajouter la position comme cible valide
-                    valid_targets.append(case_pos)
-                    print(f"     - Case vide trouvée ✓: {case_pos}")
-                else:
-                    print(f"     - Case occupée ✗")
-            else:
-                print(f"     - Hors limites ✗ (q_range: {jeu.q_range}, r_range: {jeu.r_range})")
+        # Gérer les différents types de ciblage de cases
+        if comp_name == "cristalisation":
+            # Cases vides adjacentes pour cristalisation
+            _add_adjacent_empty_cases(jeu, unite_source, valid_targets)
+        elif comp_name == "pluie de flèches":
+            # Cases dans la portée pour pluie de flèches (portée 3)
+            _add_cases_in_range(jeu, unite_source, valid_targets, 3)
+        elif comp_name == "monture libéré":
+            # Cases vides adjacentes pour monture libéré
+            _add_adjacent_empty_cases(jeu, unite_source, valid_targets)
     
+    print(f"🔸 {comp_name}: {len(valid_targets)} cibles trouvées")
     return valid_targets
+
+def _is_in_range(source, target, portee):
+    """Vérifie si la cible est à portée."""
+    from ia import hex_distance
+    return hex_distance(source.pos, target.pos) <= portee
+
+def _add_adjacent_empty_cases(jeu, unite_source, valid_targets):
+    """Ajoute les cases vides adjacentes aux cibles valides."""
+    directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
+    q, r = unite_source.pos
+    
+    for dq, dr in directions:
+        case_pos = (q+dq, r+dr)
+        case_q, case_r = case_pos
+        
+        # Vérifier que la case est dans les limites du jeu
+        if (case_q in jeu.q_range and case_r in jeu.r_range):
+            # Vérifier que la case est vide
+            case_libre = True
+            for u in jeu.unites:
+                if u.pos == case_pos and u.vivant:
+                    case_libre = False
+                    break
+            
+            if case_libre:
+                valid_targets.append(case_pos)
+
+def _add_cases_in_range(jeu, unite_source, valid_targets, portee):
+    """Ajoute toutes les cases dans la portée aux cibles valides."""
+    from ia import hex_distance
+    
+    # Parcourir toutes les cases possibles dans la portée
+    for q in jeu.q_range:
+        for r in jeu.r_range:
+            case_pos = (q, r)
+            if hex_distance(unite_source.pos, case_pos) <= portee:
+                valid_targets.append(case_pos)
 
 def _are_enemies(equipe1, equipe2, versus_mode):
     """Détermine si deux équipes sont ennemies selon le mode de jeu"""

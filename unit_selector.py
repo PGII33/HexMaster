@@ -603,13 +603,13 @@ class UnitSelector:
         """Ajoute une unité à la sélection"""
         if self._can_add_unit(cls):
             self.selected_units.append(cls)
-            print(f"Unité ajoutée: {cls('joueur', (0,0)).get_nom()}")  # Debug
+            # Debug supprimé pour éviter le spam dans les logs
     
     def retirer_unite(self, cls):
         """Retire une unité de la sélection"""
         if cls in self.selected_units:
             self.selected_units.remove(cls)
-            print(f"Unité retirée: {cls('joueur', (0,0)).get_nom()}")  # Debug
+            # Debug supprimé pour éviter le spam dans les logs
     
     def run(self):
         """Lance le sélecteur d'unités"""

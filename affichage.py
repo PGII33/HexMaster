@@ -20,6 +20,12 @@ def dessiner(jeu):
     
     jeu.screen.fill(BLANC)
 
+    # Vérifier que les attributs de layout existent
+    if not hasattr(jeu, 'largeur') or not hasattr(jeu, 'top_h'):
+        # Recalculer le layout si les attributs manquent
+        from layout import recalculer_layout
+        recalculer_layout(jeu)
+
     # bandeau
     bandeau = pygame.Rect(0, 0, jeu.largeur, jeu.top_h)
     pygame.draw.rect(jeu.screen, (200,200,250), bandeau)
