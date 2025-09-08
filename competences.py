@@ -16,11 +16,10 @@ def zombification(self, cible):
 
 def tas_d_os(self):
     from unites import Tas_D_Os
-    # La transformation se fait même si l'unité est encore marquée comme vivante
-    # car cette fonction est appelée pendant le processus de mort
+    # Transformation en tas d'os : c'est une nouvelle unité vivante
     self.__class__ = Tas_D_Os
     self.__init__(self.equipe, self.pos)
-    self.vivant = False  # Important: garder l'état mort après transformation
+    # Le tas d'os est vivant avec 1 PV (défini dans Tas_D_Os.__init__)
 
 def cases_fantomatiques(unite, toutes_unites, q_range=None, r_range=None):
     """Retourne toutes les cases accessibles en traversant les unités (traverser une unité ne coûte pas de PM, s'arrêter sur une case vide coûte 1 PM par case vide)."""
