@@ -233,12 +233,13 @@ class Unite:
                     co.combustion_differee(self, autre)
                 
                 cible_tuée = False
+                faction_originale = autre.faction  # Sauvegarder avant transformation
                 if autre.pv <= 0:
                     result = autre.mourir(toutes_unites)  # Passer la liste complète des unités
                     cible_tuée = result  # True si l'unité était vivante et est maintenant morte
                 
                 # Compétences après l'attaque normale (quand on sait si la cible est tuée)
-                if self.comp == "lumière vengeresse" and cible_tuée:
+                if self.comp == "lumière vengeresse" and cible_tuée and faction_originale == "Morts-Vivants":
                     co.lumière_vengeresse(self, autre)
                 
                 if self.comp == "zombification" and cible_tuée:

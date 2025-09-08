@@ -188,9 +188,10 @@ def cristalisation(self, cible_pos, toutes_unites):
 
 def lumière_vengeresse(self, cible):
     """Regagne son attaque lorsqu'il tue un Mort-Vivant."""
-    if not cible.vivant and cible.faction == "Morts-Vivants":
-        # Regagner une attaque
-        self.attaque_restantes += 1
+    # La vérification de faction est faite dans unites.py avant l'appel
+    self.attaque_restantes += 1
+    # Flag pour indiquer que cette unité devrait continuer à agir
+    self._lumiere_vengeresse_activee = True
 
 def aura_sacrée(self, toutes_unites):
     """Bonus de dégâts pour tout les alliés adjacents."""

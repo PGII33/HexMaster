@@ -273,15 +273,24 @@ class Jeu:
                         # 1. A utilisé une attaque (même si regagnée par un passif)
                         # 2. A bougé
                         # 3. A tué un ennemi (important pour lumière vengeresse !)
+                        # 4. A déclenché lumière vengeresse (regagné une attaque)
+                        lumiere_vengeresse_activee = getattr(e, '_lumiere_vengeresse_activee', False)
+                        if lumiere_vengeresse_activee:
+                            e._lumiere_vengeresse_activee = False  # Reset le flag
+                        
                         action_effectuee = (attaques_apres < attaques_avant or  # Attaque utilisée nette
                                           position_apres != position_avant or   # A bougé
-                                          ennemis_vivants_apres < ennemis_vivants_avant)  # A tué quelqu'un
+                                          ennemis_vivants_apres < ennemis_vivants_avant or  # A tué quelqu'un
+                                          lumiere_vengeresse_activee)  # A regagné une attaque
                         
                         if action_effectuee:
                             # Rester sur la même unité pour qu'elle continue à agir
                             if hasattr(e, '_derniere_position'):
                                 e._derniere_position = e.pos  # Mettre à jour la position
-                            print(f"IA continue: {type(e).__name__} a {attaques_apres} attaque(s) restante(s)")
+                            if lumiere_vengeresse_activee:
+                                print(f"IA continue: {type(e).__name__} a déclenché lumière vengeresse!")
+                            else:
+                                print(f"IA continue: {type(e).__name__} a {attaques_apres} attaque(s) restante(s)")
                             pass  # Ne pas incrémenter ia_index
                         else:
                             # L'IA n'a rien fait, passer à l'unité suivante pour éviter la boucle
