@@ -385,11 +385,17 @@ class Jeu:
                         from sauvegarde import niveau_est_complete
                         if (hasattr(self.niveau_config, 'chapitre') and 
                             hasattr(self.niveau_config, 'numero')):
+                            # Convertir le nom de chapitre (ex: "01_Religieux" -> "Religieux")
+                            chapitre_display = self.niveau_config.chapitre
+                            if "_" in chapitre_display:
+                                chapitre_display = chapitre_display.split("_", 1)[1].replace("_", " ")
+                            
                             niveau_deja_complete = niveau_est_complete(
-                                self.niveau_config.chapitre, 
+                                chapitre_display, 
                                 self.niveau_config.numero
                             )
-                    except:
+                    except Exception as e:
+                        print(f"[DEBUG] Erreur vérification niveau: {e}")
                         niveau_deja_complete = False
                 
                 # Donner les récompenses seulement si pas déjà complété
