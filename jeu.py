@@ -364,24 +364,46 @@ class Jeu:
         """Calcule les récompenses basées sur le mode de jeu et la performance"""
         recompenses = {"pa": 0, "cp": 0, "unites": []}
         
-        # Base des récompenses selon le mode
         if self.mode_hexarene:
-            # HexArène donne plus de PA
-            recompenses["pa"] = 5
-            recompenses["cp"] = 2
+            # HexArène : somme des tiers des monstres vaincus (= CP adverse utilisé)
+            ennemis_morts = [u for u in self.unites if u.equipe != "joueur" and not u.vivant]
+            recompenses["pa"] = sum(u.tier for u in ennemis_morts)
+            recompenses["cp"] = sum(u.tier for u in ennemis_morts)  # Même valeur que PA
         elif self.versus_mode:
-            # Mode versus donne des récompenses équilibrées
-            recompenses["pa"] = 3
-            recompenses["cp"] = 3
+            # Mode versus : aucune récompense
+            recompenses["pa"] = 0
+            recompenses["cp"] = 0
         else:
-            # Mode campagne - récompenses selon le niveau
-            recompenses["pa"] = 4
-            recompenses["cp"] = 1
-        
-        # Bonus selon les unités survivantes
-        joueur_unites = [u for u in self.unites if u.equipe == "joueur" and u.vivant]
-        bonus_survie = len(joueur_unites)
-        recompenses["pa"] += bonus_survie
+            # Mode campagne : récompenses prédéfinies dans le niveau
+            if self.niveau_config:
+                # Vérifier si le niveau a déjà été complété
+                niveau_deja_complete = False
+                if (hasattr(self.niveau_config, 'completable_plusieurs_fois') and 
+                    not self.niveau_config.completable_plusieurs_fois):
+                    # Importer la fonction de vérification
+                    try:
+                        from sauvegarde import niveau_est_complete
+                        if (hasattr(self.niveau_config, 'chapitre') and 
+                            hasattr(self.niveau_config, 'numero')):
+                            niveau_deja_complete = niveau_est_complete(
+                                self.niveau_config.chapitre, 
+                                self.niveau_config.numero
+                            )
+                    except:
+                        niveau_deja_complete = False
+                
+                # Donner les récompenses seulement si pas déjà complété
+                if not niveau_deja_complete:
+                    recompenses["pa"] = getattr(self.niveau_config, 'recompense_pa', 0)
+                    recompenses["cp"] = getattr(self.niveau_config, 'recompense_cp', 0)
+                else:
+                    # Niveau déjà complété, pas de récompenses
+                    recompenses["pa"] = 0
+                    recompenses["cp"] = 0
+            else:
+                # Pas de niveau_config = pas de récompenses
+                recompenses["pa"] = 0
+                recompenses["cp"] = 0
         
         # Les unités sont débloquées via le système de niveau (niveau_config.unites_debloquees)
         # Pas de récompenses aléatoires d'unités ici
