@@ -102,6 +102,13 @@ class Unite:
     def reset_actions(self):
         self.attaque_restantes = self.attaque_max
         self.pm = self.mv
+        
+        # Appliquer l'effet divertissement si l'unité a été divertie
+        if hasattr(self, 'diverti') and self.diverti:
+            self.attaque_restantes = max(0, self.attaque_restantes - 1)
+            print(f"{self.nom} est diverti et perd 1 attaque!")
+            # Nettoyer le marquage
+            self.diverti = False
 
     # ---------- Déplacements ----------
     def est_adjacente(self, autre):
@@ -292,11 +299,14 @@ class Unite:
             co.vague_apaisante(self, toutes_unites)
         # Ajoute ici d'autres compétences passives si besoin
     
-    def fin_tour(self):
+    def fin_tour(self, toutes_unites):
         """À appeler en fin de tour de l'unité pour déclencher les compétences de fin de tour."""
         # Compétence d'enracinement : régénère si l'unité n'a pas bougé
         if self.comp == "enracinement":
             co.enracinement(self)
+        # Compétence de divertissement : réduit les attaques des ennemis adjacents
+        elif self.comp == "divertissement":
+            co.divertissement(self, toutes_unites)
     
     def fin_tour_ennemi(self, toutes_unites):
         """À appeler en fin de tour ennemi pour gérer la combustion différée."""

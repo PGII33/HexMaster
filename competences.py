@@ -314,6 +314,34 @@ def appliquer_bonus_commandement(unite):
         return unite.dmg + bonus
     return unite.dmg
 
+def divertissement(self, toutes_unites):
+    """S'il lui reste une attaque, marque les ennemis adjacents comme divertis (perdront 1 attaque au prochain tour)."""
+    # Vérifier que l'unité a encore au moins une attaque
+    if self.attaque_restantes <= 0:
+        return
+    
+    # Trouver les ennemis adjacents
+    directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
+    q, r = self.pos
+    
+    ennemis_divertis = []
+    for dq, dr in directions:
+        pos_adjacente = (q + dq, r + dr)
+        
+        # Chercher une unité ennemie à cette position
+        for unite in toutes_unites:
+            if (unite.pos == pos_adjacente and 
+                unite.vivant and 
+                unite.equipe != self.equipe):
+                
+                # Marquer l'unité comme divertie pour le prochain tour
+                unite.diverti = True
+                ennemis_divertis.append(unite)
+                break  # Une seule unité par case
+    
+    if ennemis_divertis:
+        print(f"{self.nom} divertit {len(ennemis_divertis)} ennemi(s) adjacent(s)!")
+
 # ========== COMPÉTENCES ÉLÉMENTAIRES ==========
 
 def enracinement(self):
@@ -451,4 +479,5 @@ COMPETENCES = {
     "pluie de flèches": "Attaque de zone : inflige des dégâts à la cible et toutes les unités adjacentes.",
     "monture libéré": "Se transforme en Guerrier et invoque un Cheval allié sur une case adjacente.",
     "commandement": "Augmente l'attaque d'un allié de +3 et lui donne +2 dégâts pour le prochain tour.",
+    "divertissement": "Si il a encore des attaques en fin de tour, réduit les attaques des ennemis adjacents de 1.",
 }

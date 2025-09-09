@@ -321,7 +321,7 @@ class Jeu:
         # Appeler fin_tour pour toutes les unités de l'équipe qui termine son tour
         for u in self.unites:
             if u.equipe == self.tour and u.vivant and hasattr(u, 'fin_tour'):
-                u.fin_tour()
+                u.fin_tour(self.unites)
         
         # Gérer la combustion différée en fin de tour ennemi
         if self.tour == "ennemi":
