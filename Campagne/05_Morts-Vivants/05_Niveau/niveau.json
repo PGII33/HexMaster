@@ -1,6 +1,6 @@
 {
   "nom": "Niveau 5 -",
-  "description": "Rien",
+  "description": "",
   "chapitre": "Morts-Vivants",
   "numero": 0,
   "type_restriction": "faction_unique",
@@ -20,34 +20,6 @@
       ]
     ],
     [
-      "Archliche",
-      [
-        0,
-        6
-      ]
-    ],
-    [
-      "Liche",
-      [
-        3,
-        6
-      ]
-    ],
-    [
-      "Liche",
-      [
-        -1,
-        5
-      ]
-    ],
-    [
-      "Liche",
-      [
-        6,
-        5
-      ]
-    ],
-    [
       "Squelette",
       [
         -1,
@@ -73,36 +45,69 @@
       [
         5,
         4
+      ]
+    ],
+    [
+      "Squelette",
+      [
+        2,
+        4
+      ]
+    ],
+    [
+      "Archliche",
+      [
+        2,
+        6
       ]
     ],
     [
       "Liche",
       [
         1,
-        6
+        4
       ]
     ],
     [
-      "Archliche",
+      "Liche",
       [
         4,
+        4
+      ]
+    ],
+    [
+      "Archliche",
+      [
+        -1,
         6
       ]
     ],
     [
       "Archliche",
       [
-        5,
+        6,
         6
+      ]
+    ],
+    [
+      "Liche",
+      [
+        1,
+        5
+      ]
+    ],
+    [
+      "Liche",
+      [
+        4,
+        5
       ]
     ]
   ],
   "difficulte_ennemis": "normale",
   "recompense_cp": 5,
   "recompense_pa": 200,
-  "unites_debloquees": [
-    "Archliche"
-  ],
+  "unites_debloquees": [],
   "recompenses_autres": [],
   "completable_plusieurs_fois": false
 }
