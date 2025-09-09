@@ -144,7 +144,7 @@ Les unités du jeu sont séparés en différentes "factions" il s'agit de groupe
     Protection : Si une unité allié est adjacente est attaqué, cette unité subit les dégats à sa place. (si l'unité qui subit les dégats a la même capacité, les dégats sont partagés pour équilibrer les PV)
     Tas d'os : À la mort, un tas d'os d'1PV apparaît sur la cellule.
     Sangsue : Augmente sa vie du nombre de dégâts infligés.
-    Sédition venimeuse : La créature attaqué attaque une autre créature ennemie adjacente s'il y en a une.
+    Sédition venimeuse : La créature attaquée attaque une autre créature alliée adjacente s'il y en a une.
     Soin : Régénère 5 points de vie.
     Tir Précis : Permet de tirer à porté + 1 en plus de son attaque tout les 2 tours et d'infliger dmg * 1.5.
     Vague apaisante : Soigne 2 PV aux unités adjacentes.
