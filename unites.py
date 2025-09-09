@@ -270,6 +270,10 @@ class Unite:
             
             if self.comp == "zombification" and cible_tuée:
                 co.zombification(self, autre)
+            
+            # Rage : augmente l'attaque après chaque attaque
+            if self.comp == "rage":
+                co.rage(self)
 
     def mourir(self, toutes_unites):
         """Gère la mort de l'unité et les compétences déclenchées.

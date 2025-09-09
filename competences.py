@@ -567,6 +567,17 @@ def regard_mortel(attaquant, cible):
         return True
     return False
 
+def rage(attaquant):
+    """Augmente l'attaque de 1 par attaque (accumulation permanente)."""
+    # Initialise le compteur de rage s'il n'existe pas
+    if not hasattr(attaquant, 'rage_stacks'):
+        attaquant.rage_stacks = 0
+    
+    # Augmente le stack de rage
+    attaquant.rage_stacks += 1
+    attaquant.dmg += 1
+    print(f"⚡ {attaquant.nom} entre en RAGE ! Attaque +{attaquant.rage_stacks} (Total: {attaquant.dmg})")
+
 # Fonction utilitaire pour déterminer si une compétence est active
 def est_competence_active(nom_competence):
     """Retourne True si la compétence nécessite une cible."""
@@ -638,4 +649,5 @@ COMPETENCES = {
     "protection": "Subit les dégâts à la place des alliés adjacents attaqués (dégâts partagés entre protecteurs).",
     "manipulation": "Toutes les unités avec 4PV ou moins passent dans votre camp (fin de tour, tant qu'elles ont ≤4 PV).",
     "regard mortel": "L'ennemi touché est mort instantanément s'il est de tier 2 ou moins.",
+    "rage": "Augmente l'attaque de 1 par attaque (accumulation permanente).",
 }
