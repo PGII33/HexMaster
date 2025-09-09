@@ -602,6 +602,48 @@ def venin_incapacitant(attaquant, cible):
         return True
     return False
 
+def sedition_venimeuse(attaquant, cible, toutes_unites):
+    """La créature attaquée attaque une autre créature ennemie adjacente s'il y en a une."""
+    if not cible.vivant or cible.equipe == attaquant.equipe:
+        return False
+    
+    # Trouver les créatures alliées adjacentes à la cible
+    directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
+    q, r = cible.pos
+    
+    cibles_possibles = []
+    for dq, dr in directions:
+        pos_adjacente = (q + dq, r + dr)
+        
+        # Chercher une unité alliée de la cible à cette position
+        for unite in toutes_unites:
+            if (unite.pos == pos_adjacente and 
+                unite.vivant and 
+                unite.equipe == cible.equipe and  # Allié de la cible
+                unite != cible):  # Pas la cible elle-même
+                
+                cibles_possibles.append(unite)
+                break  # Une seule unité par case
+    
+    if cibles_possibles:
+        # Choisir la première cible disponible
+        cible_seduite = cibles_possibles[0]
+        print(f"🐍✨ {attaquant.nom} séduit {cible.nom} ! {cible.nom} attaque {cible_seduite.nom} !")
+        
+        # La cible attaque la créature séduite (mais sans déclencher ses propres compétences)
+        if cible.est_a_portee(cible_seduite):
+            # Calculer les dégâts de la cible
+            degats = cible.get_attaque_totale()
+            degats_infliges = cible_seduite.subir_degats(degats)
+            
+            # Gestion de la mort si nécessaire
+            if cible_seduite.pv <= 0:
+                cible_seduite.mourir(toutes_unites)
+            
+            return True
+    
+    return False
+
 # Fonction utilitaire pour déterminer si une compétence est active
 def est_competence_active(nom_competence):
     """Retourne True si la compétence nécessite une cible."""
@@ -676,4 +718,5 @@ COMPETENCES = {
     "rage": "Augmente l'attaque de 1 par attaque (accumulation permanente).",
     "vol": "Ignore la première attaque subie.",
     "venin incapacitant": "Une cible touchée ne peut plus se déplacer pour son prochain tour.",
+    "sédition venimeuse": "La créature attaquée attaque une autre créature alliée adjacente s'il y en a une.",
 }

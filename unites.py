@@ -288,6 +288,10 @@ class Unite:
             # Venin incapacitant : empêche la cible de se déplacer au prochain tour
             if self.comp == "venin incapacitant" and autre.vivant:
                 co.venin_incapacitant(self, autre)
+            
+            # Sédition venimeuse : la cible attaque un ennemi adjacent
+            if self.comp == "sédition venimeuse" and autre.vivant:
+                co.sedition_venimeuse(self, autre, toutes_unites)
 
     def mourir(self, toutes_unites):
         """Gère la mort de l'unité et les compétences déclenchées.
