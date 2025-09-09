@@ -1,3 +1,5 @@
+import random
+
 def sangsue(self, degats_infliges):
     """Le vampire récupère autant de PV que de dégâts réellement infligés (peut dépasser PV max)."""
     self.pv += degats_infliges
@@ -348,6 +350,72 @@ def divertissement(self, toutes_unites):
     if ennemis_divertis:
         print(f"{self.nom} divertit {len(ennemis_divertis)} ennemi(s) adjacent(s)!")
 
+def manipulation(self, toutes_unites):
+    """Toutes les unités avec 4PV ou moins passent dans votre camp tant qu'elles ont ≤4 PV."""
+    unites_manipulees = []
+    
+    for unite in toutes_unites:
+        if (unite.equipe != self.equipe and 
+            unite.vivant and 
+            unite.pv <= 4 and
+            not hasattr(unite, 'manipulee_par')):  # Éviter la double manipulation
+            
+            # Marquer l'unité comme manipulée
+            unite.equipe_originale = unite.equipe
+            unite.equipe = self.equipe
+            unite.manipulee_par = self  # Référence au marionettiste qui manipule
+            
+            # L'unité manipulée récupère ses actions
+            unite.pm = unite.mv
+            unite.attaque_restantes = unite.attaque_max
+            
+            unites_manipulees.append(unite)
+            print(f"🎭 {unite.nom} ({unite.pv} PV) est manipulé par {self.nom}!")
+    
+    return unites_manipulees
+
+def verifier_conditions_manipulation(toutes_unites):
+    """Vérifie les conditions de manipulation en continu et libère les unités si nécessaire."""
+    unites_a_liberer = []
+    
+    for unite in toutes_unites:
+        if hasattr(unite, 'manipulee_par') and unite.vivant:
+            marionettiste = unite.manipulee_par
+            
+            # Condition 1: Le marionettiste est mort
+            if not marionettiste.vivant:
+                unites_a_liberer.append(unite)
+                print(f"🎭 {unite.nom} retrouve son libre arbitre car {marionettiste.nom} est mort!")
+            
+            # Condition 2: L'unité a maintenant plus de 4 PV
+            elif unite.pv > 4:
+                unites_a_liberer.append(unite)
+                print(f"🎭 {unite.nom} ({unite.pv} PV) retrouve son libre arbitre car elle a plus de 4 PV!")
+    
+    # Libérer les unités qui ne remplissent plus les conditions
+    for unite in unites_a_liberer:
+        liberer_unite_manipulee(unite)
+
+def liberer_unite_manipulee(unite):
+    """Libère une unité manipulée et nettoie ses attributs."""
+    if hasattr(unite, 'equipe_originale'):
+        unite.equipe = unite.equipe_originale
+        delattr(unite, 'equipe_originale')
+    if hasattr(unite, 'manipulee_par'):
+        delattr(unite, 'manipulee_par')
+
+def liberer_toutes_unites_manipulees_par(marionettiste, toutes_unites):
+    """Libère toutes les unités manipulées par un marionettiste spécifique."""
+    for unite in toutes_unites:
+        if (hasattr(unite, 'manipulee_par') and 
+            unite.manipulee_par == marionettiste):
+            liberer_unite_manipulee(unite)
+            print(f"🎭 {unite.nom} est libérée car {marionettiste.nom} est mort!")
+
+def gerer_fin_manipulation(toutes_unites):
+    """Fonction de compatibilité - maintenant appelle verifier_conditions_manipulation."""
+    verifier_conditions_manipulation(toutes_unites)
+
 def protection(cible_originale, degats, toutes_unites):
     """
     Gère la redirection des dégâts vers les protecteurs adjacents.
@@ -381,14 +449,14 @@ def protection(cible_originale, degats, toutes_unites):
     # ÉTAPE 1: Appliquer l'armure de pierre de la cible originale si elle en a
     degats_apres_armure_cible = degats
     if cible_originale.comp == "armure de pierre":
-        degats_apres_armure_cible = armure_de_pierre(degats)
+        degats_apres_armure_cible = max(0, degats - 2)  # Fonction armure_de_pierre inline
         print(f" {cible_originale.nom} a armure de pierre: {degats} → {degats_apres_armure_cible} dégâts")
     
     # ÉTAPE 2: Les protecteurs vont subir les dégâts réduits à la place
     if len(protecteurs) == 1:
         # Un seul protecteur, il prend tous les dégâts (déjà réduits par l'armure de la cible)
         protecteur = protecteurs[0]
-        print(f"" {protecteur.nom} protège {cible_originale.nom}!")
+        print(f" {protecteur.nom} protège {cible_originale.nom}!")
         # Le protecteur applique ses propres défenses sur les dégâts déjà réduits
         degats_infliges = protecteur.subir_degats(degats_apres_armure_cible)
         return degats_infliges
@@ -559,4 +627,5 @@ COMPETENCES = {
     "commandement": "Augmente l'attaque d'un allié de +3 et lui donne +2 dégâts pour le prochain tour.",
     "divertissement": "Si il a encore des attaques en fin de tour, réduit les attaques des ennemis adjacents de 1.",
     "protection": "Subit les dégâts à la place des alliés adjacents attaqués (dégâts partagés entre protecteurs).",
+    "manipulation": "Toutes les unités avec 4PV ou moins passent dans votre camp (fin de tour, tant qu'elles ont ≤4 PV).",
 }

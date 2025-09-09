@@ -329,6 +329,10 @@ class Jeu:
                 if u.vivant and hasattr(u, 'fin_tour_ennemi'):
                     u.fin_tour_ennemi(self.unites)
         
+        # Vérifier les conditions de manipulation pour toutes les unités
+        import competences as co
+        co.verifier_conditions_manipulation(self.unites)
+        
         if getattr(self, 'versus_mode', False):
             # En mode versus, alterner entre "joueur" et "joueur2"
             self.tour = "joueur2" if self.tour == "joueur" else "joueur"

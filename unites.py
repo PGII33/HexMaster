@@ -277,6 +277,9 @@ class Unite:
             # Compétences déclenchées à la mort (sauf explosion sacrée qui est gérée dans attaquer)
             if self.comp == "tas d'os":
                 co.tas_d_os(self)
+            # Si c'est un marionettiste qui meurt, libérer toutes ses unités manipulées
+            elif self.comp == "manipulation":
+                co.liberer_toutes_unites_manipulees_par(self, toutes_unites)
             
             return True  # Unité effectivement tuée
         return False  # Unité déjà morte
@@ -303,6 +306,7 @@ class Unite:
             co.aura_sacrée(self, toutes_unites)
         elif self.comp == "vague apaisante":
             co.vague_apaisante(self, toutes_unites)
+        # La manipulation se déclenche en fin de tour, pas au début
         # Ajoute ici d'autres compétences passives si besoin
     
     def fin_tour(self, toutes_unites):
@@ -313,6 +317,9 @@ class Unite:
         # Compétence de divertissement : réduit les attaques des ennemis adjacents
         elif self.comp == "divertissement":
             co.divertissement(self, toutes_unites)
+        # Compétence de manipulation : contrôle les unités avec ≤4 PV
+        elif self.comp == "manipulation":
+            co.manipulation(self, toutes_unites)
     
     def fin_tour_ennemi(self, toutes_unites):
         """À appeler en fin de tour ennemi pour gérer la combustion différée."""
