@@ -644,10 +644,46 @@ def sedition_venimeuse(attaquant, cible, toutes_unites):
     
     return False
 
+def tir_precis(attaquant, cible, toutes_unites):
+    """Tir précis : Attaque avec dégâts x1.5 à portée étendue (portée +1)."""
+    if not cible or not cible.vivant:
+        return False
+    
+    # Vérifier que la cible est ennemie
+    if cible.equipe == attaquant.equipe:
+        return False
+    
+    # Calculer la distance
+    q1, r1 = attaquant.pos
+    q2, r2 = cible.pos
+    distance = max(abs(q1 - q2), abs(r1 - r2), abs((q1 + r1) - (q2 + r2)))
+    
+    # Vérifier la portée étendue (portée normale + 1)
+    portee_etendue = attaquant.portee + 1
+    
+    if distance > portee_etendue:
+        print(f"❌ {cible.nom} est trop loin pour le tir précis (distance {distance}, portée max {portee_etendue})")
+        return False
+    
+    # Tir précis activé : dégâts x1.5
+    degats_base = attaquant.get_attaque_totale()
+    degats_precis = int(degats_base * 1.5)
+    
+    print(f"🏹 {attaquant.nom} utilise TIR PRÉCIS ! Dégâts augmentés à {degats_precis} !")
+    
+    # Appliquer les dégâts avec protection
+    degats_infliges = attaquant.appliquer_degats_avec_protection(cible, degats_precis, toutes_unites)
+    
+    # Gestion de la mort
+    if cible.pv <= 0:
+        cible.mourir(toutes_unites)
+    
+    return True
+
 # Fonction utilitaire pour déterminer si une compétence est active
 def est_competence_active(nom_competence):
     """Retourne True si la compétence nécessite une cible."""
-    competences_actives = ["soin", "bénédiction", "cristalisation", "pluie de flèches", "monture libéré", "commandement"]
+    competences_actives = ["soin", "bénédiction", "cristalisation", "pluie de flèches", "monture libéré", "commandement", "tir précis"]
     return nom_competence in competences_actives
 
 def peut_cibler_allie(nom_competence):
@@ -657,7 +693,7 @@ def peut_cibler_allie(nom_competence):
 
 def peut_cibler_ennemi(nom_competence):
     """Retourne True si la compétence peut cibler des ennemis."""
-    competences_ennemis = []
+    competences_ennemis = ["tir précis"]
     return nom_competence in competences_ennemis
 
 def peut_cibler_case_vide(nom_competence):
@@ -679,6 +715,8 @@ def utiliser_competence_active(unite, nom_competence, cible, toutes_unites=None)
         return monture_libere(unite, cible, toutes_unites)
     elif nom_competence == "commandement":
         return commandement(unite, cible, toutes_unites)
+    elif nom_competence == "tir précis":
+        return tir_precis(unite, cible, toutes_unites)
     return False
 
 
@@ -719,4 +757,5 @@ COMPETENCES = {
     "vol": "Ignore la première attaque subie.",
     "venin incapacitant": "Une cible touchée ne peut plus se déplacer pour son prochain tour.",
     "sédition venimeuse": "La créature attaquée attaque une autre créature alliée adjacente s'il y en a une.",
+    "tir précis": "Attaque à portée +1 avec dégâts x1.5 (tous les 2 tours).",
 }

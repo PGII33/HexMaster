@@ -56,33 +56,16 @@ def handle_click(jeu, mx, my):
                 return
             
             # Compétences qui nécessitent une cible
-            elif comp_name in ["soin", "bénédiction", "cristalisation", "pluie de flèches", "monture libéré", "commandement"]:
-                print(f"🔸 DEBUG: Activation {comp_name} pour {jeu.selection.nom}")
-                print(f"   - Mode sélection: {getattr(jeu, 'mode_selection_competence', False)}")
-                print(f"   - Attaques restantes: {jeu.selection.attaque_restantes}")
-                print(f"   - Cooldown: {getattr(jeu.selection, 'cooldown_actuel', 0)}")
-                print(f"   - Compétence utilisée: {getattr(jeu.selection, 'competence_utilisee_ce_tour', False)}")
-                
-                print(f"   Mode sélection activé pour {comp_name}")
+            elif comp_name in ["soin", "bénédiction", "cristalisation", "pluie de flèches", "monture libéré", "commandement", "tir précis"]:
                 # Entrer en mode sélection de cible
                 jeu.mode_selection_competence = True
                 jeu.competence_en_cours = comp_name
                 jeu.unite_utilisant_competence = jeu.selection  # Stocker l'unité
                 jeu.cibles_possibles = _get_valid_targets(jeu, comp_name, jeu.selection)
-                print(f"   {len(jeu.cibles_possibles)} cibles disponibles")
-                if jeu.cibles_possibles:
-                    print(f"   Première cible: {jeu.cibles_possibles[0]}")
                 return
         else:
-            print(f"🔴 CONDITIONS NON REMPLIES")
-            if not jeu.selection.a_competence_active():
-                print(f"   - Pas de compétence active")
-            if attaque_necessaire and jeu.selection.attaque_restantes <= 0:
-                print(f"   - Pas d'attaque restante")
-            if cooldown_restant > 0:
-                print(f"   - En cooldown ({cooldown_restant} tours)")
-            if competence_utilisee:
-                print(f"   - Déjà utilisée ce tour")
+            # Conditions non remplies pour utiliser la compétence
+            pass
         
     # clic sur une unité ?
     for u in jeu.unites:
@@ -218,7 +201,14 @@ def _get_valid_targets(jeu, comp_name, unite_source):
         # Peut cibler les ennemis
         for u in jeu.unites:
             if u.vivant and _are_enemies(unite_source.equipe, u.equipe, getattr(jeu, 'versus_mode', False)):
-                valid_targets.append(u)
+                # Vérifier la portée pour les compétences qui en ont besoin
+                if comp_name == "tir précis":
+                    # Portée étendue pour tir précis (portée +1)
+                    if _is_in_range(unite_source, u, unite_source.portee + 1):
+                        valid_targets.append(u)
+                else:
+                    # Autres compétences ennemies sans restriction de portée
+                    valid_targets.append(u)
     
     if co.peut_cibler_case_vide(comp_name):
         # Gérer les différents types de ciblage de cases
@@ -232,7 +222,7 @@ def _get_valid_targets(jeu, comp_name, unite_source):
             # Cases vides adjacentes pour monture libéré
             _add_adjacent_empty_cases(jeu, unite_source, valid_targets)
     
-    print(f"🔸 {comp_name}: {len(valid_targets)} cibles trouvées")
+
     return valid_targets
 
 def _is_in_range(source, target, portee):

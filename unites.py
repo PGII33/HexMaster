@@ -75,6 +75,7 @@ class Unite:
             # Compétences actives - 0 = utilisable chaque tour, 1 = un tour d'attente, etc.
             "soin": 0,  # Utilisable chaque tour
             "bénédiction": 1,  # Un tour d'attente entre utilisations
+            "tir précis": 1,  # Un tour d'attente entre utilisations (tous les 2 tours)
             # Compétences qui ne doivent pas avoir de cooldown (passives ou spéciales)
             "sangsue": 0,
             "zombification": 0,
@@ -226,7 +227,7 @@ class Unite:
         """Applique l'animation et les dégâts séparément."""
         if toutes_unites is None:
             toutes_unites = []
-            
+        
         if self.attaque_restantes > 0 and self.est_a_portee(autre) and autre.vivant:
             self.attaque_restantes -= 1
 
@@ -323,8 +324,7 @@ class Unite:
         """À appeler au début du tour de l'unité pour déclencher les compétences passives."""
         
         # Réduction du cooldown des compétences actives
-        # Ne réduit pas si la compétence a été utilisée ce tour
-        if self.cooldown_actuel > 0 and not self.competence_utilisee_ce_tour:
+        if self.cooldown_actuel > 0:
             self.cooldown_actuel -= 1
         
         # Reset du flag pour le nouveau tour
