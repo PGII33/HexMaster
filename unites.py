@@ -207,6 +207,11 @@ class Unite:
         self.pv -= degats
         return degats  # Retourner les dégâts réellement subis (après armure)
     
+    def appliquer_degats_avec_protection(self, cible, degats, toutes_unites):
+        """Applique les dégâts en tenant compte de la protection."""
+        # La fonction protection gère maintenant tout le processus
+        return co.protection(cible, degats, toutes_unites)
+    
     def attaquer(self, autre, toutes_unites=None):
         """Applique l'animation et les dégâts séparément."""
         if toutes_unites is None:
@@ -229,7 +234,8 @@ class Unite:
                 degats_supplementaires = self.get_degats_supplementaires()
                 degats_totaux = degats_base + degats_supplementaires
                 
-                degats_infliges = autre.subir_degats(degats_totaux)
+                # Appliquer la protection si applicable
+                degats_infliges = self.appliquer_degats_avec_protection(autre, degats_totaux, toutes_unites)
                 
                 # Compétence sangsue après l'attaque (avec les vrais dégâts)
                 if self.comp == "sangsue":

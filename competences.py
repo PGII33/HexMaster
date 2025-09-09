@@ -127,9 +127,13 @@ def explosion_sacrée(self, toutes_unites, cible_attaquee=None):
     
     # Infliger des dégâts uniquement à la cible directe si c'est un ennemi
     if cible_attaquee and cible_attaquee.equipe != self.equipe and cible_attaquee.vivant:
-        cible_attaquee.subir_degats(degats)
-        if cible_attaquee.pv <= 0:
-            cible_attaquee.mourir(toutes_unites)
+        # Appliquer la protection si applicable
+        degats_infliges = protection(cible_attaquee, degats, toutes_unites)
+        
+        # Vérifier si la cible ou les protecteurs meurent
+        for unite in toutes_unites:
+            if unite.pv <= 0 and unite.vivant:
+                unite.mourir(toutes_unites)
     
     # Marquer pour mourir après l'animation (ne pas mourir immédiatement)
     self.explosion_sacree_pending = True
@@ -234,12 +238,14 @@ def pluie_de_fleches(self, cible_pos, toutes_unites):
     unites_touchees = []
     for unite in toutes_unites:
         if unite.pos in cases_affectees and unite.equipe != self.equipe and unite.vivant:
-            degats_infliges = unite.subir_degats(self.dmg)
+            # Appliquer la protection si applicable
+            degats_infliges = protection(unite, self.dmg, toutes_unites)
             unites_touchees.append(unite)
-            
-            # Vérifier si l'unité meurt
-            if unite.pv <= 0:
-                unite.mourir(toutes_unites)
+    
+    # Vérifier les morts après tous les dégâts
+    for unite in toutes_unites[:]:  # Copie pour éviter les problèmes de modification pendant l'itération
+        if unite.pv <= 0 and unite.vivant:
+            unite.mourir(toutes_unites)
     
     return len(unites_touchees) > 0
 
@@ -341,6 +347,78 @@ def divertissement(self, toutes_unites):
     
     if ennemis_divertis:
         print(f"{self.nom} divertit {len(ennemis_divertis)} ennemi(s) adjacent(s)!")
+
+def protection(cible_originale, degats, toutes_unites):
+    """
+    Gère la redirection des dégâts vers les protecteurs adjacents.
+    1. Applique d'abord l'armure de pierre de la cible originale (si elle en a)
+    2. Partage les dégâts réduits entre les protecteurs
+    3. Chaque protecteur applique ses propres défenses
+    Retourne les dégâts totaux effectivement infligés.
+    """
+    # Trouver tous les protecteurs adjacents à la cible
+    protecteurs = []
+    directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
+    q, r = cible_originale.pos
+    
+    for dq, dr in directions:
+        pos_adjacente = (q + dq, r + dr)
+        
+        # Chercher une unité alliée avec protection à cette position
+        for unite in toutes_unites:
+            if (unite.pos == pos_adjacente and 
+                unite.vivant and 
+                unite.equipe == cible_originale.equipe and
+                unite.comp == "protection"):
+                
+                protecteurs.append(unite)
+                break  # Une seule unité par case
+    
+    if not protecteurs:
+        # Pas de protection, la cible subit tous les dégâts normalement
+        return cible_originale.subir_degats(degats)
+    
+    # ÉTAPE 1: Appliquer l'armure de pierre de la cible originale si elle en a
+    degats_apres_armure_cible = degats
+    if cible_originale.comp == "armure de pierre":
+        degats_apres_armure_cible = armure_de_pierre(degats)
+        print(f" {cible_originale.nom} a armure de pierre: {degats} → {degats_apres_armure_cible} dégâts")
+    
+    # ÉTAPE 2: Les protecteurs vont subir les dégâts réduits à la place
+    if len(protecteurs) == 1:
+        # Un seul protecteur, il prend tous les dégâts (déjà réduits par l'armure de la cible)
+        protecteur = protecteurs[0]
+        print(f"" {protecteur.nom} protège {cible_originale.nom}!")
+        # Le protecteur applique ses propres défenses sur les dégâts déjà réduits
+        degats_infliges = protecteur.subir_degats(degats_apres_armure_cible)
+        return degats_infliges
+    else:
+        # Plusieurs protecteurs : partager les dégâts réduits pour équilibrer les PV
+        print(f" {len(protecteurs)} gardes protègent {cible_originale.nom}!")
+        
+        # ÉTAPE 3: Calculer comment répartir les dégâts déjà réduits
+        degats_restants = degats_apres_armure_cible
+        degats_total_infliges = 0
+        
+        # Trier les protecteurs par PV (ceux avec plus de PV prennent plus de dégâts)
+        protecteurs_tries = sorted(protecteurs, key=lambda u: u.pv, reverse=True)
+        
+        for i, protecteur in enumerate(protecteurs_tries):
+            if i == len(protecteurs_tries) - 1:
+                # Dernier protecteur prend le reste
+                degats_pour_ce_protecteur = degats_restants
+            else:
+                # Répartir équitablement les dégâts déjà réduits
+                degats_pour_ce_protecteur = degats_restants // (len(protecteurs_tries) - i)
+            
+            if degats_pour_ce_protecteur > 0:
+                # Chaque protecteur applique ses propres défenses sur sa part
+                degats_infliges = protecteur.subir_degats(degats_pour_ce_protecteur)
+                degats_total_infliges += degats_infliges
+                degats_restants -= degats_pour_ce_protecteur
+                print(f"  {protecteur.nom} subit {degats_pour_ce_protecteur} dégâts (post-armure cible) → {degats_infliges} effectifs")
+        
+        return degats_total_infliges
 
 # ========== COMPÉTENCES ÉLÉMENTAIRES ==========
 
@@ -480,4 +558,5 @@ COMPETENCES = {
     "monture libéré": "Se transforme en Guerrier et invoque un Cheval allié sur une case adjacente.",
     "commandement": "Augmente l'attaque d'un allié de +3 et lui donne +2 dégâts pour le prochain tour.",
     "divertissement": "Si il a encore des attaques en fin de tour, réduit les attaques des ennemis adjacents de 1.",
+    "protection": "Subit les dégâts à la place des alliés adjacents attaqués (dégâts partagés entre protecteurs).",
 }
