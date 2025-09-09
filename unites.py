@@ -229,13 +229,25 @@ class Unite:
                 co.explosion_sacrée(self, toutes_unites, autre)  # Passer toutes les unités et la cible
                 # Ne pas faire l'attaque normale, l'explosion sacrée remplace tout
             else:
-                # Attaque normale - calculer les dégâts avec boosts
-                degats_base = self.get_attaque_totale()
-                degats_supplementaires = self.get_degats_supplementaires()
-                degats_totaux = degats_base + degats_supplementaires
-                
-                # Appliquer la protection si applicable
-                degats_infliges = self.appliquer_degats_avec_protection(autre, degats_totaux, toutes_unites)
+                # Compétence regard mortel : tue instantanément les unités tier ≤ 2
+                if self.comp == "regard mortel":
+                    regard_mortel_actif = co.regard_mortel(self, autre)
+                    if not regard_mortel_actif:
+                        # Si regard mortel n'a pas d'effet, appliquer les dégâts normaux
+                        degats_base = self.get_attaque_totale()
+                        degats_supplementaires = self.get_degats_supplementaires()
+                        degats_totaux = degats_base + degats_supplementaires
+                        degats_infliges = self.appliquer_degats_avec_protection(autre, degats_totaux, toutes_unites)
+                    else:
+                        degats_infliges = autre.pv_max  # Pour les statistiques
+                else:
+                    # Attaque normale - calculer les dégâts avec boosts
+                    degats_base = self.get_attaque_totale()
+                    degats_supplementaires = self.get_degats_supplementaires()
+                    degats_totaux = degats_base + degats_supplementaires
+                    
+                    # Appliquer la protection si applicable
+                    degats_infliges = self.appliquer_degats_avec_protection(autre, degats_totaux, toutes_unites)
                 
                 # Compétence sangsue après l'attaque (avec les vrais dégâts)
                 if self.comp == "sangsue":
@@ -244,19 +256,20 @@ class Unite:
                 # Combustion différée : marquer la cible
                 if self.comp == "combustion différée" and autre.vivant:
                     co.combustion_differee(self, autre)
-                
-                cible_tuée = False
-                faction_originale = autre.faction  # Sauvegarder avant transformation
-                if autre.pv <= 0:
-                    result = autre.mourir(toutes_unites)  # Passer la liste complète des unités
-                    cible_tuée = result  # True si l'unité était vivante et est maintenant morte
-                
-                # Compétences après l'attaque normale (quand on sait si la cible est tuée)
-                if self.comp == "lumière vengeresse" and cible_tuée and faction_originale == "Morts-Vivants":
-                    co.lumière_vengeresse(self, autre)
-                
-                if self.comp == "zombification" and cible_tuée:
-                    co.zombification(self, autre)
+            
+            # Vérification de mort commune pour tous les types d'attaque
+            cible_tuée = False
+            faction_originale = autre.faction  # Sauvegarder avant transformation
+            if autre.pv <= 0:
+                result = autre.mourir(toutes_unites)  # Passer la liste complète des unités
+                cible_tuée = result  # True si l'unité était vivante et est maintenant morte
+            
+            # Compétences après l'attaque (quand on sait si la cible est tuée)
+            if self.comp == "lumière vengeresse" and cible_tuée and faction_originale == "Morts-Vivants":
+                co.lumière_vengeresse(self, autre)
+            
+            if self.comp == "zombification" and cible_tuée:
+                co.zombification(self, autre)
 
     def mourir(self, toutes_unites):
         """Gère la mort de l'unité et les compétences déclenchées.

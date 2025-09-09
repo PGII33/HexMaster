@@ -558,6 +558,15 @@ def gerer_combustion_differee(unite, toutes_unites):
             if hasattr(unite, 'combustion_attaquant'):
                 delattr(unite, 'combustion_attaquant')
 
+def regard_mortel(attaquant, cible):
+    """L'ennemi touché est mort s'il est de tier 2 ou moins."""
+    if cible.tier <= 2 and cible.equipe != attaquant.equipe and cible.vivant:
+        print(f"💀 {attaquant.nom} utilise son regard mortel sur {cible.nom} (tier {cible.tier})!")
+        cible.pv = 0  # Tue instantanément l'unité
+        print(f"💀 {cible.nom} succombe au regard mortel!")
+        return True
+    return False
+
 # Fonction utilitaire pour déterminer si une compétence est active
 def est_competence_active(nom_competence):
     """Retourne True si la compétence nécessite une cible."""
@@ -628,4 +637,5 @@ COMPETENCES = {
     "divertissement": "Si il a encore des attaques en fin de tour, réduit les attaques des ennemis adjacents de 1.",
     "protection": "Subit les dégâts à la place des alliés adjacents attaqués (dégâts partagés entre protecteurs).",
     "manipulation": "Toutes les unités avec 4PV ou moins passent dans votre camp (fin de tour, tant qu'elles ont ≤4 PV).",
+    "regard mortel": "L'ennemi touché est mort instantanément s'il est de tier 2 ou moins.",
 }
