@@ -137,7 +137,7 @@ Les unités du jeu sont séparés en différentes "factions" il s'agit de groupe
     Manipulation : Toutes les unités avec 4PV ou moins passent dans votre camp (chaque tour, début du tour, pour un tour)
     Monture libéré : Descend de son cheval pour se battre en guerrier (le cheval devient indépendant).
     Nécromancie : Crée un squelette sur une case adjacente (chaque tour).
-    Rage : Augemente l'attaque de 1 par morts.
+    Rage : Augemente l'attaque de 1 par attaque.
     Regard mortel : L'ennemie touché est mort s'il est de tier 2 ou moins.
     Renaissance : 80% de chance de revivre après sa mort.
     Pluie de flèches : Inflige ses dégats sur un rayon de 2 cellules juqu'à 3 cases de distances.
