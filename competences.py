@@ -578,6 +578,30 @@ def rage(attaquant):
     attaquant.dmg += 1
     print(f"⚡ {attaquant.nom} entre en RAGE ! Attaque +{attaquant.rage_stacks} (Total: {attaquant.dmg})")
 
+def vol(defenseur, degats):
+    """Ignore la première attaque subie (retourne les dégâts après réduction)."""
+    # Initialise le compteur de vol s'il n'existe pas
+    if not hasattr(defenseur, 'vol_utilise'):
+        defenseur.vol_utilise = False
+    
+    # Si c'est la première attaque, l'ignorer
+    if not defenseur.vol_utilise:
+        defenseur.vol_utilise = True
+        print(f"🪶 {defenseur.nom} utilise VOL ! La première attaque est ignorée.")
+        return 0  # Aucun dégât subi
+    
+    # Les attaques suivantes passent normalement
+    return degats
+
+def venin_incapacitant(attaquant, cible):
+    """Empêche la cible de se déplacer au prochain tour."""
+    if cible.vivant and cible.equipe != attaquant.equipe:
+        # Marquer la cible comme empoisonnée (ne peut pas bouger au prochain tour)
+        cible.venin_incapacite = True
+        print(f"🐍 {attaquant.nom} empoisonne {cible.nom} ! Elle ne pourra pas se déplacer au prochain tour.")
+        return True
+    return False
+
 # Fonction utilitaire pour déterminer si une compétence est active
 def est_competence_active(nom_competence):
     """Retourne True si la compétence nécessite une cible."""
@@ -650,4 +674,6 @@ COMPETENCES = {
     "manipulation": "Toutes les unités avec 4PV ou moins passent dans votre camp (fin de tour, tant qu'elles ont ≤4 PV).",
     "regard mortel": "L'ennemi touché est mort instantanément s'il est de tier 2 ou moins.",
     "rage": "Augmente l'attaque de 1 par attaque (accumulation permanente).",
+    "vol": "Ignore la première attaque subie.",
+    "venin incapacitant": "Une cible touchée ne peut plus se déplacer pour son prochain tour.",
 }

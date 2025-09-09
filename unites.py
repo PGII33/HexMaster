@@ -103,6 +103,12 @@ class Unite:
         self.attaque_restantes = self.attaque_max
         self.pm = self.mv
         
+        # Appliquer l'effet venin incapacitant si l'unité a été empoisonnée
+        if hasattr(self, 'venin_incapacite') and self.venin_incapacite:
+            self.pm = 0  # L'unité ne peut pas se déplacer
+            self.venin_incapacite = False  # L'effet ne dure qu'un tour
+            print(f"🐍 {self.nom} est incapacité par le venin ! Aucun mouvement possible ce tour.")
+        
         # Appliquer l'effet divertissement si l'unité a été divertie
         if hasattr(self, 'diverti') and self.diverti:
             self.attaque_restantes = max(0, self.attaque_restantes - 1)
@@ -179,11 +185,15 @@ class Unite:
 
     # ---------- Combat ----------
     def subir_degats(self, degats):
-        """Subit des dégâts en tenant compte du bouclier et de l'armure de pierre."""
+        """Subit des dégâts en tenant compte du vol, bouclier et de l'armure de pierre."""
         if not hasattr(self, 'bouclier'):
             self.bouclier = 0
         
         degats_originaux = degats
+        
+        # Appliquer vol si l'unité a cette compétence (avant tout le reste)
+        if self.comp == "vol":
+            degats = co.vol(self, degats)
         
         # Appliquer l'armure de pierre si l'unité a cette compétence
         if self.comp == "armure de pierre":
@@ -274,6 +284,10 @@ class Unite:
             # Rage : augmente l'attaque après chaque attaque
             if self.comp == "rage":
                 co.rage(self)
+            
+            # Venin incapacitant : empêche la cible de se déplacer au prochain tour
+            if self.comp == "venin incapacitant" and autre.vivant:
+                co.venin_incapacitant(self, autre)
 
     def mourir(self, toutes_unites):
         """Gère la mort de l'unité et les compétences déclenchées.
