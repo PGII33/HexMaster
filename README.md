@@ -146,7 +146,7 @@ Les unités du jeu sont séparés en différentes "factions" il s'agit de groupe
     Sangsue : Augmente sa vie du nombre de dégâts infligés.
     Sédition venimeuse : La créature attaqué attaque une autre créature ennemie adjacente s'il y en a une.
     Soin : Régénère 5 points de vie.
-    Tir Précis : Permet de tirer à porté + 1 en plus de son attaque tout les 2 tours.
+    Tir Précis : Permet de tirer à porté + 1 en plus de son attaque tout les 2 tours et d'infliger dmg * 1.5.
     Vague apaisante : Soigne 2 PV aux unités adjacentes.
     Venin incapacitant : Une cible touchée ne peut plus se déplacer pour son prochain tour.
     Vol : Ignore la première attaque subie.
