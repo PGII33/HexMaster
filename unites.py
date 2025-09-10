@@ -436,7 +436,7 @@ class Squelette(Unite):
 
 class Spectre(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Spectre", pv=5, dmg=4, mv=1, tier=1, comp="fantomatique", faction="Morts-Vivants")
+        super().__init__(equipe, pos, nom="Spectre", pv=5, dmg=3, mv=1, tier=1, comp="fantomatique", faction="Morts-Vivants")
 
 class Zombie_BASE(Unite):
     """ Pour crée les zombies zombifiés """
@@ -464,7 +464,7 @@ class Archliche(Unite):
 
 class Missionnaire(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Missionnaire", pv=8, dmg=2, mv=2, tier=1, faction="Religieux")
+        super().__init__(equipe, pos, nom="Missionnaire", pv=12, dmg=2, mv=2, tier=1, faction="Religieux")
 
 class Clerc(Unite):
     def __init__(self, equipe, pos):
@@ -472,11 +472,11 @@ class Clerc(Unite):
 
 class Fanatique(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Fanatique", pv=8, dmg=0, mv=2, tier=1, faction="Religieux", comp="explosion sacrée")
+        super().__init__(equipe, pos, nom="Fanatique", pv=10, dmg=0, mv=2, tier=1, faction="Religieux", comp="explosion sacrée")
 
 class Esprit_Saint(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Esprit Saint", pv=8, dmg=1, mv=2, tier=2, faction="Religieux", comp="bouclier de la foi")
+        super().__init__(equipe, pos, nom="Esprit Saint", pv=7, dmg=1, mv=2, tier=2, faction="Religieux", comp="bouclier de la foi")
 
 class Paladin(Unite):
     def __init__(self, equipe, pos):
@@ -484,7 +484,7 @@ class Paladin(Unite):
 
 class Ange(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Ange", pv=12, dmg=8, mv=2, tier=3, faction="Religieux", comp="lumière vengeresse", portee=2)
+        super().__init__(equipe, pos, nom="Ange", pv=12, dmg=6, mv=2, tier=3, faction="Religieux", comp="lumière vengeresse", portee=2)
 
 class ArchAnge(Unite):
     def __init__(self, equipe, pos):
@@ -499,11 +499,11 @@ class Cristal(Unite):
 
 class Esprit(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Esprit", pv=6, dmg=3, mv=2, tier=1, faction="Élémentaires")
+        super().__init__(equipe, pos, nom="Esprit", pv=6, dmg=3, mv=3, tier=1, faction="Élémentaires")
 
 class Driade(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Driade", pv=7, dmg=2, mv=1, tier=1, faction="Élémentaires", comp="enracinement")
+        super().__init__(equipe, pos, nom="Driade", pv=10, dmg=2, mv=1, tier=1, faction="Élémentaires", comp="enracinement")
 
 class Gnome(Unite):
     def __init__(self, equipe, pos):
@@ -515,15 +515,15 @@ class Golem(Unite):
 
 class Ondine(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Ondine", pv=10, dmg=2, mv=2, tier=2, faction="Élémentaires", comp="vague apaisante")
+        super().__init__(equipe, pos, nom="Ondine", pv=7, dmg=2, mv=2, tier=2, faction="Élémentaires", comp="vague apaisante")
 
 class Ifrit(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Ifrit", pv=11, dmg=6, mv=2, tier=3, faction="Élémentaires", comp="combustion différée")
+        super().__init__(equipe, pos, nom="Ifrit", pv=25, dmg=3, mv=2, tier=3, faction="Élémentaires", comp="combustion différée")
 
 class Phénix(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Phénix", pv=15, dmg=10, mv=3, tier=4, faction="Élémentaires", comp="renaissance")
+        super().__init__(equipe, pos, nom="Phénix", pv=15, dmg=6, mv=3, tier=4, faction="Élémentaires", comp="renaissance")
 
 
 # Royaume
