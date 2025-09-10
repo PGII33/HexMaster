@@ -153,17 +153,10 @@ class Jeu:
         recalculer_layout(self)
 
     def on_enemy_killed(self, killed_unit):
-        """Appelé quand une unité ennemie est tuée. Gère les gains de PA en mode hexarene."""
+        """Appelé quand une unité ennemie est tuée. Affiche seulement un message en mode hexarene."""
         if self.mode_hexarene and killed_unit.equipe == "ennemi":
-            import sauvegarde
-            data = sauvegarde.charger()
-            
-            # Gagner des PA égaux au tier de l'unité tuée
-            pa_gagne = killed_unit.tier
-            data["pa"] = data.get("pa", 100) + pa_gagne
-            
-            sauvegarde.sauvegarder(data)
-            print(f"💰 +{pa_gagne} PA pour avoir tué {killed_unit.nom} (Tier {killed_unit.tier})")
+            # Juste afficher un message, les PA seront calculés à la fin du combat
+            print(f"+ {killed_unit.tier} PA pour avoir tué {killed_unit.nom} (Tier {killed_unit.tier})")
 
     def recalculer_layout(self):
         recalculer_layout(self)
@@ -344,6 +337,10 @@ class Jeu:
 
     def activer_menu_fin_combat(self, victoire):
         """Active le menu de fin de combat avec les récompenses"""
+        # Protection contre les appels multiples
+        if getattr(self, 'end_menu_processed', False):
+            return
+            
         self.show_end_menu = True
         self.end_menu_processed = True  # Marquer comme traité pour éviter la ré-activation
         self.victoire = victoire
@@ -369,10 +366,10 @@ class Jeu:
         recompenses = {"pa": 0, "cp": 0, "unites": []}
         
         if self.mode_hexarene:
-            # HexArène : somme des tiers des monstres vaincus (= CP adverse utilisé)
+            # HexArène : 5 * somme des tiers des monstres vaincus en PA, 0 CP
             ennemis_morts = [u for u in self.unites if u.equipe != "joueur" and not u.vivant]
-            recompenses["pa"] = sum(u.tier for u in ennemis_morts)
-            recompenses["cp"] = sum(u.tier for u in ennemis_morts)  # Même valeur que PA
+            recompenses["pa"] = 5 * sum(u.tier for u in ennemis_morts)
+            recompenses["cp"] = 0  # Pas de CP en mode HexArène
         elif self.versus_mode:
             # Mode versus : aucune récompense
             recompenses["pa"] = 0
@@ -426,17 +423,26 @@ class Jeu:
             from sauvegarde import charger, sauvegarder
             progression = charger()
             
-            # Ajouter les récompenses à la progression
-            progression["pa"] = progression.get("pa", 0) + self.recompenses["pa"]
-            progression["cp"] = progression.get("cp", 0) + self.recompenses["cp"]
+            # En mode campagne, les récompenses sont gérées par appliquer_recompenses_niveau()
+            # On ne sauvegarde ici que pour HexArène et JcJ
+            if self.mode_hexarene or self.versus_mode:
+                # Ajouter les récompenses à la progression
+                progression["pa"] = progression.get("pa", 0) + self.recompenses["pa"]
+                progression["cp"] = progression.get("cp", 0) + self.recompenses["cp"]
+                
+                sauvegarder(progression)
+                print(f"Récompenses sauvegardées: {self.recompenses}")
+            else:
+                # Mode campagne : récompenses gérées par le système de campagne
+                print(f"Récompenses calculées (campagne): {self.recompenses}")
             
-            # Ajouter les nouvelles unités
+            # Ajouter les nouvelles unités (toujours, peu importe le mode)
             if "unites_dispo" not in progression:
                 progression["unites_dispo"] = []
             progression["unites_dispo"].extend(self.recompenses["unites"])
             
-            sauvegarder(progression)
-            print(f"Récompenses sauvegardées: {self.recompenses}")
+            if self.recompenses["unites"]:
+                sauvegarder(progression)
             
         except Exception as e:
             print(f"Erreur lors de la sauvegarde des récompenses: {e}")
