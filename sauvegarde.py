@@ -23,10 +23,8 @@ FICHIER_SAVE = get_save_path()
 
 def charger():
     try:
-        print(f"[DEBUG] Tentative de chargement depuis: {FICHIER_SAVE}")
         with open(FICHIER_SAVE, "r", encoding="utf-8") as f:
             data = json.load(f)
-            print(f"[DEBUG] Sauvegarde chargée avec succès: {len(data)} éléments")
             # Ajouter CP si pas présent
             if "cp" not in data:
                 data["cp"] = 5  # CP de départ
@@ -43,13 +41,12 @@ def charger():
                 data["unites"].append("Goule")
             return data
     except FileNotFoundError:
-        print(f"[DEBUG] Fichier de sauvegarde non trouvé: {FICHIER_SAVE}")
         return creer_sauvegarde_defaut()
     except json.JSONDecodeError as e:
-        print(f"[DEBUG] Erreur de lecture JSON: {e}")
+        print(f"Erreur de lecture JSON: {e}")
         return creer_sauvegarde_defaut()
     except Exception as e:
-        print(f"[DEBUG] Erreur inattendue lors du chargement: {e}")
+        print(f"Erreur inattendue lors du chargement: {e}")
         return creer_sauvegarde_defaut()
 
 def creer_sauvegarde_defaut():
@@ -62,7 +59,6 @@ def creer_sauvegarde_defaut():
             "Religieux": {"niveaux_completes": [], "disponible": True}
         }
     }
-    print(f"[DEBUG] Création d'une nouvelle sauvegarde par défaut")
     return data
 
 def sauvegarder(data):

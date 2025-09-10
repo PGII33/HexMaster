@@ -156,12 +156,7 @@ class HexaMaster:
             info_lines.append(f"CP: {data.get('cp', 'N/A')}")
             unites = data.get('unites', [])
             info_lines.append(f"Unités: {len(unites)} débloquées")
-            
-            # Test d'écriture
-            test_data = data.copy()
-            test_data['debug_test'] = f"test_{pygame.time.get_ticks()}"
-            sauvegarde.sauvegarder(test_data)
-            info_lines.append("Test écriture: OK")
+            info_lines.append("Lecture fichier: OK")
             
         except Exception as e:
             info_lines.append(f"Erreur: {e}")
