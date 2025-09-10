@@ -28,6 +28,7 @@ class LevelBuilder:
         self._positions_sauvegardees = []
         
         self.text_data = {
+            "numero": "01",
             "nom": "",
             "description": "",
             "chapitre": ""
@@ -321,6 +322,7 @@ class LevelBuilder:
                 self.niveau_selectionne = niveau_info
                 # Charger les données de texte pour l'interface
                 self.text_data = {
+                    "numero": f"{config.numero:02d}",
                     "nom": config.nom,
                     "description": config.description,
                     "chapitre": config.chapitre
@@ -352,8 +354,32 @@ class LevelBuilder:
         if self.niveau_selectionne:
             try:
                 from niveau_structure import sauvegarder_niveau
-                # Utiliser le même chemin que le niveau original
-                sauvegarder_niveau(self.niveau_config, self.niveau_selectionne["chemin"])
+                
+                # Vérifier si le nom de dossier doit changer
+                ancien_chemin = self.niveau_selectionne["chemin"]
+                ancien_dossier = os.path.dirname(ancien_chemin)
+                dossier_parent = os.path.dirname(ancien_dossier)
+                
+                # Calculer le nouveau nom de dossier
+                nouveau_nom_dossier = f"{self.niveau_config.numero:02d}_{self.niveau_config.nom.replace(' ', '_')}"
+                nouveau_dossier = os.path.join(dossier_parent, nouveau_nom_dossier)
+                nouveau_chemin = os.path.join(nouveau_dossier, "niveau.json")
+                
+                # Si le dossier a changé, renommer
+                if ancien_dossier != nouveau_dossier and os.path.exists(ancien_dossier):
+                    if os.path.exists(nouveau_dossier):
+                        # Si le nouveau dossier existe déjà, supprimer l'ancien après sauvegarde
+                        sauvegarder_niveau(self.niveau_config, nouveau_chemin)
+                        import shutil
+                        shutil.rmtree(ancien_dossier)
+                    else:
+                        # Renommer le dossier
+                        os.rename(ancien_dossier, nouveau_dossier)
+                        sauvegarder_niveau(self.niveau_config, nouveau_chemin)
+                else:
+                    # Utiliser le chemin original si pas de changement
+                    sauvegarder_niveau(self.niveau_config, ancien_chemin)
+                
                 print(f"Niveau '{self.niveau_config.nom}' mis à jour avec succès!")
                 # Retourner au menu principal
                 self.etat = "main_menu" 
@@ -561,6 +587,7 @@ class LevelBuilder:
         self._positions_sauvegardees = []
         
         self.text_data = {
+            "numero": "01",
             "nom": "",
             "description": "",
             "chapitre": ""
@@ -696,11 +723,55 @@ class LevelBuilder:
         except Exception as e:
             print(f"Erreur lors de la sauvegarde: {e}")
     
+    def _ensure_text_data_complete(self):
+        """S'assure que tous les champs requis sont présents dans text_data"""
+        defaults = {
+            "numero": "01",
+            "nom": "",
+            "description": "",
+            "chapitre": ""
+        }
+        for key, default_value in defaults.items():
+            if key not in self.text_data:
+                self.text_data[key] = default_value
+
+    def _handle_text_input_with_validation(self, event):
+        """Gère la saisie de texte avec validation spécifique selon le champ"""
+        if not self.ui.champ_actif:
+            return
+            
+        field_name = self.ui.champ_actif
+        
+        if event.key == pygame.K_BACKSPACE:
+            if field_name in self.text_data:
+                self.text_data[field_name] = self.text_data[field_name][:-1]
+        elif event.unicode.isprintable():
+            if field_name == "numero":
+                # Validation spéciale pour le numéro : seulement des chiffres, max 2 caractères
+                if event.unicode.isdigit() and len(self.text_data.get(field_name, "")) < 2:
+                    self.text_data[field_name] = self.text_data.get(field_name, "") + event.unicode
+            else:
+                # Gestion normale pour les autres champs
+                max_length = 50 if field_name != "nom" else 30
+                if field_name in self.text_data and len(self.text_data[field_name]) < max_length:
+                    self.text_data[field_name] += event.unicode
+
     def _synchroniser_config_avec_ui(self):
         """Met à jour la configuration avec les données de l'interface utilisateur"""
         self.niveau_config.nom = self.text_data.get("nom", "")
         self.niveau_config.description = self.text_data.get("description", "")
         self.niveau_config.chapitre = self.text_data.get("chapitre", "")
+        
+        # Traiter le numéro (s'assurer qu'il s'agit d'un entier valide entre 0 et 99)
+        try:
+            numero_str = self.text_data.get("numero", "01").strip()
+            if numero_str:
+                numero = int(numero_str)
+                self.niveau_config.numero = max(0, min(99, numero))  # Limiter entre 0 et 99
+            else:
+                self.niveau_config.numero = 1
+        except ValueError:
+            self.niveau_config.numero = 1
     
     def tester_niveau(self):
         """Lance le niveau pour le tester avec toutes les contraintes"""
@@ -1057,10 +1128,17 @@ class LevelBuilder:
     
     def afficher_config_generale(self):
         """Affiche l'interface de configuration générale"""
+        self._ensure_text_data_complete()
         self.screen.fill((255, 255, 255))
         self.ui.draw_title("Configuration du Niveau", 50)
         
         y = 120
+        
+        # Numéro du niveau (2 chiffres max)
+        self.ui.draw_text("Numéro (00-99):", 50, y)
+        numero_rect = self.ui.draw_input_field(200, y-5, 100, 30, self.text_data.get("numero", "01"), "numero")
+        self.field_rects["numero"] = numero_rect
+        y += 50
         
         # Nom du niveau
         self.ui.draw_text("Nom du niveau:", 50, y)
@@ -1303,7 +1381,7 @@ class LevelBuilder:
                 
                 elif event.type == pygame.KEYDOWN:
                     if self.etat == "config_generale":
-                        self.ui.handle_text_input(event, self.text_data, self.ui.champ_actif)
+                        self._handle_text_input_with_validation(event)
                 
                 elif event.type == pygame.MOUSEWHEEL:
                     if self.etat == "selection_niveau" or self.etat == "selection_niveau_custom":
