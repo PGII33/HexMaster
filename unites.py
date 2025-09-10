@@ -511,7 +511,7 @@ class Gnome(Unite):
 
 class Golem(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Golem", pv=18, dmg=3, mv=1, tier=2, faction="Élémentaires", comp="armure de pierre")
+        super().__init__(equipe, pos, nom="Golem", pv=12, dmg=4, mv=1, tier=2, faction="Élémentaires", comp="armure de pierre")
 
 class Ondine(Unite):
     def __init__(self, equipe, pos):
