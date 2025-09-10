@@ -2,7 +2,7 @@
   "nom": "Niveau 5 -",
   "description": "",
   "chapitre": "Morts-Vivants",
-  "numero": 0,
+  "numero": 5,
   "type_restriction": "faction_unique",
   "unites_imposees": [],
   "placement_impose": false,
