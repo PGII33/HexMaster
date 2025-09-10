@@ -436,11 +436,6 @@ class Jeu:
                 # Mode campagne : récompenses gérées par le système de campagne
                 print(f"Récompenses calculées (campagne): {self.recompenses}")
             
-            # Ajouter les nouvelles unités (toujours, peu importe le mode)
-            if "unites_dispo" not in progression:
-                progression["unites_dispo"] = []
-            progression["unites_dispo"].extend(self.recompenses["unites"])
-            
             if self.recompenses["unites"]:
                 sauvegarder(progression)
             
