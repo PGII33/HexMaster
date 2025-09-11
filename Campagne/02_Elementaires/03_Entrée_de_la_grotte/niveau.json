@@ -1,0 +1,85 @@
+{
+  "nom": "Entrée de la grotte",
+  "description": "",
+  "chapitre": "02_Elementaires",
+  "numero": 3,
+  "type_restriction": "faction_libre",
+  "unites_imposees": [],
+  "placement_impose": false,
+  "factions_autorisees": [],
+  "faction_unique_requise": false,
+  "faction_imposee": "",
+  "cp_disponible": 7,
+  "max_unites": 7,
+  "unites_ennemis": [
+    [
+      "Golem",
+      [
+        4,
+        4
+      ]
+    ],
+    [
+      "Golem",
+      [
+        3,
+        4
+      ]
+    ],
+    [
+      "Golem",
+      [
+        1,
+        4
+      ]
+    ],
+    [
+      "Golem",
+      [
+        2,
+        4
+      ]
+    ],
+    [
+      "Golem",
+      [
+        0,
+        5
+      ]
+    ],
+    [
+      "Golem",
+      [
+        5,
+        4
+      ]
+    ],
+    [
+      "Golem",
+      [
+        5,
+        5
+      ]
+    ],
+    [
+      "Ondine",
+      [
+        1,
+        6
+      ]
+    ],
+    [
+      "Ondine",
+      [
+        3,
+        6
+      ]
+    ]
+  ],
+  "difficulte_ennemis": "normale",
+  "recompense_cp": 1,
+  "recompense_pa": 20,
+  "unites_debloquees": [],
+  "recompenses_autres": [],
+  "completable_plusieurs_fois": false
+}
