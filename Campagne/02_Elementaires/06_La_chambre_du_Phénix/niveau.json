@@ -1,0 +1,57 @@
+{
+  "nom": "La chambre du Phénix",
+  "description": "",
+  "chapitre": "02_Elementaires",
+  "numero": 6,
+  "type_restriction": "faction_unique",
+  "unites_imposees": [],
+  "placement_impose": false,
+  "factions_autorisees": [],
+  "faction_unique_requise": false,
+  "faction_imposee": "",
+  "cp_disponible": 8,
+  "max_unites": 6,
+  "unites_ennemis": [
+    [
+      "Golem",
+      [
+        4,
+        4
+      ]
+    ],
+    [
+      "Golem",
+      [
+        0,
+        4
+      ]
+    ],
+    [
+      "Phénix",
+      [
+        2,
+        4
+      ]
+    ],
+    [
+      "Golem",
+      [
+        2,
+        5
+      ]
+    ],
+    [
+      "Golem",
+      [
+        1,
+        5
+      ]
+    ]
+  ],
+  "difficulte_ennemis": "normale",
+  "recompense_cp": 1,
+  "recompense_pa": 200,
+  "unites_debloquees": [],
+  "recompenses_autres": [],
+  "completable_plusieurs_fois": false
+}

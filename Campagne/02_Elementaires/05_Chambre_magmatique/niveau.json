@@ -1,0 +1,57 @@
+{
+  "nom": "Chambre magmatique",
+  "description": "",
+  "chapitre": "02_Elementaires",
+  "numero": 5,
+  "type_restriction": "faction_unique",
+  "unites_imposees": [],
+  "placement_impose": false,
+  "factions_autorisees": [],
+  "faction_unique_requise": false,
+  "faction_imposee": "",
+  "cp_disponible": 14,
+  "max_unites": 8,
+  "unites_ennemis": [
+    [
+      "Gnome",
+      [
+        0,
+        4
+      ]
+    ],
+    [
+      "Golem",
+      [
+        1,
+        4
+      ]
+    ],
+    [
+      "Ifrit",
+      [
+        2,
+        4
+      ]
+    ],
+    [
+      "Golem",
+      [
+        3,
+        4
+      ]
+    ],
+    [
+      "Gnome",
+      [
+        4,
+        4
+      ]
+    ]
+  ],
+  "difficulte_ennemis": "normale",
+  "recompense_cp": 1,
+  "recompense_pa": 80,
+  "unites_debloquees": [],
+  "recompenses_autres": [],
+  "completable_plusieurs_fois": false
+}
