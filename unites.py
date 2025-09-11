@@ -428,7 +428,7 @@ class Tas_D_Os(Unite):
 
 class Goule(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Goule", pv=20, dmg=2, mv=1, tier=1, faction="Morts-Vivants")
+        super().__init__(equipe, pos, nom="Goule", pv=13, dmg=2, mv=1, tier=1, faction="Morts-Vivants")
 
 class Squelette(Unite):
     def __init__(self, equipe, pos):
@@ -441,23 +441,23 @@ class Spectre(Unite):
 class Zombie_BASE(Unite):
     """ Pour crée les zombies zombifiés """
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Zombie", pv=13, dmg=2, mv=2, tier=2, faction="Morts-Vivants")
+        super().__init__(equipe, pos, nom="Zombie", pv=10, dmg=2, mv=2, tier=2, faction="Morts-Vivants")
 
 class Zombie(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Zombie", pv=13, dmg=2, mv=2, tier=2, comp="zombification", faction="Morts-Vivants")
+        super().__init__(equipe, pos, nom="Zombie", pv=10, dmg=2, mv=2, tier=2, comp="zombification", faction="Morts-Vivants")
 
 class Vampire(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Vampire", pv=15, dmg=3, mv=2, tier=2, comp="sangsue", faction="Morts-Vivants")
+        super().__init__(equipe, pos, nom="Vampire", pv=8, dmg=3, mv=2, tier=2, comp="sangsue", faction="Morts-Vivants")
 
 class Liche(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Liche", pv=9, dmg=1, mv=2, tier=3, comp="nécromancie", faction="Morts-Vivants")
+        super().__init__(equipe, pos, nom="Liche", pv=9, dmg=1, mv=2, tier=3, comp="nécromancie", faction="Morts-Vivants", portee=2)
 
 class Archliche(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Archliche", pv=18, dmg=1, mv=2, tier=4, comp="invocation", faction="Morts-Vivants")
+        super().__init__(equipe, pos, nom="Archliche", pv=18, dmg=1, mv=2, tier=4, comp="invocation", faction="Morts-Vivants", portee=3)
 
 
 # Religieux
