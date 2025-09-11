@@ -1,0 +1,78 @@
+{
+  "nom": "Tunel brumeux",
+  "description": "",
+  "chapitre": "02_Elementaires",
+  "numero": 4,
+  "type_restriction": "faction_unique",
+  "unites_imposees": [],
+  "placement_impose": false,
+  "factions_autorisees": [],
+  "faction_unique_requise": false,
+  "faction_imposee": "",
+  "cp_disponible": 14,
+  "max_unites": 8,
+  "unites_ennemis": [
+    [
+      "Driade",
+      [
+        4,
+        4
+      ]
+    ],
+    [
+      "Driade",
+      [
+        4,
+        5
+      ]
+    ],
+    [
+      "Golem",
+      [
+        3,
+        4
+      ]
+    ],
+    [
+      "Golem",
+      [
+        2,
+        4
+      ]
+    ],
+    [
+      "Driade",
+      [
+        1,
+        4
+      ]
+    ],
+    [
+      "Driade",
+      [
+        0,
+        5
+      ]
+    ],
+    [
+      "Ondine",
+      [
+        3,
+        5
+      ]
+    ],
+    [
+      "Ondine",
+      [
+        1,
+        5
+      ]
+    ]
+  ],
+  "difficulte_ennemis": "normale",
+  "recompense_cp": 1,
+  "recompense_pa": 0,
+  "unites_debloquees": [],
+  "recompenses_autres": [],
+  "completable_plusieurs_fois": false
+}
