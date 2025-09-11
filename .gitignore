@@ -167,4 +167,20 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+# Fichiers de sauvegarde et données utilisateur
 sauvegarde.json
+
+# Système de données externes - dossiers temporaires de test
+HexMaster_Data/
+HexMaster_Portable/
+HexMaster_Portable_*/
+*.tar.gz
+*.zip
+
+# Fichiers de build local temporaires
+build_output/
+temp_build/
+
+# Logs de test
+test_output.log
+build.log

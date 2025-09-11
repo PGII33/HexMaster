@@ -208,15 +208,18 @@ class LevelBuilder:
     def _charger_liste_niveaux_campagne(self):
         """Charge la liste des niveaux disponibles dans le dossier Campagne"""
         niveaux = []
-        campagne_path = "Campagne"
         
-        if not os.path.exists(campagne_path):
+        # Utiliser le système de chemins externe/EXE
+        from path_utils import get_campaign_path
+        campagne_path = get_campaign_path()
+        
+        if not campagne_path.exists():
             return niveaux
         
         # Parcourir les chapitres
         for chapitre_folder in sorted(os.listdir(campagne_path)):
-            chapitre_path = os.path.join(campagne_path, chapitre_folder)
-            if not os.path.isdir(chapitre_path):
+            chapitre_path = campagne_path / chapitre_folder
+            if not chapitre_path.is_dir():
                 continue
             
             # Extraire le nom du chapitre
@@ -227,12 +230,12 @@ class LevelBuilder:
             
             # Parcourir les niveaux du chapitre
             for niveau_folder in sorted(os.listdir(chapitre_path)):
-                niveau_path = os.path.join(chapitre_path, niveau_folder)
-                if not os.path.isdir(niveau_path):
+                niveau_path = chapitre_path / niveau_folder
+                if not niveau_path.is_dir():
                     continue
                 
-                niveau_file = os.path.join(niveau_path, "niveau.json")
-                if os.path.exists(niveau_file):
+                niveau_file = niveau_path / "niveau.json"
+                if niveau_file.exists():
                     try:
                         from niveau_structure import charger_niveau
                         config = charger_niveau(niveau_file)
@@ -253,21 +256,24 @@ class LevelBuilder:
     def _charger_liste_niveaux_custom(self):
         """Charge la liste des niveaux custom disponibles"""
         niveaux = []
-        custom_path = "custom_levels"
         
-        if not os.path.exists(custom_path):
-            os.makedirs(custom_path)
+        # Utiliser le système de chemins externe/EXE
+        from path_utils import get_custom_levels_path
+        custom_path = get_custom_levels_path()
+        
+        if not custom_path.exists():
+            custom_path.mkdir(parents=True, exist_ok=True)
             return niveaux
         
         # Parcourir les dossiers dans custom_levels (comme pour la campagne)
         for niveau_folder in sorted(os.listdir(custom_path)):
-            niveau_folder_path = os.path.join(custom_path, niveau_folder)
-            if not os.path.isdir(niveau_folder_path):
+            niveau_folder_path = custom_path / niveau_folder
+            if not niveau_folder_path.is_dir():
                 continue
                 
             # Chercher le fichier niveau.json dans le dossier
-            niveau_file = os.path.join(niveau_folder_path, "niveau.json")
-            if os.path.exists(niveau_file):
+            niveau_file = niveau_folder_path / "niveau.json"
+            if niveau_file.exists():
                 try:
                     from niveau_structure import charger_niveau
                     config = charger_niveau(niveau_file)

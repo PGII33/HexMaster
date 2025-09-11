@@ -1,77 +1,244 @@
-name: Build and Release EXE (Legacy - Disabled)
+name: Build HexMaster EXE with External Data Support
 
-# Workflow désactivé - utilisez release.yml à la place
 on:
-  workflow_dispatch:  # Seulement déclenchement manuel
-  # push:
-  #   branches: [ "main" ]
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*.*.*'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # Déclenchement manuel
 
 jobs:
-  build:
+  build-windows:
     runs-on: windows-latest
     permissions:
       contents: write
-
+    
     steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pyinstaller
-
-      - name: Build exe
-        run: |
-          # S'assurer que les dossiers requis existent
-          if (-not (Test-Path "custom_levels")) { New-Item -ItemType Directory -Path "custom_levels" }
-          if (-not (Test-Path "custom_levels/.keep")) { 
-            "# Placeholder file" | Out-File -FilePath "custom_levels/.keep" -Encoding UTF8 
-          }
-          pyinstaller main.spec
-
-      - name: Generate version tag
-        id: version
-        run: |
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+    
+    - name: Prepare build directories
+      run: |
+        # S'assurer que les dossiers requis existent
+        if (-not (Test-Path "custom_levels")) { 
+          New-Item -ItemType Directory -Path "custom_levels" -Force
+        }
+        if (-not (Test-Path "custom_levels/.keep")) { 
+          "# Dossier pour les niveaux créés par l'utilisateur" | Out-File -FilePath "custom_levels/.keep" -Encoding UTF8 
+        }
+    
+    - name: Build executable with PyInstaller
+      run: |
+        pyinstaller --clean --noconfirm main.spec
+        
+    - name: Verify executable was created
+      run: |
+        if (Test-Path "dist/HexMaster.exe") {
+          Write-Host "✅ EXE créé avec succès"
+          Get-ChildItem dist/HexMaster.exe | Format-Table Name, Length, LastWriteTime
+        } else {
+          Write-Host "❌ Erreur: EXE non trouvé"
+          Get-ChildItem dist/ -Recurse
+          exit 1
+        }
+    
+    - name: Create portable package with external data support
+      run: |
+        # Créer la structure portable
+        $packageDir = "HexMaster_Portable"
+        Remove-Item $packageDir -Recurse -Force -ErrorAction SilentlyContinue
+        New-Item -ItemType Directory -Path $packageDir -Force
+        
+        # Copier l'exécutable principal
+        Copy-Item "dist/HexMaster.exe" "$packageDir/"
+        
+        # Créer la structure de données externe
+        New-Item -ItemType Directory -Path "$packageDir/HexMaster_Data" -Force
+        New-Item -ItemType Directory -Path "$packageDir/HexMaster_Data/Campagne" -Force
+        New-Item -ItemType Directory -Path "$packageDir/HexMaster_Data/custom_levels" -Force
+        
+        # Copier les niveaux de campagne (externes, modifiables)
+        Copy-Item "Campagne/*" "$packageDir/HexMaster_Data/Campagne/" -Recurse -Force
+        
+        # Créer un fichier d'information
+        @"
+        # HexMaster - Edition Portable
+        
+        ## 🚀 Démarrage rapide
+        Double-cliquez sur HexMaster.exe pour jouer !
+        
+        ## 📁 Structure des fichiers
+        - **HexMaster.exe** : Jeu principal
+        - **HexMaster_Data/** : Toutes vos données de jeu
+          - **Campagne/** : Niveaux de campagne (vous pouvez les modifier !)
+          - **custom_levels/** : Vos niveaux créés avec l'éditeur
+          - **sauvegarde.json** : Votre progression (créé automatiquement)
+        
+        ## 🎮 Fonctionnalités
+        - ✅ Campagne complète avec progression
+        - ✅ Mode HexArène (combat contre IA)
+        - ✅ Mode Joueur vs Joueur local
+        - ✅ **Éditeur de niveaux intégré** 
+        - ✅ **Niveaux créés sauvegardés de façon permanente**
+        - ✅ Système de points et déblocage d'unités
+        
+        ## 🔧 Créer vos propres niveaux
+        1. Lancez le jeu
+        2. Menu Principal → Éditeur de Niveaux
+        3. Créez votre niveau
+        4. Sauvegardez-le
+        5. Il apparaîtra dans la liste des niveaux disponibles !
+        
+        **Les niveaux créés sont sauvegardés dans :** HexMaster_Data/custom_levels/
+        
+        ## 💾 Sauvegarde de progression
+        Votre progression est automatiquement sauvegardée dans :
+        **HexMaster_Data/sauvegarde.json**
+        
+        Sauvegardez ce fichier pour conserver votre progression !
+        
+        ## 🛠️ Dépannage
+        - Si le jeu ne se lance pas : vérifiez que tous les fichiers sont présents
+        - Si vos niveaux disparaissent : ils sont dans HexMaster_Data/custom_levels/
+        - Si la progression est perdue : restaurez sauvegarde.json
+        
+        ## Version
+        Build: ${{ github.sha }}
+        Date: $(Get-Date -Format 'yyyy-MM-dd HH:mm')
+        "@ | Out-File -FilePath "$packageDir/README.txt" -Encoding UTF8
+        
+        # Script de lancement (optionnel)
+        @"
+        @echo off
+        title HexMaster Launcher
+        echo =====================================
+        echo       HexMaster - Lanceur
+        echo =====================================
+        echo.
+        echo Verification des dossiers...
+        if not exist "HexMaster_Data" (
+            echo Creation du dossier de donnees...
+            mkdir "HexMaster_Data"
+            mkdir "HexMaster_Data\custom_levels"
+        )
+        echo.
+        echo Lancement de HexMaster...
+        start "" "HexMaster.exe"
+        echo.
+        echo HexMaster lance avec succes !
+        echo Vous pouvez fermer cette fenetre.
+        pause
+        "@ | Out-File -FilePath "$packageDir/Lancer_HexMaster.bat" -Encoding ASCII
+        
+        Write-Host "✅ Package portable créé avec support des données externes"
+        Get-ChildItem $packageDir -Recurse | Select-Object Name, Length | Format-Table
+    
+    - name: Create ZIP archive
+      run: |
+        $archiveName = "HexMaster_Portable_Windows.zip"
+        Compress-Archive -Path "HexMaster_Portable/*" -DestinationPath $archiveName -Force
+        Write-Host "✅ Archive créée: $archiveName"
+        $archive = Get-ChildItem $archiveName
+        Write-Host "Taille: $([math]::Round($archive.Length / 1MB, 2)) MB"
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: HexMaster-Windows-Portable
+        path: |
+          HexMaster_Portable_Windows.zip
+          HexMaster_Portable/
+        retention-days: 30
+    
+    # Générer une version avec timestamp pour les builds automatiques
+    - name: Generate version tag
+      id: version
+      run: |
+        if ("${{ github.ref_type }}" -eq "tag") {
+          $version = "${{ github.ref_name }}"
+        } else {
           $timestamp = Get-Date -Format "yyyy.MM.dd.HHmm"
-          $version = "v$timestamp"
-          echo "VERSION=$version" >> $env:GITHUB_OUTPUT
-          echo "Generated version: $version"
-
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.version.outputs.VERSION }}
-          release_name: HexMaster ${{ steps.version.outputs.VERSION }}
-          body: |
-            🎮 **HexMaster - Version automatique**
-            
-            Nouvelle version générée automatiquement à partir du commit: ${{ github.sha }}
-            
-            **Téléchargement:**
-            - Téléchargez `HexMaster.exe` ci-dessous
-            - Aucune installation requise, lancez directement le jeu !
-            
-            **Changements:**
-            - Derniers commits intégrés
-            - Build automatique depuis le code source
-          draft: false
-          prerelease: false
-
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: dist/HexMaster.exe
+          $version = "auto-v$timestamp"
+        }
+        echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+        echo "Generated version: $version"
+    
+    # Créer une release seulement pour les tags ou les builds manuels
+    - name: Create Release
+      if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.version.outputs.VERSION }}
+        name: HexMaster ${{ steps.version.outputs.VERSION }}
+        files: HexMaster_Portable_Windows.zip
+        draft: false
+        prerelease: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        body: |
+          ## 🎮 HexMaster ${{ steps.version.outputs.VERSION }}
+          
+          ### 🆕 Nouvelles fonctionnalités de cette version
+          - **🔥 Éditeur de niveaux fonctionnel en version EXE !**
+          - **💾 Niveaux créés sauvegardés de façon permanente**
+          - **📁 Système de données externes** : plus de problèmes de niveaux perdus
+          - **🛠️ Structure portable complète** avec tous les fichiers nécessaires
+          
+          ### 📦 Contenu du package
+          - `HexMaster.exe` : Jeu principal
+          - `HexMaster_Data/` : **Dossier de données externe**
+            - `Campagne/` : Niveaux de campagne (modifiables)
+            - `custom_levels/` : **Vos créations sont sauvegardées ici !**
+            - `sauvegarde.json` : Votre progression (créé automatiquement)
+          - `README.txt` : Guide complet d'utilisation
+          - `Lancer_HexMaster.bat` : Script de lancement optionnel
+          
+          ### 🚀 Installation
+          1. **Télécharger** : `HexMaster_Portable_Windows.zip`
+          2. **Extraire** dans un dossier de votre choix
+          3. **Lancer** : Double-clic sur `HexMaster.exe`
+          4. **Jouer** ! 🎯
+          
+          ### 🎯 Fonctionnalités
+          - ✅ **Campagne complète** avec système de progression
+          - ✅ **Mode HexArène** : combats générés contre l'IA
+          - ✅ **Mode JcJ local** : affrontez un ami sur le même PC
+          - ✅ **Éditeur de niveaux intégré** : créez vos propres défis
+          - ✅ **Persistance garantie** : vos créations ne disparaissent plus !
+          - ✅ **Modification des niveaux de campagne** possible
+          
+          ### 🔧 Utilisation de l'éditeur
+          1. Menu Principal → **Éditeur de Niveaux**
+          2. Créez votre niveau (unités, objectifs, récompenses)
+          3. **Sauvegardez** avec un nom unique
+          4. Votre niveau apparaît dans **"Niveaux Custom"**
+          5. **Testez-le** : sélectionnez et jouez !
+          
+          **🎉 Vos niveaux restent disponibles après redémarrage du jeu !**
+          
+          ### 📊 Informations techniques
+          - Build: `${{ github.sha }}`
+          - Python: 3.11
+          - PyInstaller: Version récente
+          - Compatible: Windows 10/11
+          - Taille: ~XX MB
+          
+          ---
+          
+          **🐛 Problèmes ?** → [Issues GitHub](https://github.com/${{ github.repository }}/issues)
+          **💬 Discussions ?** → [Discord/Forum](lien_si_disponible)
+        generate_release_notes: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           asset_name: HexMaster.exe
           asset_content_type: application/octet-stream

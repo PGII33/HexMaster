@@ -2,24 +2,9 @@ import json
 import os
 import sys
 
-def get_save_path():
-    """Retourne le chemin correct du fichier de sauvegarde selon l'environnement"""
-    if getattr(sys, 'frozen', False):
-        # Application compilée avec PyInstaller
-        # Utiliser le dossier utilisateur pour éviter les problèmes de permissions
-        import tempfile
-        user_data_dir = os.path.join(os.path.expanduser("~"), "HexMaster")
-        
-        # Créer le dossier s'il n'existe pas
-        os.makedirs(user_data_dir, exist_ok=True)
-        
-        return os.path.join(user_data_dir, "sauvegarde.json")
-    else:
-        # Mode développement - garder dans le dossier du projet
-        application_path = os.path.dirname(os.path.abspath(__file__))
-        return os.path.join(application_path, "sauvegarde.json")
-
-FICHIER_SAVE = get_save_path()
+# Utiliser le nouveau système de chemins unifié
+from path_utils import get_save_path
+FICHIER_SAVE = str(get_save_path())
 
 def charger():
     try:
