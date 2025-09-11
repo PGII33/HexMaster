@@ -9,23 +9,9 @@
   "factions_autorisees": [],
   "faction_unique_requise": false,
   "faction_imposee": "",
-  "cp_disponible": 3,
-  "max_unites": 3,
+  "cp_disponible": 4,
+  "max_unites": 4,
   "unites_ennemis": [
-    [
-      "Fanatique",
-      [
-        -1,
-        5
-      ]
-    ],
-    [
-      "Fanatique",
-      [
-        6,
-        5
-      ]
-    ],
     [
       "Missionnaire",
       [
@@ -52,6 +38,20 @@
       [
         5,
         5
+      ]
+    ],
+    [
+      "Fanatique",
+      [
+        6,
+        6
+      ]
+    ],
+    [
+      "Fanatique",
+      [
+        -1,
+        6
       ]
     ]
   ],
