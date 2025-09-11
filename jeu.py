@@ -169,9 +169,12 @@ class Jeu:
             self.screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
             self.recalculer_layout()
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            # Permettre les clics pour TOUS les tours (joueur ET joueur2)
-            if self.versus_mode or self.tour == "joueur":
-                mx, my = event.pos
+            mx, my = event.pos
+            # Toujours permettre les clics si le menu de fin est affiché (pour les boutons)
+            if (hasattr(self, 'show_end_menu') and self.show_end_menu):
+                handle_click(self, mx, my)
+            # Sinon, permettre les clics selon le mode de jeu normal
+            elif self.versus_mode or self.tour == "joueur":
                 handle_click(self, mx, my)
 
     def abandonner_combat(self):
