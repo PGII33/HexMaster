@@ -48,9 +48,8 @@ class PlacementPhase:
                 if unit_class in self.available_units and self.available_units[unit_class] > 0:
                     self.available_units[unit_class] -= 1
         
-        # Drag and drop
-        self.dragging = None  # (classe, source_type, source_pos) ou None
-        self.drag_offset = (0, 0)
+        # Système clic-clic
+        self.selected_unit_to_place = None  # (classe, source_type, source_pos) ou None
         
         # Scroll pour le panneau d'unités
         self.scroll_y = 0
@@ -184,21 +183,32 @@ class PlacementPhase:
             
             # Ne dessiner que si visible
             if rect.bottom >= self.top_h + 50 and rect.top <= self.hauteur - 130:
+                # Vérifier si cette unité est sélectionnée
+                is_selected = (self.selected_unit_to_place and 
+                             self.selected_unit_to_place[0] == cls and 
+                             self.selected_unit_to_place[1] == "list")
+                
                 # Fond de la carte
-                pygame.draw.rect(self.screen, (220, 220, 220), rect, border_radius=8)
-                pygame.draw.rect(self.screen, (0, 0, 0), rect, width=2, border_radius=8)
+                if is_selected:
+                    # Couleur de sélection
+                    pygame.draw.rect(self.screen, (150, 150, 255), rect, border_radius=8)
+                    pygame.draw.rect(self.screen, (0, 0, 255), rect, width=3, border_radius=8)
+                else:
+                    pygame.draw.rect(self.screen, (220, 220, 220), rect, border_radius=8)
+                    pygame.draw.rect(self.screen, (0, 0, 0), rect, width=2, border_radius=8)
                 
                 # Nom de l'unité
                 tmp = cls("joueur", (0, 0))
-                nom_txt = self.font.render(tmp.get_nom(), True, (0, 0, 0))
+                text_color = (255, 255, 255) if is_selected else (0, 0, 0)
+                nom_txt = self.font.render(tmp.get_nom(), True, text_color)
                 self.screen.blit(nom_txt, (rect.x + 10, rect.y + 10))
                 
                 # Compteur
-                count_txt = self.font.render(f"x{count}", True, (200, 0, 0))
+                count_txt = self.font.render(f"x{count}", True, (255, 100, 100) if is_selected else (200, 0, 0))
                 self.screen.blit(count_txt, (rect.right - 40, rect.y + 10))
                 
                 # Stats rapides
-                stats_txt = self.font.render(f"PV:{tmp.pv} DMG:{tmp.dmg}", True, (60, 60, 60))
+                stats_txt = self.font.render(f"PV:{tmp.pv} DMG:{tmp.dmg}", True, (200, 200, 255) if is_selected else (60, 60, 60))
                 self.screen.blit(stats_txt, (rect.x + 10, rect.y + 35))
             
             card_index += 1
@@ -206,77 +216,118 @@ class PlacementPhase:
         # Retirer le clipping
         self.screen.set_clip(None)
     
-    def _handle_mouse_down(self, pos):
-        """Gère le début du drag and drop"""
+    def _handle_mouse_click(self, pos):
+        """Gère le système clic-clic pour sélection et placement"""
         mx, my = pos
         
-        # Vérifier si on clique sur une unité placée
-        for (q, r), cls in self.placed_units.items():
-            x, y = hex_to_pixel(self, q, r)
-            if (mx - x)**2 + (my - y)**2 <= self.unit_radius**2:
-                # Commencer le drag depuis le plateau
-                self.dragging = (cls, "board", (q, r))
-                self.drag_offset = (mx - x, my - y)
-                # Retirer temporairement l'unité du plateau
-                del self.placed_units[(q, r)]
-                self.available_units[cls] = self.available_units.get(cls, 0) + 1
-                return
-        
-        # Vérifier si on clique sur une carte d'unité
-        unique_classes = list(set(self.selected_units))
-        card_index = 0
-        for cls in unique_classes:
-            count = self.available_units.get(cls, 0)
-            if count == 0:
-                continue
-            
-            rect = self._get_unit_card_rect(card_index)
-            if rect.collidepoint(mx, my):
-                # Commencer le drag depuis la liste
-                self.dragging = (cls, "list", card_index)
-                self.drag_offset = (mx - rect.centerx, my - rect.centery)
-                return
-            
-            card_index += 1
-    
-    def _handle_mouse_up(self, pos):
-        """Gère la fin du drag and drop"""
-        if not self.dragging:
-            return
-        
-        mx, my = pos
-        cls, source_type, source_pos = self.dragging
-        
-        # Trouver la case hexagonale la plus proche
-        best_pos = None
-        best_dist = float('inf')
-        
-        for q in self.q_range:
-            for r in self.r_range:
+        # Si aucune unité sélectionnée, essayer de sélectionner une unité
+        if not self.selected_unit_to_place:
+            # Vérifier si on clique sur une unité placée
+            for (q, r), cls in self.placed_units.items():
                 x, y = hex_to_pixel(self, q, r)
-                dist = (mx - x)**2 + (my - y)**2
-                if dist < best_dist and dist <= (self.taille_hex * 1.5)**2:
-                    best_dist = dist
-                    best_pos = (q, r)
+                if (mx - x)**2 + (my - y)**2 <= self.unit_radius**2:
+                    # Sélectionner l'unité du plateau
+                    self.selected_unit_to_place = (cls, "board", (q, r))
+                    # Retirer temporairement l'unité du plateau
+                    del self.placed_units[(q, r)]
+                    self.available_units[cls] = self.available_units.get(cls, 0) + 1
+                    return
+            
+            # Vérifier si on clique sur une carte d'unité
+            unique_classes = list(set(self.selected_units))
+            card_index = 0
+            for cls in unique_classes:
+                count = self.available_units.get(cls, 0)
+                if count == 0:
+                    continue
+                
+                rect = self._get_unit_card_rect(card_index)
+                if rect.collidepoint(mx, my):
+                    # Sélectionner l'unité de la liste
+                    self.selected_unit_to_place = (cls, "list", card_index)
+                    return
+                
+                card_index += 1
         
-        # Vérifier si on peut placer l'unité
-        can_place = (
-            best_pos is not None and
-            best_pos not in self.placed_units and
-            self._is_player_spawn_zone(*best_pos)  # Seulement en zone joueur
-        )
-        
-        if can_place:
-            # Placer l'unité
-            self.placed_units[best_pos] = cls
-            self.available_units[cls] -= 1
         else:
-            # Remettre l'unité à sa place d'origine si elle venait du plateau
-            if source_type == "board":
-                # Si on ne peut pas la replacer, la remettre dans la liste
-                pass  # L'unité est déjà remise dans available_units
-        
-        self.dragging = None
+            # Une unité est sélectionnée, essayer de la placer
+            cls, source_type, source_pos = self.selected_unit_to_place
+            
+            # Trouver la case hexagonale la plus proche
+            best_pos = None
+            best_dist = float('inf')
+            
+            for q in self.q_range:
+                for r in self.r_range:
+                    x, y = hex_to_pixel(self, q, r)
+                    dist = (mx - x)**2 + (my - y)**2
+                    if dist < best_dist and dist <= (self.taille_hex * 1.5)**2:
+                        best_dist = dist
+                        best_pos = (q, r)
+            
+            # Vérifier si on peut placer l'unité
+            can_place = (
+                best_pos is not None and
+                best_pos not in self.placed_units and
+                self._is_player_spawn_zone(*best_pos)  # Seulement en zone joueur
+            )
+            
+            if can_place:
+                # Placer l'unité
+                self.placed_units[best_pos] = cls
+                self.available_units[cls] -= 1
+                self.selected_unit_to_place = None
+            else:
+                # Clic sur une zone invalide
+                # Vérifier si on clique sur une autre unité pour changer la sélection
+                clicked_on_unit = False
+                
+                # Vérifier les unités déjà placées
+                for (q, r), other_cls in self.placed_units.items():
+                    x, y = hex_to_pixel(self, q, r)
+                    if (mx - x)**2 + (my - y)**2 <= self.unit_radius**2:
+                        # Remettre l'unité actuelle en arrière si possible
+                        if source_type == "board":
+                            self.placed_units[source_pos] = cls
+                            self.available_units[cls] -= 1
+                        
+                        # Sélectionner la nouvelle unité
+                        self.selected_unit_to_place = (other_cls, "board", (q, r))
+                        del self.placed_units[(q, r)]
+                        self.available_units[other_cls] += 1
+                        clicked_on_unit = True
+                        return
+                
+                # Vérifier les cartes d'unités
+                if not clicked_on_unit:
+                    unique_classes = list(set(self.selected_units))
+                    card_index = 0
+                    for other_cls in unique_classes:
+                        count = self.available_units.get(other_cls, 0)
+                        if count == 0:
+                            continue
+                        
+                        rect = self._get_unit_card_rect(card_index)
+                        if rect.collidepoint(mx, my):
+                            # Remettre l'unité actuelle si possible
+                            if source_type == "board":
+                                self.placed_units[source_pos] = cls
+                                self.available_units[cls] -= 1
+                            
+                            # Sélectionner la nouvelle unité
+                            self.selected_unit_to_place = (other_cls, "list", card_index)
+                            clicked_on_unit = True
+                            return
+                        
+                        card_index += 1
+                
+                # Si on n'a cliqué sur rien de valide, annuler la sélection
+                if not clicked_on_unit:
+                    # Remettre l'unité à sa place d'origine si elle venait du plateau
+                    if source_type == "board":
+                        self.placed_units[source_pos] = cls
+                        self.available_units[cls] -= 1
+                    self.selected_unit_to_place = None
     
     def run(self):
         """Lance la phase de placement"""
@@ -293,12 +344,9 @@ class PlacementPhase:
                     self._create_buttons()
                 
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    self._handle_mouse_down(event.pos)
+                    self._handle_mouse_click(event.pos)
                     self.retour_btn.handle_event(event)
                     self.valider_btn.handle_event(event)
-                
-                elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                    self._handle_mouse_up(event.pos)
                 
                 elif event.type == pygame.MOUSEWHEEL:
                     # Scroll seulement si on est dans la zone du panneau d'unités
@@ -328,23 +376,35 @@ class PlacementPhase:
             # Unités placées
             for (q, r), cls in self.placed_units.items():
                 x, y = hex_to_pixel(self, q, r)
-                pygame.draw.circle(self.screen, (50, 200, 50), (int(x), int(y)), self.unit_radius)
                 
-                # Nom de l'unité
-                tmp = cls("joueur", (0, 0))
-                name_txt = self.font.render(tmp.get_nom(), True, (0, 0, 0))
-                self.screen.blit(name_txt, (x - name_txt.get_width()//2, y - self.unit_radius - 20))
+                # Vérifier si cette unité est sélectionnée (mais pas encore re-placée)
+                is_selected = (self.selected_unit_to_place and 
+                             self.selected_unit_to_place[0] == cls and 
+                             self.selected_unit_to_place[1] == "board" and
+                             self.selected_unit_to_place[2] == (q, r))
+                
+                # Cette condition ne devrait jamais être vraie car on retire l'unité du plateau
+                # quand on la sélectionne, mais on garde la logique par sécurité
+                if not is_selected:
+                    pygame.draw.circle(self.screen, (50, 200, 50), (int(x), int(y)), self.unit_radius)
+                    
+                    # Nom de l'unité
+                    tmp = cls("joueur", (0, 0))
+                    name_txt = self.font.render(tmp.get_nom(), True, (0, 0, 0))
+                    self.screen.blit(name_txt, (x - name_txt.get_width()//2, y - self.unit_radius - 20))
             
             # Panneau latéral
             self._draw_unit_cards()
             
-            # Unité en cours de drag
-            if self.dragging:
+            # Unité sélectionnée pour placement
+            if self.selected_unit_to_place:
                 mx, my = pygame.mouse.get_pos()
-                cls = self.dragging[0]
-                pygame.draw.circle(self.screen, (100, 100, 250), 
-                                 (mx - self.drag_offset[0], my - self.drag_offset[1]), 
-                                 self.unit_radius)
+                cls = self.selected_unit_to_place[0]
+                
+                # Nom de l'unité sélectionnée seulement
+                tmp = cls("joueur", (0, 0))
+                name_txt = self.font.render(f"Placement: {tmp.get_nom()}", True, (100, 100, 250))
+                self.screen.blit(name_txt, (mx - name_txt.get_width()//2, my - 25))
             
             # Boutons
             self.retour_btn.draw(self.screen)
@@ -359,9 +419,14 @@ class PlacementPhase:
                 self.valider_btn.text_color = (100, 100, 100)
             self.valider_btn.draw(self.screen)
             
-            # Instruction
-            if total_available > 0:
-                instruction = self.font.render(f"Placez toutes vos unités ({total_available} restantes)", True, (200, 0, 0))
+            # Instructions
+            if self.selected_unit_to_place:
+                cls = self.selected_unit_to_place[0]
+                tmp = cls("joueur", (0, 0))
+                instruction = self.font.render(f"Cliquez pour placer: {tmp.get_nom()}", True, (0, 0, 200))
+                self.screen.blit(instruction, (20, 60))
+            elif total_available > 0:
+                instruction = self.font.render(f"Cliquez sur une unité, puis sur sa position ({total_available} restantes)", True, (200, 0, 0))
                 self.screen.blit(instruction, (20, 60))
             
             pygame.display.flip()
