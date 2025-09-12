@@ -428,7 +428,7 @@ class Tas_D_Os(Unite):
 
 class Goule(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Goule", pv=13, dmg=2, mv=1, tier=1, faction="Morts-Vivants")
+        super().__init__(equipe, pos, nom="Goule", pv=16, dmg=2, mv=1, tier=1, faction="Morts-Vivants")
 
 class Squelette(Unite):
     def __init__(self, equipe, pos):
