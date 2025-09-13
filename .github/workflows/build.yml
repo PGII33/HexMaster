@@ -45,9 +45,9 @@ jobs:
         
     - name: Verify executable was created
       run: |
-        if (Test-Path "dist/HexMaster.exe") {
-          Write-Host "✅ EXE créé avec succès"
-          Get-ChildItem dist/HexMaster.exe | Format-Table Name, Length, LastWriteTime
+        if (Test-Path "dist/HexMaster/HexMaster.exe") {
+          Write-Host "✅ EXE créé avec succès (mode onedir)"
+          Get-ChildItem "dist/HexMaster" -Recurse | Format-Table Name, Length, LastWriteTime
         } else {
           Write-Host "❌ Erreur: EXE non trouvé"
           Get-ChildItem dist/ -Recurse
@@ -61,8 +61,8 @@ jobs:
         Remove-Item $packageDir -Recurse -Force -ErrorAction SilentlyContinue
         New-Item -ItemType Directory -Path $packageDir -Force
         
-        # Copier l'exécutable principal
-        Copy-Item "dist/HexMaster.exe" "$packageDir/"
+        # Copier tout le dossier de distribution (mode onedir)
+        Copy-Item "dist/HexMaster/*" "$packageDir/" -Recurse -Force
         
         # Créer la structure de données externe
         New-Item -ItemType Directory -Path "$packageDir/HexMaster_Data" -Force

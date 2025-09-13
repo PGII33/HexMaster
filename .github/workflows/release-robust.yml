@@ -37,14 +37,21 @@ jobs:
           Write-Host "Running PyInstaller..."
           pyinstaller main.spec
           
-          # Vérifier que le fichier EXE a été créé
-          if (-not (Test-Path "dist/HexMaster.exe")) {
-            Write-Host "❌ Build failed: HexMaster.exe not found in dist/"
+          # Vérifier que le dossier et l'EXE ont été créés (mode onedir)
+          if (-not (Test-Path "dist/HexMaster/HexMaster.exe")) {
+            Write-Host "❌ Build failed: HexMaster.exe not found in dist/HexMaster/"
             exit 1
           }
           
-          $size = (Get-Item "dist/HexMaster.exe").Length
-          Write-Host "✅ Build successful: HexMaster.exe created ($([math]::Round($size/1MB, 2)) MB)"
+          # Créer l'archive ZIP pour la distribution
+          Write-Host "Creating HexMaster.zip..."
+          Compress-Archive -Path "dist/HexMaster/*" -DestinationPath "dist/HexMaster.zip" -Force
+          
+          $folderSize = (Get-ChildItem "dist/HexMaster" -Recurse | Measure-Object -Property Length -Sum).Sum
+          $zipSize = (Get-Item "dist/HexMaster.zip").Length
+          Write-Host "✅ Build successful:"
+          Write-Host "   - Folder: $([math]::Round($folderSize/1MB, 2)) MB"
+          Write-Host "   - ZIP: $([math]::Round($zipSize/1MB, 2)) MB"
 
       - name: Generate version and release info
         id: version
@@ -67,15 +74,27 @@ jobs:
           if (Test-Path "dist") {
             Write-Host "`nContents of dist directory:"
             Get-ChildItem "dist" -Force | Format-Table Name, Length, LastWriteTime
+            
+            if (Test-Path "dist/HexMaster") {
+              Write-Host "`nContents of dist/HexMaster directory:"
+              Get-ChildItem "dist/HexMaster" -Force | Format-Table Name, Length, LastWriteTime
+            }
           } else {
             Write-Host "`n❌ dist directory does not exist"
           }
           
-          if (Test-Path "dist/HexMaster.exe") {
-            $size = (Get-Item "dist/HexMaster.exe").Length
+          if (Test-Path "dist/HexMaster/HexMaster.exe") {
+            $size = (Get-Item "dist/HexMaster/HexMaster.exe").Length
             Write-Host "`n✅ HexMaster.exe found: $([math]::Round($size/1MB, 2)) MB"
           } else {
             Write-Host "`n❌ HexMaster.exe not found"
+          }
+          
+          if (Test-Path "dist/HexMaster.zip") {
+            $size = (Get-Item "dist/HexMaster.zip").Length
+            Write-Host "`n✅ HexMaster.zip found: $([math]::Round($size/1MB, 2)) MB"
+          } else {
+            Write-Host "`n❌ HexMaster.zip not found"
           }
 
       - name: Check if release exists
@@ -141,9 +160,9 @@ jobs:
           $ErrorActionPreference = 'Stop'
           Write-Host "Creating release ${{ steps.version.outputs.VERSION }}..."
           
-          # Verify the EXE exists before proceeding
-          if (-not (Test-Path "dist/HexMaster.exe")) {
-            Write-Host "❌ HexMaster.exe not found in dist/"
+          # Verify the ZIP exists before proceeding
+          if (-not (Test-Path "dist/HexMaster.zip")) {
+            Write-Host "❌ HexMaster.zip not found in dist/"
             exit 1
           }
           
@@ -155,11 +174,13 @@ jobs:
           🚀 Branch: ${{ github.ref_name }}
           
           Comment jouer:
-          1. Téléchargez HexMaster.exe ci-dessous
-          2. Lancez le fichier directement (aucune installation requise)
-          3. Amusez-vous bien!
+          1. Téléchargez HexMaster.zip ci-dessous
+          2. Extrayez l'archive dans un dossier de votre choix
+          3. Lancez HexMaster.exe dans le dossier extrait
+          4. Amusez-vous bien!
           
-          Note: Cette version a été générée automatiquement depuis le dernier code source.
+          Note: Cette version utilise le mode "onedir" de PyInstaller pour une meilleure compatibilité.
+          L'archive contient tous les fichiers nécessaires au fonctionnement du jeu.
           "@
           
           $headers = @{
@@ -182,14 +203,14 @@ jobs:
             $release = Invoke-RestMethod -Uri $uri -Headers $headers -Method Post -Body $body
             Write-Host "✅ Release created with ID: $($release.id)"
             
-            # Upload the asset
-            Write-Host "Uploading HexMaster.exe..."
-            $uploadUri = "https://uploads.github.com/repos/${{ github.repository }}/releases/$($release.id)/assets?name=HexMaster.exe"
-            $headers['Content-Type'] = 'application/octet-stream'
+            # Upload the ZIP asset
+            Write-Host "Uploading HexMaster.zip..."
+            $uploadUri = "https://uploads.github.com/repos/${{ github.repository }}/releases/$($release.id)/assets?name=HexMaster.zip"
+            $headers['Content-Type'] = 'application/zip'
             
-            $fileBytes = [System.IO.File]::ReadAllBytes("dist/HexMaster.exe")
+            $fileBytes = [System.IO.File]::ReadAllBytes("dist/HexMaster.zip")
             $asset = Invoke-RestMethod -Uri $uploadUri -Headers $headers -Method Post -Body $fileBytes
-            Write-Host "✅ HexMaster.exe uploaded successfully (ID: $($asset.id))"
+            Write-Host "✅ HexMaster.zip uploaded successfully (ID: $($asset.id))"
           } catch {
             Write-Host "❌ Error creating release: $($_.Exception.Message)"
             if ($_.Exception.Response) {
