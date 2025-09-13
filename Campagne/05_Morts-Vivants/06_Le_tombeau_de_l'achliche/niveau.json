@@ -9,8 +9,8 @@
   "factions_autorisees": [],
   "faction_unique_requise": false,
   "faction_imposee": "",
-  "cp_disponible": 20,
-  "max_unites": 20,
+  "cp_disponible": 10,
+  "max_unites": 10,
   "unites_ennemis": [
     [
       "Archliche",

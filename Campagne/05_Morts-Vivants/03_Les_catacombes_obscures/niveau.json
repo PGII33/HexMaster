@@ -9,8 +9,8 @@
   "factions_autorisees": [],
   "faction_unique_requise": false,
   "faction_imposee": "",
-  "cp_disponible": 5,
-  "max_unites": 14,
+  "cp_disponible": 4,
+  "max_unites": 3,
   "unites_ennemis": [
     [
       "Zombie",

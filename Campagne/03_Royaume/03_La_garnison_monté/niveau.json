@@ -9,8 +9,8 @@
   "factions_autorisees": [],
   "faction_unique_requise": false,
   "faction_imposee": "",
-  "cp_disponible": 7,
-  "max_unites": 7,
+  "cp_disponible": 6,
+  "max_unites": 6,
   "unites_ennemis": [
     [
       "Cavalier",
@@ -39,25 +39,11 @@
         -1,
         6
       ]
-    ],
-    [
-      "Archer",
-      [
-        2,
-        6
-      ]
-    ],
-    [
-      "Cavalier",
-      [
-        3,
-        6
-      ]
     ]
   ],
   "difficulte_ennemis": "normale",
   "recompense_cp": 1,
-  "recompense_pa": 20,
+  "recompense_pa": 80,
   "unites_debloquees": [],
   "recompenses_autres": [],
   "completable_plusieurs_fois": false
