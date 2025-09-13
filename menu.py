@@ -296,7 +296,7 @@ class HexaMaster:
         self.etat = "jeu"
 
     def start_hexarene_faction(self):
-        """Lance le mode HexArène avec contrainte de faction"""
+        """Lance le mode HexArène avec contrainte de faction (joueur et IA sur même faction)"""
         # Utiliser le mode hexarene existant (qui a déjà la contrainte de faction)
         selector = UnitSelector(self.screen, "hexarene")
         player_units = selector.run()
@@ -304,15 +304,15 @@ class HexaMaster:
         if player_units is None:  # Annulé
             return
         
-        # Calculer le tier max du joueur pour l'IA
-        player_max_tier = max([cls("joueur", (0,0)).tier for cls in player_units]) if player_units else 1
+        # Déterminer la faction du joueur
+        player_faction = player_units[0]("joueur", (0,0)).faction if player_units else "Morts-Vivants"
         
-        # Sélection de l'IA
+        # Sélection de l'IA avec même faction
         import sauvegarde
         data = sauvegarde.charger()
-        ia_selector = IASelector("hexarene", 
+        ia_selector = IASelector("hexarene_faction", 
                                 player_cp=data.get("cp", 5),
-                                player_max_tier=player_max_tier)
+                                player_faction=player_faction)
         ia_units = ia_selector.select_units()
         
         self.jeu = Jeu(
@@ -323,32 +323,33 @@ class HexaMaster:
             enable_placement=True,
             mode_hexarene=True,  # Activer le mode hexarene
             hexarene_mode_type="faction",
-            faction_hexarene=player_units[0]("joueur", (0,0)).faction if player_units else "Inconnue"
+            faction_hexarene=player_faction
         )
         self.etat = "jeu"
 
     def start_hexarene_libre(self):
-        """Lance le mode HexArène sans contrainte de faction (mode mixte)"""
-        # Utiliser le mode mixte existant
+        """Lance le mode HexArène libre (joueur et IA peuvent mélanger les factions)"""
+        # Utiliser le mode mixte pour le joueur
         selector = UnitSelector(self.screen, "mixte")
         player_units = selector.run()
         
         if player_units is None:  # Annulé
             return
         
-        # Sélection de l'IA
+        # Sélection de l'IA libre (peut mélanger les factions)
         import sauvegarde
         data = sauvegarde.charger()
-        ia_selector = IASelector("mixte", cp_disponible=data.get("cp", 5))
+        ia_selector = IASelector("hexarene_libre", 
+                                player_cp=data.get("cp", 5))
         ia_units = ia_selector.select_units()
         
         self.jeu = Jeu(
-            ia_strategy=ia.ia_tactique_avancee,  # IA améliorée pour le mode mixte
+            ia_strategy=ia.ia_tactique_avancee,  # IA améliorée pour le mode libre
             screen=self.screen,
             initial_player_units=player_units,
             initial_enemy_units=ia_units,
             enable_placement=True,
-            mode_hexarene=True,  # Activer le mode hexarene aussi pour le mode libre
+            mode_hexarene=True,  # Activer le mode hexarene
             hexarene_mode_type="libre"
         )
         self.etat = "jeu"

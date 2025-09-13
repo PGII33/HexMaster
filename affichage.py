@@ -344,27 +344,36 @@ def dessiner_menu_fin_combat(jeu):
     titre_y = menu_y + 30
     jeu.screen.blit(txt_titre, (menu_x + (menu_width - txt_titre.get_width()) // 2, titre_y))
     
-    # Section récompenses
-    recomp_y = titre_y + 60
-    txt_recomp = jeu.font_norm.render("Récompenses :", True, NOIR)
-    jeu.screen.blit(txt_recomp, (menu_x + 50, recomp_y))
-    
-    # PA
-    pa_y = recomp_y + 40
-    txt_pa = jeu.font_norm.render(f"PA : +{jeu.recompenses['pa']}", True, (0, 100, 200))
-    jeu.screen.blit(txt_pa, (menu_x + 70, pa_y))
-    
-    # CP
-    cp_y = pa_y + 30
-    txt_cp = jeu.font_norm.render(f"CP : +{jeu.recompenses['cp']}", True, (200, 100, 0))
-    jeu.screen.blit(txt_cp, (menu_x + 70, cp_y))
-    
-    # Nouvelles unités
-    if jeu.recompenses['unites']:
-        unites_y = cp_y + 30
-        for i, unite in enumerate(jeu.recompenses['unites']):
-            txt_unite = jeu.font_norm.render(f"Nouvelle unité : {unite}", True, (100, 150, 100))
-            jeu.screen.blit(txt_unite, (menu_x + 70, unites_y + i * 25))
+    # Section récompenses (seulement si victoire et qu'il y a des récompenses)
+    if jeu.victoire and (jeu.recompenses['pa'] > 0 or jeu.recompenses['cp'] > 0 or jeu.recompenses['unites']):
+        recomp_y = titre_y + 60
+        txt_recomp = jeu.font_norm.render("Récompenses :", True, NOIR)
+        jeu.screen.blit(txt_recomp, (menu_x + 50, recomp_y))
+        
+        current_y = recomp_y + 40
+        
+        # PA (seulement si > 0)
+        if jeu.recompenses['pa'] > 0:
+            txt_pa = jeu.font_norm.render(f"PA : +{jeu.recompenses['pa']}", True, (0, 100, 200))
+            jeu.screen.blit(txt_pa, (menu_x + 70, current_y))
+            current_y += 30
+        
+        # CP (seulement si > 0)
+        if jeu.recompenses['cp'] > 0:
+            txt_cp = jeu.font_norm.render(f"CP : +{jeu.recompenses['cp']}", True, (200, 100, 0))
+            jeu.screen.blit(txt_cp, (menu_x + 70, current_y))
+            current_y += 30
+        
+        # Nouvelles unités
+        if jeu.recompenses['unites']:
+            for i, unite in enumerate(jeu.recompenses['unites']):
+                txt_unite = jeu.font_norm.render(f"Nouvelle unité : {unite}", True, (100, 150, 100))
+                jeu.screen.blit(txt_unite, (menu_x + 70, current_y + i * 25))
+    elif not jeu.victoire:
+        # Message de défaite sans récompenses
+        defaite_y = titre_y + 80
+        txt_defaite = jeu.font_norm.render("Aucune récompense accordée", True, (150, 150, 150))
+        jeu.screen.blit(txt_defaite, (menu_x + (menu_width - txt_defaite.get_width()) // 2, defaite_y))
     
     # Bouton Retour au menu principal
     btn_width = 200

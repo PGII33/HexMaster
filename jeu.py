@@ -361,8 +361,8 @@ class Jeu:
                     self.recompenses['unites'] = []
                 self.recompenses['unites'].extend(self.niveau_config.unites_debloquees)
         else:
-            # Récompenses minimales en cas de défaite
-            self.recompenses = {"pa": 1, "cp": 0, "unites": []}
+            # Aucune récompense en cas de défaite
+            self.recompenses = {"pa": 0, "cp": 0, "unites": []}
         
         # Sauvegarder les récompenses
         self.sauvegarder_recompenses()
