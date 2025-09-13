@@ -10,7 +10,7 @@
   "faction_unique_requise": false,
   "faction_imposee": "",
   "cp_disponible": 6,
-  "max_unites": 3,
+  "max_unites": 5,
   "unites_ennemis": [
     [
       "Esprit",
@@ -57,7 +57,7 @@
   ],
   "difficulte_ennemis": "normale",
   "recompense_cp": 1,
-  "recompense_pa": 80,
+  "recompense_pa": 20,
   "unites_debloquees": [],
   "recompenses_autres": [],
   "completable_plusieurs_fois": false
