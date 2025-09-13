@@ -476,7 +476,7 @@ class Clerc(Unite):
 
 class Fanatique(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Fanatique", pv=10, dmg=0, mv=2, tier=1, faction="Religieux", comp="explosion sacrée")
+        super().__init__(equipe, pos, nom="Fanatique", pv=10, dmg=0, mv=3, tier=1, faction="Religieux", comp="explosion sacrée")
 
 class Esprit_Saint(Unite):
     def __init__(self, equipe, pos):
@@ -542,7 +542,7 @@ class Guerrier(Unite):
 
 class Archer(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Archer", pv=6, dmg=2, mv=2, tier=1, faction="Royaume", comp="pluie de flèches", portee=2)
+        super().__init__(equipe, pos, nom="Archer", pv=6, dmg=2, mv=1, tier=1, faction="Royaume", comp="pluie de flèches", portee=2)
 
 class Cavalier(Unite):
     def __init__(self, equipe, pos):
@@ -554,7 +554,7 @@ class Bouffon(Unite):
 
 class Garde_Royal(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Garde royal", pv=15, dmg=3, mv=2, tier=2, faction="Royaume", comp="protection")
+        super().__init__(equipe, pos, nom="Garde royal", pv=15, dmg=3, mv=1, tier=2, faction="Royaume", comp="protection")
 
 class Roi(Unite):
     def __init__(self, equipe, pos):
