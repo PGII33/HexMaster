@@ -236,10 +236,10 @@ def pluie_de_fleches(self, cible_pos, toutes_unites):
         case_adjacente = (q_cible + dq, r_cible + dr)
         cases_affectees.append(case_adjacente)
     
-    # Attaquer toutes les unités ennemies dans les cases affectées
+    # Attaquer TOUTES les unités dans les cases affectées (y compris les alliés)
     unites_touchees = []
     for unite in toutes_unites:
-        if unite.pos in cases_affectees and unite.equipe != self.equipe and unite.vivant:
+        if unite.pos in cases_affectees and unite != self and unite.vivant:  # Touche tout sauf l'archer lui-même
             # Appliquer la protection si applicable
             degats_infliges = protection(unite, self.dmg, toutes_unites)
             unites_touchees.append(unite)
@@ -730,7 +730,7 @@ COMPETENCES = {
     "combustion différée": "Les cibles touchées meurent au bout de 3 tours ennemis.",
     
     # Nouvelles compétences actives
-    "pluie de flèches": "Attaque de zone : inflige des dégâts à la cible et toutes les unités adjacentes.",
+    "pluie de flèches": "Attaque de zone : inflige des dégâts à toutes les unités (alliées et ennemies) sur la cible et les cases adjacentes. Ne consomme pas l'attaque.",
     "monture libéré": "Se transforme en Guerrier et invoque un Cheval allié sur une case adjacente.",
     "commandement": "Augmente l'attaque d'un allié de +3 et lui donne +2 dégâts pour le prochain tour.",
     "divertissement": "Si il a encore des attaques en fin de tour, réduit les attaques des ennemis adjacents de 1.",
