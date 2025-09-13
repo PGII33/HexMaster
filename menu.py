@@ -209,17 +209,12 @@ class HexaMaster:
 
     def start_campagne(self):
         """Lance le mode campagne"""
-        # Créer la structure de campagne si elle n'existe pas
+        # Vérifier si la structure de campagne existe
         campaign_path = resource_path("Campagne")
         if not os.path.exists(campaign_path):
-            print("Création de la structure de campagne...")
-            try:
-                from create_demo_levels import creer_niveaux_demo
-                creer_niveaux_demo()
-                print("Structure de campagne créée avec succès")
-            except Exception as e:
-                print(f"Erreur: Impossible de créer la structure de campagne - {e}")
-                return
+            print("Aucune campagne trouvée dans le dossier Campagne/")
+            print("Veuillez créer manuellement la structure de campagne ou ajouter des niveaux.")
+            return
         
         campagne = Campagne(self.screen)
         niveau_info = campagne.run()

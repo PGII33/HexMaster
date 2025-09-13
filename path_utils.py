@@ -90,6 +90,10 @@ def get_save_path():
         # Mode développement : sauvegarde locale
         return Path(__file__).parent / "sauvegarde.json"
 
+def ensure_directory(path):
+    """S'assure qu'un répertoire existe, le crée si nécessaire"""
+    Path(path).mkdir(parents=True, exist_ok=True)
+
 # Initialiser les répertoires au chargement du module (seulement en mode EXE)
 if __name__ != "__main__" and getattr(sys, 'frozen', False):
     try:
