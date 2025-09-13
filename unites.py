@@ -504,7 +504,7 @@ class ArchAnge(Unite):
 
 class Cristal(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Cristal", pv=10, dmg=0, mv=0, tier=0, faction="Élémentaires", attaque_max=0, comp="effondrement")
+        super().__init__(equipe, pos, nom="Cristal", pv=10, dmg=0, mv=0, tier=0, faction="Élémentaires", attaque_max=0)
 
 class Esprit(Unite):
     def __init__(self, equipe, pos):

@@ -715,40 +715,41 @@ def utiliser_competence_active(unite, nom_competence, cible, toutes_unites=None)
 # Dictionnaire des compétences (nom -> description)
 COMPETENCES = {
     # Morts-Vivants
-    "sangsue": "Augmente sa vie du nombre de dégâts infligés.",
-    "zombification": "Transforme l'unite ennemie tuée en zombie",
-    "tas d'os": "À la mort, un tas d'os d'1PV apparaît sur la cellule.",
-    "fantomatique": "Se déplace au travers des unites gratuitement.",
-    "nécromancie": "Crée un squelette sur une case adjacente (chaque tour).",
-    "invocation": "Invoque une unité de tier 1 ou 2 des Morts-Vivants sur une case adjacente (chaque tour).",
+    "sangsue": "Récupère des PV égaux aux dégâts infligés (peut dépasser le maximum).",
+    "zombification": "Transforme l'unité ennemie tuée en zombie allié.",
+    "tas d'os": "À la mort, se transforme en Tas d'Os de 1 PV.",
+    "fantomatique": "Traverse les unités gratuitement (0 PM pour traverser, 1 PM par case vide).",
+    "nécromancie": "Invoque un Squelette sur une case adjacente libre chaque tour.",
+    "invocation": "Invoque aléatoirement une unité Morts-Vivants (tier 1-2) sur une case adjacente libre chaque tour.",
     
     # Religieux
-    "soin": "Soigne un allié de 5 points de vie.",
-    "explosion sacrée": "Se sacrifie en attaquant pour infliger ses points de vie en dégâts à la cible et aux ennemis adjacents.",
-    "bouclier de la foi": "2 Bouclier sur les unités alliées autour de soi (chaque tour).",
-    "bénédiction": "Augmente l'attaque et donne 1 bouclier à un allié.",
-    "lumière vengeresse": "Regagne son attaque lorsqu'il tue un Mort-Vivant (passif).",
-    "aura sacrée": "Bonus de dégâts pour tout les alliés adjacents (chaque tour).",
+    "soin": "Soigne un allié de 5 PV (maximum PV max de la cible).",
+    "explosion sacrée": "Se sacrifie pour infliger ses PV actuels en dégâts à la cible attaquée uniquement.",
+    "bouclier de la foi": "Donne 1 point de bouclier à tous les alliés adjacents chaque tour.",
+    "bénédiction": "Augmente définitivement l'attaque de +2 et donne 1 bouclier à un allié.",
+    "lumière vengeresse": "Regagne 1 attaque et peut continuer d'agir quand il tue un Mort-Vivant.",
+    "aura sacrée": "Augmente définitivement l'attaque de +3 pour tous les alliés adjacents tant qu'il vit.",
     
     # Élémentaires
-    "enracinement": "Si l'unité n'a pas bougé en fin de tour, régénère 2 PV.",
-    "vague apaisante": "Soigne les unités alliées adjacentes de 2 PV (chaque tour).",
-    "renaissance": "80% de chance de revenir à la vie avec tous ses PV à la mort.",
+    "enracinement": "Régénère 2 PV en fin de tour si l'unité n'a pas bougé.",
+    "vague apaisante": "Soigne tous les alliés adjacents de 2 PV chaque tour.",
+    "renaissance": "80% de chance de revenir à la vie avec tous ses PV quand elle meurt.",
     "armure de pierre": "Réduit tous les dégâts reçus de 2 points (minimum 0).",
-    "combustion différée": "Les cibles touchées meurent au bout de 3 tours ennemis.",
+    "combustion différée": "L'unité touchée meurt automatiquement au bout de 3 tours ennemis.",
     
-    # Nouvelles compétences actives
-    "pluie de flèches": "Attaque de zone : inflige des dégâts à toutes les unités (alliées et ennemies) sur la cible et les cases adjacentes. Ne consomme pas l'attaque. (Utilisable 1 tour sur 2)",
-    "monture libéré": "Se transforme en Guerrier et invoque un Cheval allié sur une case adjacente.",
-    "commandement": "Augmente l'attaque d'un allié de +3, lui donne +2 dégâts pour le prochain tour, et +1 attaque supplémentaire. Ne consomme pas d'attaque.",
-    "divertissement": "Si il a encore des attaques en fin de tour, réduit les attaques de toutes les unités adjacentes (alliées et ennemies) de 1.",
-    "protection": "Subit les dégâts à la place des alliés adjacents attaqués (dégâts partagés entre protecteurs).",
-    "manipulation": "Toutes les unités avec 4PV ou moins passent dans votre camp (fin de tour, tant qu'elles ont ≤4 PV).",
-    "regard mortel": "L'ennemi touché est mort instantanément s'il est de tier 2 ou moins.",
-    "rage": "Augmente l'attaque de 1 par attaque (accumulation permanente).",
-    "vol": "Ignore la première attaque subie.",
-    "tir précis": "Attaque à distance ignorant les obstacles avec +3 dégâts. (Utilisable 1 tour sur 2)",
-    "venin incapacitant": "Une cible touchée ne peut plus se déplacer pour son prochain tour.",
-    "sédition venimeuse": "La créature attaquée attaque une autre créature alliée adjacente s'il y en a une.",
-    "tir précis": "Attaque à portée +1 avec dégâts x1.5 (tous les 2 tours).",
+    # Royaume - Compétences actives
+    "pluie de flèches": "Attaque de zone (portée 3) : inflige des dégâts à la cible et toutes les cases adjacentes, y compris aux alliés. Utilisable tous les 2 tours.",
+    "monture libéré": "Se transforme en Guerrier à une case adjacente libre et crée un Cheval allié à sa position d'origine.",
+    "commandement": "Donne +3 attaque temporaire et +1 attaque supplémentaire à un allié (portée 2). N'utilise pas d'attaque.",
+    "divertissement": "Si il reste des attaques en fin de tour, toutes les unités adjacentes perdent 1 attaque au tour suivant.",
+    "protection": "Subit les dégâts à la place des alliés adjacents (le protecteur le plus résistant prend tous les dégâts).",
+    "manipulation": "Toutes les unités ennemies avec ≤4 PV rejoignent temporairement votre camp tant qu'elles ont ≤4 PV.",
+    
+    # Chimères - Compétences actives/passives
+    "regard mortel": "Tue instantanément les unités ennemies de tier ≤2 touchées.",
+    "rage": "Gagne définitivement +1 attaque après chaque attaque effectuée.",
+    "vol": "Ignore complètement la première attaque subie.",
+    "tir précis": "Attaque à portée +1 avec dégâts x1.5. Utilisable tous les 2 tours.",
+    "venin incapacitant": "L'unité touchée ne peut pas se déplacer au tour suivant.",
+    "sédition venimeuse": "L'unité attaquée est forcée d'attaquer un allié adjacent si possible.",
 }

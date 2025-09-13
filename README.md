@@ -83,7 +83,7 @@ Les unités du jeu sont séparés en différentes "factions" il s'agit de groupe
 
 | Nom       | Tier | Compétences       |
 |-----------|------|-------------------|
-| Cristal   | 0    |Effondrement       |
+| Cristal   | 0    |                   |
 | Esprit    | 1    |                   |
 | Driade    | 1    |Enracinement       |
 | Gnome     | 1    |Cristalisation     |
@@ -120,37 +120,36 @@ Les unités du jeu sont séparés en différentes "factions" il s'agit de groupe
 
 ## Description des compétences
     
-    Aura sacrée : Bonus de dégâts pour tout les alliés adjacents.
-    Armure de pierre : Dégats subis moins 2.
-    Benediction : Augemente l'attaque et la vie de la cible.
-    Bouclier de la foi : 2 Bouclier sur les unités autour de soi.
-    Combustion Différée : Toute unité touché meurt au bout de 3 tours.
-    Commandement : Une attaque supplémentaire avec des dégats additionnels (dmg) pour la cible.
-    Cristallisation : Crée un cristal de 10PV sur une case adjacente sélectionnée qui se brise au prochain tour.
-    Divertissement : S'il lui reste une attaque, divertis les ennemis adjacents qui perdent une attaque (fin de tour).
-    Effondrement : Meurt à son tour.
-    Enracinement : Gagne 2PV si aucun déplacement n'a été fait ce tour ci.
-    Explosion sacrée : Se sacrifie pour infliger ses points de vie en dégats.
-    Fantomatique : Se déplace au travers des unites gratuitement.
-    Invocation : Invoque une unitée de tier 1 ou 2 des Morts-Vivants sur une case adjacente (chaque tour).
-    Lumière Vengeresse : Regagne son attaque lorsqu'il tue un Mort-Vivant.
-    Manipulation : Toutes les unités avec 4PV ou moins passent dans votre camp (chaque tour, début du tour, pour un tour)
-    Monture libéré : Descend de son cheval pour se battre en guerrier (le cheval devient indépendant).
-    Nécromancie : Crée un squelette sur une case adjacente (chaque tour).
-    Rage : Augemente l'attaque de 1 par attaque.
-    Regard mortel : L'ennemie touché est mort s'il est de tier 2 ou moins.
-    Renaissance : 80% de chance de revivre après sa mort.
-    Pluie de flèches : Inflige ses dégats sur un rayon de 2 cellules juqu'à 3 cases de distances.
-    Protection : Si une unité allié est adjacente est attaqué, cette unité subit les dégats à sa place. (si l'unité qui subit les dégats a la même capacité, les dégats sont partagés pour équilibrer les PV)
-    Tas d'os : À la mort, un tas d'os d'1PV apparaît sur la cellule.
-    Sangsue : Augmente sa vie du nombre de dégâts infligés.
-    Sédition venimeuse : La créature attaquée attaque une autre créature alliée adjacente s'il y en a une.
-    Soin : Régénère 5 points de vie.
-    Tir Précis : Permet de tirer à porté + 1 en plus de son attaque tout les 2 tours et d'infliger dmg * 1.5.
-    Vague apaisante : Soigne 2 PV aux unités adjacentes.
-    Venin incapacitant : Une cible touchée ne peut plus se déplacer pour son prochain tour.
-    Vol : Ignore la première attaque subie.
-    Zombification : Transforme l'unite ennemie tuée en zombie.
+    Aura sacrée : Augmente définitivement l'attaque de +3 pour tous les alliés adjacents tant qu'il vit.
+    Armure de pierre : Réduit tous les dégâts reçus de 2 points (minimum 0).
+    Bénédiction : Augmente définitivement l'attaque de +2 et donne 1 bouclier à un allié.
+    Bouclier de la foi : Donne 1 point de bouclier à tous les alliés adjacents chaque tour.
+    Combustion différée : L'unité touchée meurt automatiquement au bout de 3 tours ennemis.
+    Commandement : Donne +3 attaque temporaire et +1 attaque supplémentaire à un allié (portée 2). N'utilise pas d'attaque.
+    Cristalisation : Crée un cristal de 10PV sur une case adjacente sélectionnée qui se brise au prochain tour.
+    Divertissement : Si il reste des attaques en fin de tour, toutes les unités adjacentes perdent 1 attaque au tour suivant.
+    Enracinement : Régénère 2 PV en fin de tour si l'unité n'a pas bougé.
+    Explosion sacrée : Se sacrifie pour infliger ses PV actuels en dégâts à la cible attaquée uniquement.
+    Fantomatique : Traverse les unités gratuitement (0 PM pour traverser, 1 PM par case vide).
+    Invocation : Invoque aléatoirement une unité Morts-Vivants (tier 1-2) sur une case adjacente libre chaque tour.
+    Lumière vengeresse : Regagne 1 attaque et peut continuer d'agir quand il tue un Mort-Vivant.
+    Manipulation : Toutes les unités ennemies avec ≤4 PV rejoignent temporairement votre camp tant qu'elles ont ≤4 PV.
+    Monture libéré : Se transforme en Guerrier à une case adjacente libre et crée un Cheval allié à sa position d'origine.
+    Nécromancie : Invoque un Squelette sur une case adjacente libre chaque tour.
+    Rage : Gagne définitivement +1 attaque après chaque attaque effectuée.
+    Regard mortel : Tue instantanément les unités ennemies de tier ≤2 touchées.
+    Renaissance : 80% de chance de revenir à la vie avec tous ses PV quand elle meurt.
+    Pluie de flèches : Attaque de zone (portée 3) : inflige des dégâts à la cible et toutes les cases adjacentes, y compris aux alliés. Utilisable tous les 2 tours.
+    Protection : Subit les dégâts à la place des alliés adjacents (le protecteur le plus résistant prend tous les dégâts).
+    Tas d'os : À la mort, se transforme en Tas d'Os de 1 PV.
+    Sangsue : Récupère des PV égaux aux dégâts infligés (peut dépasser le maximum).
+    Sédition venimeuse : L'unité attaquée est forcée d'attaquer un allié adjacent si possible.
+    Soin : Soigne un allié de 5 PV (maximum PV max de la cible).
+    Tir précis : Attaque à portée +1 avec dégâts x1.5. Utilisable tous les 2 tours.
+    Vague apaisante : Soigne tous les alliés adjacents de 2 PV chaque tour.
+    Venin incapacitant : L'unité touchée ne peut pas se déplacer au tour suivant.
+    Vol : Ignore complètement la première attaque subie.
+    Zombification : Transforme l'unité ennemie tuée en zombie allié.
 
 ## Extra
 
