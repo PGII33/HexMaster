@@ -461,32 +461,16 @@ def protection(cible_originale, degats, toutes_unites):
         degats_infliges = protecteur.subir_degats(degats_apres_armure_cible)
         return degats_infliges
     else:
-        # Plusieurs protecteurs : partager les dégâts réduits pour équilibrer les PV
+        # Plusieurs protecteurs : celui avec le plus de PV prend tous les dégâts
         print(f" {len(protecteurs)} gardes protègent {cible_originale.nom}!")
         
-        # ÉTAPE 3: Calculer comment répartir les dégâts déjà réduits
-        degats_restants = degats_apres_armure_cible
-        degats_total_infliges = 0
+        # Choisir le protecteur avec le plus de PV
+        protecteur_choisi = max(protecteurs, key=lambda u: u.pv)
+        print(f" {protecteur_choisi.nom} (le plus résistant) prend tous les dégâts!")
         
-        # Trier les protecteurs par PV (ceux avec plus de PV prennent plus de dégâts)
-        protecteurs_tries = sorted(protecteurs, key=lambda u: u.pv, reverse=True)
-        
-        for i, protecteur in enumerate(protecteurs_tries):
-            if i == len(protecteurs_tries) - 1:
-                # Dernier protecteur prend le reste
-                degats_pour_ce_protecteur = degats_restants
-            else:
-                # Répartir équitablement les dégâts déjà réduits
-                degats_pour_ce_protecteur = degats_restants // (len(protecteurs_tries) - i)
-            
-            if degats_pour_ce_protecteur > 0:
-                # Chaque protecteur applique ses propres défenses sur sa part
-                degats_infliges = protecteur.subir_degats(degats_pour_ce_protecteur)
-                degats_total_infliges += degats_infliges
-                degats_restants -= degats_pour_ce_protecteur
-                print(f"  {protecteur.nom} subit {degats_pour_ce_protecteur} dégâts (post-armure cible) → {degats_infliges} effectifs")
-        
-        return degats_total_infliges
+        # Le protecteur choisi applique ses propres défenses sur les dégâts déjà réduits
+        degats_infliges = protecteur_choisi.subir_degats(degats_apres_armure_cible)
+        return degats_infliges
 
 # ========== COMPÉTENCES ÉLÉMENTAIRES ==========
 

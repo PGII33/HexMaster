@@ -212,10 +212,14 @@ class Unite:
                 self.bouclier = 0
                 # Les dégâts restants vont aux PV
                 self.pv -= degats_aux_pv
-                return degats  # Retourner les dégâts réellement subis (après armure)
+        else:
+            # Les dégâts vont directement aux PV
+            self.pv -= degats
         
-        # Les dégâts vont directement aux PV
-        self.pv -= degats
+        # Vérifier si l'unité doit mourir
+        if self.pv <= 0 and self.vivant:
+            self.mourir([])  # Appel basique, sera surchargé si nécessaire
+        
         return degats  # Retourner les dégâts réellement subis (après armure)
     
     def appliquer_degats_avec_protection(self, cible, degats, toutes_unites):
@@ -546,7 +550,7 @@ class Cavalier(Unite):
 
 class Bouffon(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Bouffon", pv=9, dmg=2, mv=2, tier=2, faction="Royaume", comp="divertissement")
+        super().__init__(equipe, pos, nom="Bouffon", pv=9, dmg=1, mv=2, tier=2, faction="Royaume", comp="divertissement")
 
 class Garde_Royal(Unite):
     def __init__(self, equipe, pos):
