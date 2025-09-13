@@ -464,7 +464,7 @@ class Archliche(Unite):
 
 class Missionnaire(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Missionnaire", pv=12, dmg=2, mv=2, tier=1, faction="Religieux")
+        super().__init__(equipe, pos, nom="Missionnaire", pv=12, dmg=2, mv=3, tier=1, faction="Religieux")
 
 class Clerc(Unite):
     def __init__(self, equipe, pos):
@@ -538,7 +538,7 @@ class Guerrier(Unite):
 
 class Archer(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Archer", pv=6, dmg=3, mv=2, tier=1, faction="Royaume", comp="pluie de flèches", portee=2)
+        super().__init__(equipe, pos, nom="Archer", pv=6, dmg=2, mv=2, tier=1, faction="Royaume", comp="pluie de flèches", portee=2)
 
 class Cavalier(Unite):
     def __init__(self, equipe, pos):
