@@ -37,13 +37,30 @@ def evaluer_utilite_competence(unite, competence, cible, tous_unites):
         if cible.equipe == unite.equipe:  # Allié
             pv_manquants = cible.pv_max - cible.pv
             if pv_manquants > 0:
-                # Plus l'allié est blessé, plus c'est urgent
-                score = min(pv_manquants * 20, 80)
+                # Base score selon les PV manquants
+                score = min(pv_manquants * 15, 70)
+                
                 # Bonus si l'allié est puissant (tier élevé)
-                score += cible.tier * 5
-                # Bonus si l'allié est en danger (PV très bas)
+                score += cible.tier * 8
+                
+                # PRIORITÉ ABSOLUE si l'allié est critique (PV très bas)
                 if cible.pv <= 2:
-                    score += 30
+                    score += 60  # Score très élevé pour les alliés critiques
+                elif cible.pv <= cible.pv_max // 2:  # À moins de 50% PV
+                    score += 30  # Score élevé pour les alliés blessés
+                
+                # Bonus si l'allié a des compétences importantes
+                if hasattr(cible, 'comp'):
+                    competences_importantes = ["soin", "bénédiction", "commandement", "explosion sacrée"]
+                    if cible.comp in competences_importantes:
+                        score += 15
+                
+                # Bonus si l'allié peut encore agir (attaques ou mouvements restants)
+                if hasattr(cible, 'attaque_restantes') and cible.attaque_restantes > 0:
+                    score += 10
+                if hasattr(cible, 'pm') and cible.pm > 0:
+                    score += 5
+                    
         return score
     
     elif competence == "bénédiction":
@@ -61,6 +78,61 @@ def evaluer_utilite_competence(unite, competence, cible, tous_unites):
                 score += 30
         return score
     
+    elif competence == "pluie de flèches":
+        # Évalue l'efficacité d'une attaque de zone
+        if cible.equipe != unite.equipe:  # Ennemi (position de référence)
+            score = 0
+            # Compter les unités qui seraient touchées autour de cette position
+            directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
+            cases_affectees = [cible.pos]  # Position centrale
+            
+            # Ajouter les cases adjacentes
+            for dq, dr in directions:
+                case_adj = (cible.pos[0] + dq, cible.pos[1] + dr)
+                cases_affectees.append(case_adj)
+            
+            # Calculer le score selon les unités touchées
+            for case in cases_affectees:
+                for u in tous_unites:
+                    if u.pos == case and u.vivant:
+                        if u.equipe != unite.equipe:  # Ennemi touché = bon
+                            score += 35 + (u.tier * 5)
+                            if u.pv <= unite.dmg:  # Peut être tué
+                                score += 20
+                        else:  # Allié touché = mauvais
+                            score -= 25
+        return score
+    
+    elif competence == "tir précis":
+        if cible.equipe != unite.equipe:  # Ennemi
+            # Priorité aux cibles importantes avec dégâts augmentés
+            score = 40  # Score de base pour tir précis (dégâts x2)
+            score += cible.tier * 8
+            # Bonus si on peut tuer la cible d'un coup avec dégâts doublés
+            if cible.pv <= unite.dmg * 2:
+                score += 35
+            # Malus si trop loin
+            distance = hex_distance(unite.pos, cible.pos)
+            score -= distance * 3
+        return score
+    
+    elif competence == "commandement":
+        if cible.equipe == unite.equipe:  # Allié
+            # Donner +1 attaque à un allié qui peut l'utiliser
+            score = 0
+            if hasattr(cible, 'attaque_restantes'):
+                # Bonus selon le potentiel offensif de l'allié
+                score += cible.dmg * 8 + cible.tier * 6
+                # Gros bonus si l'allié n'a plus d'attaques
+                if cible.attaque_restantes == 0:
+                    score += 40
+                # Bonus si l'allié a des ennemis à portée
+                ennemis_a_portee = [u for u in tous_unites 
+                                  if u.vivant and u.equipe != cible.equipe 
+                                  and est_a_portee_pos(cible.pos, u.pos, cible.portee)]
+                score += len(ennemis_a_portee) * 15
+        return score
+    
     return 0
 
 def peut_utiliser_competence_active(unite, competence, tous_unites):
@@ -72,15 +144,25 @@ def peut_utiliser_competence_active(unite, competence, tous_unites):
     
     if not est_competence_active(competence):
         return False
-        
-    if unite.attaque_restantes <= 0:
+    
+    # Vérifier le cooldown
+    if hasattr(unite, 'cooldown_actuel') and unite.cooldown_actuel > 0:
         return False
-        
+    
+    # Vérifier si déjà utilisée ce tour
+    if hasattr(unite, 'competence_utilisee_ce_tour') and unite.competence_utilisee_ce_tour:
+        return False
+    
+    # Compétences qui ne nécessitent pas d'attaque restante
+    competences_sans_attaque = ["soin", "pluie de flèches", "commandement"]
+    if unite.comp not in competences_sans_attaque and unite.attaque_restantes <= 0:
+        return False
+    
     return True
 
 def trouver_meilleure_cible_competence(unite, competence, tous_unites):
     """Trouve la meilleure cible pour une compétence active."""
-    from competences import peut_cibler_allie, peut_cibler_ennemi
+    from competences import peut_cibler_allie, peut_cibler_ennemi, peut_cibler_case_vide
     
     cibles_potentielles = []
     
@@ -90,20 +172,28 @@ def trouver_meilleure_cible_competence(unite, competence, tous_unites):
     else:
         portee_competence = unite.portee  # Portée normale pour les autres compétences
     
-    # Collecter les cibles possibles
-    for cible in tous_unites:
-        if not cible.vivant or cible == unite:
-            continue
-            
-        # Vérifier si on peut cibler cette unité
-        if cible.equipe == unite.equipe and peut_cibler_allie(competence):
-            # C'est un allié et on peut cibler les alliés
-            if est_a_portee_pos(unite.pos, cible.pos, portee_competence):
-                cibles_potentielles.append(cible)
-        elif cible.equipe != unite.equipe and peut_cibler_ennemi(competence):
-            # C'est un ennemi et on peut cibler les ennemis
-            if est_a_portee_pos(unite.pos, cible.pos, portee_competence):
-                cibles_potentielles.append(cible)
+    # Gestion spéciale pour les compétences de zone (comme pluie de flèches)
+    if peut_cibler_case_vide(competence) and competence == "pluie de flèches":
+        # Pour pluie de flèches, on évalue les positions centrées sur les ennemis
+        ennemis = [u for u in tous_unites if u.vivant and u.equipe != unite.equipe]
+        for ennemi in ennemis:
+            if est_a_portee_pos(unite.pos, ennemi.pos, portee_competence):
+                cibles_potentielles.append(ennemi)  # Utiliser l'ennemi comme référence de position
+    else:
+        # Logique normale pour les autres compétences
+        for cible in tous_unites:
+            if not cible.vivant or cible == unite:
+                continue
+                
+            # Vérifier si on peut cibler cette unité
+            if cible.equipe == unite.equipe and peut_cibler_allie(competence):
+                # C'est un allié et on peut cibler les alliés
+                if est_a_portee_pos(unite.pos, cible.pos, portee_competence):
+                    cibles_potentielles.append(cible)
+            elif cible.equipe != unite.equipe and peut_cibler_ennemi(competence):
+                # C'est un ennemi et on peut cibler les ennemis
+                if est_a_portee_pos(unite.pos, cible.pos, portee_competence):
+                    cibles_potentielles.append(cible)
     
     if not cibles_potentielles:
         return None
@@ -118,7 +208,14 @@ def trouver_meilleure_cible_competence(unite, competence, tous_unites):
             meilleur_score = score
             meilleure_cible = cible
     
-    return meilleure_cible if meilleur_score > 30 else None  # Seuil minimum d'utilité
+    # Seuil adaptatif selon la compétence
+    seuil_minimum = 30  # Seuil par défaut
+    if competence == "soin":
+        seuil_minimum = 15  # Seuil plus bas pour permettre plus de soins
+    elif competence == "bénédiction":
+        seuil_minimum = 25  # Seuil modéré pour bénédiction
+    
+    return meilleure_cible if meilleur_score > seuil_minimum else None
 
 def utiliser_competence_immediate(unite, tous_unites):
     """Utilise les compétences qui ne nécessitent pas de cible (comme explosion sacrée)."""
@@ -199,7 +296,7 @@ def cible_faible(unite, ennemis, unites):
         action_effectuee = "competence"
     
     # Phase 2: Essayer d'utiliser des compétences actives sur des cibles
-    if hasattr(unite, 'comp') and unite.attaque_restantes > 0:
+    if hasattr(unite, 'comp') and peut_utiliser_competence_active(unite, unite.comp, unites):
         meilleure_cible = trouver_meilleure_cible_competence(unite, unite.comp, unites)
         if meilleure_cible:
             unite.utiliser_competence(meilleure_cible, unites)
@@ -290,41 +387,36 @@ def ia_tactique_avancee(unite, ennemis, unites):
         return None
     
     # Phase 2: Compétences de support prioritaires
-    if hasattr(unite, 'comp') and unite.attaque_restantes > 0:
+    if hasattr(unite, 'comp') and peut_utiliser_competence_active(unite, unite.comp, unites):
         competence = unite.comp
         
-        # Soigner un allié critique en priorité
+        # Soigner un allié critique en priorité (logique assouplie)
         if competence == "soin":
-            allie_critique = None
-            for allie in allies:
-                if allie.pv <= 2 and est_a_portee_pos(unite.pos, allie.pos, unite.portee):
-                    if allie_critique is None or allie.pv < allie_critique.pv:
-                        allie_critique = allie
-            
-            if allie_critique:
-                unite.utiliser_competence(allie_critique, unites)
-                return "competence_urgente"
+            meilleure_cible = trouver_meilleure_cible_competence(unite, competence, unites)
+            if meilleure_cible:
+                unite.utiliser_competence(meilleure_cible, unites)
+                return "competence_soin"
         
         # Bénédiction sur l'allié le plus offensif qui peut attaquer
         elif competence == "bénédiction":
-            meilleur_allie = None
-            meilleur_potentiel = 0
-            
-            for allie in allies:
-                if (est_a_portee_pos(unite.pos, allie.pos, unite.portee) and 
-                    allie.attaque_restantes > 0):
-                    # Calcule le potentiel offensif
-                    ennemis_accessibles = [e for e in ennemis_vivants 
-                                         if est_a_portee_pos(allie.pos, e.pos, allie.portee)]
-                    potentiel = allie.dmg * len(ennemis_accessibles) + allie.tier * 5
-                    
-                    if potentiel > meilleur_potentiel:
-                        meilleur_potentiel = potentiel
-                        meilleur_allie = allie
-            
-            if meilleur_allie and meilleur_potentiel > 15:
-                unite.utiliser_competence(meilleur_allie, unites)
-                return "competence_support"
+            meilleure_cible = trouver_meilleure_cible_competence(unite, competence, unites)
+            if meilleure_cible:
+                unite.utiliser_competence(meilleure_cible, unites)
+                return "competence_benediction"
+        
+        # Commandement : donner une attaque supplémentaire
+        elif competence == "commandement":
+            meilleure_cible = trouver_meilleure_cible_competence(unite, competence, unites)
+            if meilleure_cible:
+                unite.utiliser_competence(meilleure_cible, unites)
+                return "competence_commandement"
+        
+        # Attaques spéciales à cooldown
+        elif competence in ["pluie de flèches", "tir précis"]:
+            meilleure_cible = trouver_meilleure_cible_competence(unite, competence, unites)
+            if meilleure_cible:
+                unite.utiliser_competence(meilleure_cible, unites)
+                return f"competence_{competence.replace(' ', '_')}"
     
     # Phase 3: Utiliser compétences immédiates si pertinent
     if utiliser_competence_immediate(unite, unites):
@@ -336,6 +428,25 @@ def ia_tactique_avancee(unite, ennemis, unites):
 
 def _strategie_attaque_adaptative(unite, ennemis, unites, allies):
     """Stratégie d'attaque qui s'adapte à la situation tactique."""
+    
+    # PHASE DÉFENSIVE AVANCÉE : Vérifier si une stratégie défensive est prioritaire
+    if should_use_golem_blocking(unite, ennemis, allies):
+        accessibles = unite.cases_accessibles(unites)
+        accessibles = dict(accessibles)
+        accessibles.setdefault(unite.pos, 0)
+        
+        position_blocage = find_optimal_blocking_position(unite, ennemis, allies, accessibles)
+        if position_blocage and position_blocage != unite.pos:
+            cout = accessibles[position_blocage]
+            if cout <= unite.pm:
+                unite.pos = position_blocage
+                unite.pm -= cout
+                return "blocage_defensif"
+    
+    # PHASE TACTIQUE PASSIVE : Appliquer des stratégies spécialisées selon les passifs
+    result_tactique = apply_advanced_passive_tactics(unite, ennemis, allies, unites)
+    if result_tactique:
+        return result_tactique
     
     # Évaluer les cibles selon plusieurs critères
     meilleures_cibles = []
@@ -432,7 +543,9 @@ def _evaluer_cible(unite, ennemi, unites, allies):
         if ennemi.comp in competences_dangereuses:
             score += 15
     
-    # BONUS SPÉCIAL: Lumière vengeresse contre les morts-vivants
+    # --- BONUS SPÉCIAUX BASÉS SUR LES PASSIFS OFFENSIFS ---
+    
+    # LUMIÈRE VENGERESSE contre les morts-vivants
     if (hasattr(unite, 'comp') and unite.comp == "lumière vengeresse" and 
         hasattr(ennemi, 'faction') and ennemi.faction == "Morts-Vivants"):
         # Gros bonus pour cibler les morts-vivants car cela donne une attaque supplémentaire
@@ -441,6 +554,82 @@ def _evaluer_cible(unite, ennemi, unites, allies):
         if ennemi.pv <= unite.dmg:
             score += 50
     
+    # RAGE - Prioriser les ennemis qu'on peut enchaîner pour accumuler rage
+    if hasattr(unite, 'comp') and unite.comp == "rage":
+        # Bonus si on peut tuer l'ennemi (rage s'accumule)
+        if ennemi.pv <= unite.dmg:
+            score += 25
+            # Bonus supplémentaire si il y a d'autres ennemis à portée après
+            autres_ennemis_proches = [e for e in unites 
+                                     if (e.vivant and e.equipe != unite.equipe 
+                                         and e != ennemi 
+                                         and hex_distance(ennemi.pos, e.pos) <= 2)]
+            score += len(autres_ennemis_proches) * 10
+    
+    # SANGSUE - Prioriser les combats soutenus contre ennemis durables
+    if hasattr(unite, 'comp') and unite.comp == "sangsue":
+        # Bonus si l'ennemi a beaucoup de PV (plus de sustain)
+        if ennemi.pv > unite.pv:
+            score += 20
+        # Bonus si on peut faire des dégâts élevés
+        score += min(unite.dmg, ennemi.pv) * 5
+    
+    # REGARD MORTEL - Prioriser les ennemis tier 2 ou moins
+    if hasattr(unite, 'comp') and unite.comp == "regard mortel":
+        if ennemi.tier <= 2:
+            score += 60  # Très haute priorité pour insta-kill
+            # Bonus encore plus important si l'ennemi a beaucoup de PV
+            if ennemi.pv > unite.dmg:
+                score += 40  # Économise beaucoup d'attaques
+    
+    # TIR PRÉCIS - Évaluer avec dégâts doublés
+    if hasattr(unite, 'comp') and unite.comp == "tir précis":
+        if hasattr(unite, 'cooldown_actuel') and unite.cooldown_actuel == 0:
+            # Simuler les dégâts avec tir précis (x1.5 selon la description)
+            degats_tir_precis = int(unite.dmg * 1.5)
+            if ennemi.pv <= degats_tir_precis:
+                score += 35  # Peut tuer avec tir précis
+            score += 15  # Bonus général pour tir précis
+    
+    # --- ADAPTATION AUX PASSIFS ENNEMIS ---
+    
+    if hasattr(ennemi, 'comp'):
+        # VOL ennemi - Moins prioritaire car première attaque sera ignorée
+        if ennemi.comp == "vol":
+            score -= 20
+        
+        # ARMURE DE PIERRE ennemie - Moins efficace si nos dégâts sont faibles
+        elif ennemi.comp == "armure de pierre":
+            if unite.dmg <= 4:
+                score -= 25  # Dégâts fortement réduits
+            elif unite.dmg <= 6:
+                score -= 15  # Dégâts modérément réduits
+        
+        # RENAISSANCE ennemie - Risque de revival
+        elif ennemi.comp == "renaissance":
+            score -= 15  # 80% de revenir à la vie
+        
+        # MANIPULATION ennemie - Priorité si on a ≤4 PV
+        elif ennemi.comp == "manipulation":
+            if unite.pv <= 4:
+                score += 40  # Priorité absolue pour éviter d'être manipulé
+        
+        # COMBUSTION DIFFÉRÉE ennemie - Danger à long terme
+        elif ennemi.comp == "combustion différée":
+            score += 25  # Éliminer rapidement
+        
+        # VENIN INCAPACITANT ennemi - Réduire mobilité
+        elif ennemi.comp == "venin incapacitant":
+            # Prioritaire si notre unité dépend du mouvement
+            if unite.pm > 1:  # Unité mobile
+                score += 20
+        
+        # SÉDITION VENIMEUSE - Danger pour nos alliés adjacents
+        elif ennemi.comp == "sédition venimeuse":
+            allies_adjacents_a_nous = [a for a in allies if est_adjacent_pos(unite.pos, a.pos)]
+            if allies_adjacents_a_nous:
+                score += 15  # Éviter qu'on attaque nos alliés
+    
     return max(0, score)
 
 
@@ -448,6 +637,10 @@ def _choisir_meilleure_position_attaque(positions, accessibles, cible, unites, u
     """Choisit la meilleure position pour attaquer une cible."""
     if not positions:
         return unite.pos
+    
+    # Séparer alliés et ennemis
+    ennemis = [u for u in unites if u.vivant and u.equipe != unite.equipe]
+    allies = [u for u in unites if u.vivant and u.equipe == unite.equipe and u != unite]
     
     meilleure_pos = None
     meilleur_score = float('-inf')
@@ -458,17 +651,42 @@ def _choisir_meilleure_position_attaque(positions, accessibles, cible, unites, u
         # Préférer les positions avec un coût minimal
         score -= accessibles[pos] * 10
         
-        # Préférer les positions sûres (loin des ennemis)
+        # ÉVALUATION DÉFENSIVE AVANCÉE basée sur les passifs
+        score_defensif = evaluate_defensive_passive(unite, pos, ennemis, allies)
+        score += score_defensif
+        
+        # Éviter d'être adjacent à trop d'ennemis (sauf si on a des passifs défensifs)
         ennemis_adjacents = [u for u in unites 
                            if (u.vivant and u.equipe != unite.equipe and u != cible
                                and est_adjacent_pos(pos, u.pos))]
-        score -= len(ennemis_adjacents) * 20
+        
+        # Modifier le malus selon les capacités défensives
+        malus_ennemis = len(ennemis_adjacents) * 20
+        if hasattr(unite, 'comp'):
+            if unite.comp == "armure de pierre":
+                # Réduire le malus pour armure de pierre contre ennemis faibles
+                ennemis_faibles = [e for e in ennemis_adjacents if e.dmg <= 4]
+                malus_ennemis -= len(ennemis_faibles) * 15  # Moins peur des faibles
+            elif unite.comp == "vol":
+                # Réduire le malus si vol peut nous protéger
+                if len(ennemis_adjacents) == 1:  # Une seule attaque = vol optimal
+                    malus_ennemis //= 2
+        
+        score -= malus_ennemis
         
         # Préférer les positions près des alliés (soutien)
         allies_adjacents = [u for u in unites 
                           if (u.vivant and u.equipe == unite.equipe and u != unite
                               and est_adjacent_pos(pos, u.pos))]
-        score += len(allies_adjacents) * 5
+        
+        bonus_allies = len(allies_adjacents) * 5
+        # Bonus spécial pour protection
+        if hasattr(unite, 'comp') and unite.comp == "protection":
+            # Protection valorise d'être près des alliés fragiles
+            allies_fragiles = [a for a in allies_adjacents if a.pv <= 5]
+            bonus_allies += len(allies_fragiles) * 15
+        
+        score += bonus_allies
         
         if score > meilleur_score:
             meilleur_score = score
@@ -512,3 +730,357 @@ def _choisir_mouvement_tactique(unite, ennemis, allies, accessibles):
             meilleure_pos = pos
     
     return meilleure_pos
+
+
+# --- GESTION AVANCÉE DES PASSIFS ---
+
+def evaluate_defensive_passive(unite, position, ennemis, allies):
+    """Évalue l'efficacité défensive d'une unité avec ses passifs à une position donnée."""
+    if not hasattr(unite, 'comp') or not unite.comp:
+        return 0
+    
+    score = 0
+    competence = unite.comp
+    
+    # ARMURE DE PIERRE - Excellent tank contre multiples faibles attaquants
+    if competence == "armure de pierre":
+        ennemis_adjacents = [e for e in ennemis if est_adjacent_pos(position, e.pos)]
+        for ennemi in ennemis_adjacents:
+            # Plus l'attaque ennemie est faible, plus l'armure de pierre est efficace
+            if ennemi.dmg <= 4:  # Réduction significative
+                score += 30
+            elif ennemi.dmg <= 6:  # Réduction modérée
+                score += 15
+            else:  # Réduction minimale mais utile
+                score += 5
+        # Bonus pour chaque ennemi supplémentaire (tank AoE)
+        score += len(ennemis_adjacents) * 10
+    
+    # VOL - Ignore la première attaque, excellent contre gros dégâts uniques
+    elif competence == "vol":
+        # Identifier l'ennemi le plus menaçant à portée
+        ennemis_dangereux = [e for e in ennemis 
+                           if est_a_portee_pos(position, e.pos, e.portee) 
+                           and e.dmg >= 5]
+        if ennemis_dangereux:
+            # Plus l'attaque est forte, plus vol est précieux
+            max_degats = max(e.dmg for e in ennemis_dangereux)
+            score += max_degats * 8  # Plus les dégâts sont élevés, mieux c'est
+            # Bonus si l'unité peut survivre après avoir volé une grosse attaque
+            if unite.pv > max_degats:
+                score += 25
+    
+    # PROTECTION - Protège les alliés adjacents
+    elif competence == "protection":
+        allies_adjacents = [a for a in allies if est_adjacent_pos(position, a.pos)]
+        for allie in allies_adjacents:
+            # Priorité aux alliés fragiles et importants
+            if allie.pv <= 3:
+                score += 40  # Protéger les alliés critiques
+            elif allie.pv <= 5:
+                score += 25  # Protéger les alliés blessés
+            else:
+                score += 10  # Protection générale
+            
+            # Bonus si l'allié a une compétence importante
+            if hasattr(allie, 'comp') and allie.comp in ["soin", "bénédiction", "commandement"]:
+                score += 20
+        
+        # Évaluer les menaces sur les alliés protégés
+        for allie in allies_adjacents:
+            ennemis_menaçants = [e for e in ennemis 
+                               if est_a_portee_pos(allie.pos, e.pos, e.portee)]
+            score += len(ennemis_menaçants) * 15
+    
+    return score
+
+
+def evaluate_blocking_potential(unite, position, ennemis, allies):
+    """Évalue le potentiel de blocage tactique d'une position."""
+    if not hasattr(unite, 'comp') or unite.comp != "armure de pierre":
+        return 0
+    
+    score = 0
+    
+    # Identifier les ennemis faibles que cette unité peut efficacement bloquer
+    ennemis_bloquables = [e for e in ennemis if e.dmg <= 4]  # Dégâts faibles
+    
+    for ennemi in ennemis_bloquables:
+        # Distance entre l'ennemi et les alliés les plus proches
+        distance_min_allie = float('inf')
+        for allie in allies:
+            if allie != unite:
+                dist = hex_distance(ennemi.pos, allie.pos)
+                distance_min_allie = min(distance_min_allie, dist)
+        
+        # Si on peut s'interposer entre l'ennemi faible et nos alliés
+        if distance_min_allie > 1:  # Il y a un chemin à bloquer
+            distance_vers_ennemi = hex_distance(position, ennemi.pos)
+            if distance_vers_ennemi <= 2:  # On peut se positionner
+                # Plus l'ennemi est proche de nos alliés, plus c'est urgent
+                score += max(0, 50 - distance_min_allie * 10)
+                # Bonus si on bloque plusieurs ennemis faibles
+                score += 20
+    
+    # Bonus pour contrôler des passages étroits ou positions clés
+    ennemis_proches = [e for e in ennemis if hex_distance(position, e.pos) <= 2]
+    allies_proches = [a for a in allies if hex_distance(position, a.pos) <= 2 and a != unite]
+    
+    # Position stratégique si on est entre beaucoup d'ennemis et d'alliés
+    if len(ennemis_proches) >= 2 and len(allies_proches) >= 1:
+        score += 30
+    
+    return score
+
+
+def should_use_golem_blocking(unite, ennemis, allies):
+    """Détermine si l'unité devrait utiliser une stratégie de blocage défensif."""
+    if not hasattr(unite, 'comp') or unite.comp != "armure de pierre":
+        return False
+    
+    # Compter les ennemis faibles qui peuvent être efficacement bloqués
+    ennemis_faibles = [e for e in ennemis if e.vivant and e.dmg <= 4]
+    
+    # Compter les alliés fragiles qui bénéficieraient de la protection
+    allies_fragiles = [a for a in allies if a.vivant and a.pv <= 5]
+    
+    # Utiliser le blocage si :
+    # 1. Il y a au moins 2 ennemis faibles OU
+    # 2. Il y a au moins 1 allié fragile et 1 ennemi faible
+    return (len(ennemis_faibles) >= 2 or 
+            (len(allies_fragiles) >= 1 and len(ennemis_faibles) >= 1))
+
+
+def find_optimal_blocking_position(unite, ennemis, allies, accessibles):
+    """Trouve la meilleure position pour une stratégie de blocage."""
+    if not accessibles:
+        return None
+    
+    meilleure_pos = None
+    meilleur_score = 0
+    
+    for pos, cout in accessibles.items():
+        if cout > unite.pm:
+            continue
+        
+        # Score de blocage défensif
+        score_defensif = evaluate_defensive_passive(unite, pos, ennemis, allies)
+        score_blocage = evaluate_blocking_potential(unite, pos, ennemis, allies)
+        
+        score_total = score_defensif + score_blocage - (cout * 5)
+        
+        if score_total > meilleur_score:
+            meilleur_score = score_total
+            meilleure_pos = pos
+    
+    return meilleure_pos if meilleur_score > 30 else None
+
+
+# --- STRATÉGIES TACTIQUES PASSIVES COMPLEXES ---
+
+def evaluate_manipulation_strategy(unite, ennemis, allies, accessibles):
+    """Évalue l'opportunité d'utiliser une stratégie de manipulation."""
+    if not hasattr(unite, 'comp') or unite.comp != "manipulation":
+        return None, 0
+    
+    # Identifier les ennemis vulnérables à la manipulation (≤4 PV)
+    cibles_manipulables = [e for e in ennemis if e.vivant and e.pv <= 4]
+    
+    if not cibles_manipulables:
+        return None, 0
+    
+    meilleure_pos = None
+    meilleur_score = 0
+    
+    for pos, cout in accessibles.items():
+        if cout > unite.pm:
+            continue
+        
+        score = 0
+        
+        # Compter combien d'ennemis seraient manipulés depuis cette position
+        ennemis_manipules = []
+        for ennemi in cibles_manipulables:
+            # La manipulation affecte les unités avec ≤4 PV à la fin du tour
+            # L'IA doit se positionner pour maximiser les unités affectées
+            if hex_distance(pos, ennemi.pos) <= 3:  # Zone d'influence raisonnable
+                ennemis_manipules.append(ennemi)
+                score += ennemi.dmg * 15  # Valeur de l'ennemi manipulé
+                score += ennemi.tier * 10
+        
+        # Bonus si on peut manipuler plusieurs ennemis
+        if len(ennemis_manipules) >= 2:
+            score += 30
+        
+        # Malus pour le coût du mouvement
+        score -= cout * 8
+        
+        if score > meilleur_score:
+            meilleur_score = score
+            meilleure_pos = pos
+    
+    return meilleure_pos, meilleur_score
+
+
+def evaluate_venin_incapacitant_strategy(unite, ennemis, allies, accessibles):
+    """Évalue l'opportunité d'utiliser venin incapacitant tactiquement."""
+    if not hasattr(unite, 'comp') or unite.comp != "venin incapacitant":
+        return None, 0
+    
+    meilleure_pos = None
+    meilleur_score = 0
+    
+    for pos, cout in accessibles.items():
+        if cout > unite.pm:
+            continue
+        
+        score = 0
+        
+        # Identifier les ennemis à portée qui bénéficieraient d'être immobilisés
+        for ennemi in ennemis:
+            if est_a_portee_pos(pos, ennemi.pos, unite.portee):
+                # Plus l'ennemi est mobile, plus c'est utile de l'immobiliser
+                if hasattr(ennemi, 'pm'):
+                    score += ennemi.pm * 15
+                
+                # Bonus si l'ennemi menace des alliés qu'il ne pourra plus atteindre
+                if ennemi.pm > 1:  # L'ennemi perdrait sa mobilité
+                    allies_hors_portee = [a for a in allies 
+                                         if (hex_distance(ennemi.pos, a.pos) > ennemi.portee 
+                                             and hex_distance(ennemi.pos, a.pos) <= ennemi.portee + ennemi.pm)]
+                    score += len(allies_hors_portee) * 20
+                
+                # Bonus si l'ennemi a des compétences de déplacement importantes
+                if hasattr(ennemi, 'comp') and ennemi.comp in ["monture libéré", "fantomatique"]:
+                    score += 25
+        
+        score -= cout * 5
+        
+        if score > meilleur_score:
+            meilleur_score = score
+            meilleure_pos = pos
+    
+    return meilleure_pos, meilleur_score
+
+
+def evaluate_sedition_venimeuse_chaos(unite, ennemis, allies, accessibles):
+    """Évalue l'opportunité de créer le chaos avec sédition venimeuse."""
+    if not hasattr(unite, 'comp') or unite.comp != "sédition venimeuse":
+        return None, 0
+    
+    meilleure_pos = None
+    meilleur_score = 0
+    
+    for pos, cout in accessibles.items():
+        if cout > unite.pm:
+            continue
+        
+        score = 0
+        
+        # Chercher des ennemis qui ont d'autres ennemis adjacents
+        for ennemi in ennemis:
+            if est_a_portee_pos(pos, ennemi.pos, unite.portee):
+                # Compter les ennemis adjacents à cette cible
+                ennemis_adjacents = [e for e in ennemis 
+                                   if e != ennemi and est_adjacent_pos(ennemi.pos, e.pos)]
+                
+                if ennemis_adjacents:
+                    # Plus il y a d'ennemis adjacents, plus le chaos potentiel est grand
+                    score += len(ennemis_adjacents) * 25
+                    
+                    # Bonus si les ennemis adjacents sont forts
+                    for adj in ennemis_adjacents:
+                        score += adj.dmg * 8
+                        score += adj.tier * 5
+                    
+                    # Bonus spécial si on peut faire attaquer des unités importantes
+                    unites_importantes = [e for e in ennemis_adjacents 
+                                         if hasattr(e, 'comp') and e.comp in 
+                                         ["soin", "bénédiction", "invocation", "commandement"]]
+                    score += len(unites_importantes) * 30
+        
+        score -= cout * 5
+        
+        if score > meilleur_score:
+            meilleur_score = score
+            meilleure_pos = pos
+    
+    return meilleure_pos, meilleur_score
+
+
+def evaluate_combustion_differee_timing(unite, ennemis, allies):
+    """Évalue le timing optimal pour utiliser combustion différée."""
+    if not hasattr(unite, 'comp') or unite.comp != "combustion différée":
+        return 0
+    
+    score = 0
+    
+    # Priorité aux ennemis avec beaucoup de PV (ils ont 3 tours pour agir)
+    for ennemi in ennemis:
+        if est_a_portee_pos(unite.pos, ennemi.pos, unite.portee):
+            # Plus l'ennemi a de PV, plus combustion différée est intéressante
+            if ennemi.pv > unite.dmg * 2:
+                score += 40  # Bon investissement sur une cible durable
+            
+            # Bonus si l'ennemi a des compétences dangereuses à long terme
+            if hasattr(ennemi, 'comp'):
+                competences_dangereuses = ["invocation", "nécromancie", "soin", "manipulation"]
+                if ennemi.comp in competences_dangereuses:
+                    score += 20  # L'éliminer à terme vaut le coup
+            
+            # Malus si l'ennemi peut être tué rapidement par d'autres moyens
+            if ennemi.pv <= unite.dmg:
+                score -= 25  # Mieux vaut le tuer tout de suite
+    
+    return score
+
+
+def apply_advanced_passive_tactics(unite, ennemis, allies, unites):
+    """Applique les stratégies tactiques avancées basées sur les passifs."""
+    if not hasattr(unite, 'comp') or not unite.comp:
+        return None
+    
+    accessibles = unite.cases_accessibles(unites)
+    accessibles = dict(accessibles)
+    accessibles.setdefault(unite.pos, 0)
+    
+    # Évaluer chaque stratégie passive
+    strategies = []
+    
+    # Manipulation
+    pos_manipulation, score_manipulation = evaluate_manipulation_strategy(
+        unite, ennemis, allies, accessibles)
+    if score_manipulation > 30:
+        strategies.append(("manipulation", pos_manipulation, score_manipulation))
+    
+    # Venin incapacitant
+    pos_venin, score_venin = evaluate_venin_incapacitant_strategy(
+        unite, ennemis, allies, accessibles)
+    if score_venin > 25:
+        strategies.append(("venin_incapacitant", pos_venin, score_venin))
+    
+    # Sédition venimeuse
+    pos_sedition, score_sedition = evaluate_sedition_venimeuse_chaos(
+        unite, ennemis, allies, accessibles)
+    if score_sedition > 35:
+        strategies.append(("sedition_venimeuse", pos_sedition, score_sedition))
+    
+    # Combustion différée (évaluation pour prioriser les cibles)
+    score_combustion = evaluate_combustion_differee_timing(unite, ennemis, allies)
+    if score_combustion > 30:
+        strategies.append(("combustion_differee", unite.pos, score_combustion))
+    
+    # Choisir la meilleure stratégie
+    if strategies:
+        strategies.sort(key=lambda x: x[2], reverse=True)
+        meilleure_strategie, meilleure_pos, _ = strategies[0]
+        
+        # Appliquer la stratégie
+        if meilleure_pos and meilleure_pos != unite.pos:
+            cout = accessibles[meilleure_pos]
+            if cout <= unite.pm:
+                unite.pos = meilleure_pos
+                unite.pm -= cout
+                return f"tactique_{meilleure_strategie}"
+    
+    return None
