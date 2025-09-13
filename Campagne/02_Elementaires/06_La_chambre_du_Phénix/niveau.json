@@ -50,8 +50,10 @@
   ],
   "difficulte_ennemis": "normale",
   "recompense_cp": 1,
-  "recompense_pa": 200,
-  "unites_debloquees": [],
+  "recompense_pa": 0,
+  "unites_debloquees": [
+    "Esprit"
+  ],
   "recompenses_autres": [],
   "completable_plusieurs_fois": false
 }

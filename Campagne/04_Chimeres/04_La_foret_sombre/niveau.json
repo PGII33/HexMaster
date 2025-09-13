@@ -36,7 +36,7 @@
   ],
   "difficulte_ennemis": "normale",
   "recompense_cp": 1,
-  "recompense_pa": 0,
+  "recompense_pa": 80,
   "unites_debloquees": [],
   "recompenses_autres": [],
   "completable_plusieurs_fois": false
