@@ -292,7 +292,7 @@ def monture_libere(self, case_pos, toutes_unites):
     return True
 
 def commandement(unite, cible, toutes_unites):
-    """Augmente l'attaque d'un allié de +3 et lui donne +2 dégâts pour le prochain tour."""
+    """Augmente l'attaque d'un allié de +3, lui donne +2 dégâts pour le prochain tour, et +1 attaque supplémentaire."""
     from ia import hex_distance
     
     # Vérifier si c'est un allié
@@ -307,7 +307,11 @@ def commandement(unite, cible, toutes_unites):
         
         # Appliquer les boosts
         cible.boost_attaque_temporaire = getattr(cible, 'boost_attaque_temporaire', 0) + 3
-        cible.boost_degats_temporaire = getattr(cible, 'boost_degats_temporaire', 0) + 2
+        
+        # Donner +1 attaque supplémentaire
+        cible.attaque_restantes += 1
+        
+        print(f"{unite.nom} commande {cible.nom} ! (+3 attaque, +2 dégâts, +1 attaque supplémentaire)")
         
         return True
     
@@ -732,7 +736,7 @@ COMPETENCES = {
     # Nouvelles compétences actives
     "pluie de flèches": "Attaque de zone : inflige des dégâts à toutes les unités (alliées et ennemies) sur la cible et les cases adjacentes. Ne consomme pas l'attaque.",
     "monture libéré": "Se transforme en Guerrier et invoque un Cheval allié sur une case adjacente.",
-    "commandement": "Augmente l'attaque d'un allié de +3 et lui donne +2 dégâts pour le prochain tour.",
+    "commandement": "Augmente l'attaque d'un allié de +3 et +1 attaque supplémentaire. Ne consomme pas d'attaque.",
     "divertissement": "Si il a encore des attaques en fin de tour, réduit les attaques de toutes les unités adjacentes (alliées et ennemies) de 1.",
     "protection": "Subit les dégâts à la place des alliés adjacents attaqués (dégâts partagés entre protecteurs).",
     "manipulation": "Toutes les unités avec 4PV ou moins passent dans votre camp (fin de tour, tant qu'elles ont ≤4 PV).",
