@@ -135,7 +135,7 @@ class UnitSelector:
     def _get_all_units(self):
         """Retourne toutes les classes d'unités disponibles dans le jeu"""
         # Retourner toutes les unités du jeu, pas seulement celles possédées
-        return unites.CLASSES_UNITES + [unites.Zombie]
+        return unites.CLASSES_UNITES
     
     def _get_owned_units(self):
         """Retourne les classes d'unités possédées par le joueur"""
@@ -143,7 +143,7 @@ class UnitSelector:
         available_classes = []
         
         for nom in owned_names:
-            for classe in unites.CLASSES_UNITES + [unites.Zombie]:
+            for classe in unites.CLASSES_UNITES:
                 tmp_instance = classe("joueur", (0,0))
                 if tmp_instance.get_nom() == nom:
                     available_classes.append(classe)
