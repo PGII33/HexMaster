@@ -41,6 +41,19 @@ class Jeu:
         self.enable_placement = enable_placement
         self.versus_mode = versus_mode  # Nouveau : mode joueur vs joueur
         
+        # Initialisation des ranges de la grille hexagonale (doit être fait tôt)
+        self.q_range = range(-1, 7)
+        self.r_range = range(-1, 7)
+        
+        # Variables de contrôle du jeu
+        self.tour = "joueur"
+        self.selection = None
+        self.deplacement_possibles = {}
+        self.ia_strategy = ia_strategy
+        self.ia_busy = False
+        self.ia_queue = []
+        self.ia_index = 0
+        
         # Menu de fin de combat
         self.show_end_menu = False
         self.end_menu_processed = False  # Nouveau flag pour éviter les re-activations
@@ -127,17 +140,7 @@ class Jeu:
                     equipe = "joueur2" if versus_mode else "ennemi"
                     self.unites.append(cls(equipe, pos))
 
-        self.tour = "joueur"
-        self.selection = None
-        self.deplacement_possibles = {}
-        self.ia_strategy = ia_strategy
-
-        self.q_range = range(-1, 7)
-        self.r_range = range(-1, 7)
-
-        self.ia_busy = False
-        self.ia_queue = []
-        self.ia_index = 0
+        # Configuration du layout et finalisation de l'initialisation
         self.ia_timer_ms = 0
         self.ia_delay_between_actions = 250
 

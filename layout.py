@@ -31,6 +31,12 @@ def recalculer_layout(jeu):
     grid_w = max(100, grid_w)
     grid_h = max(100, grid_h)
 
+    # Vérifier que l'objet jeu a les attributs nécessaires
+    if not hasattr(jeu, 'q_range') or not hasattr(jeu, 'r_range'):
+        print("Warning: Objet Jeu incomplet, utilisation de valeurs par défaut")
+        jeu.q_range = range(-1, 7)
+        jeu.r_range = range(-1, 7)
+    
     # taille d'hex (probe)
     size_probe = 1.0
     centers = []
