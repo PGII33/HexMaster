@@ -734,15 +734,16 @@ COMPETENCES = {
     "combustion différée": "Les cibles touchées meurent au bout de 3 tours ennemis.",
     
     # Nouvelles compétences actives
-    "pluie de flèches": "Attaque de zone : inflige des dégâts à toutes les unités (alliées et ennemies) sur la cible et les cases adjacentes. Ne consomme pas l'attaque.",
+    "pluie de flèches": "Attaque de zone : inflige des dégâts à toutes les unités (alliées et ennemies) sur la cible et les cases adjacentes. Ne consomme pas l'attaque. (Utilisable 1 tour sur 2)",
     "monture libéré": "Se transforme en Guerrier et invoque un Cheval allié sur une case adjacente.",
-    "commandement": "Augmente l'attaque d'un allié de +3 et +1 attaque supplémentaire. Ne consomme pas d'attaque.",
+    "commandement": "Augmente l'attaque d'un allié de +3, lui donne +2 dégâts pour le prochain tour, et +1 attaque supplémentaire. Ne consomme pas d'attaque.",
     "divertissement": "Si il a encore des attaques en fin de tour, réduit les attaques de toutes les unités adjacentes (alliées et ennemies) de 1.",
     "protection": "Subit les dégâts à la place des alliés adjacents attaqués (dégâts partagés entre protecteurs).",
     "manipulation": "Toutes les unités avec 4PV ou moins passent dans votre camp (fin de tour, tant qu'elles ont ≤4 PV).",
     "regard mortel": "L'ennemi touché est mort instantanément s'il est de tier 2 ou moins.",
     "rage": "Augmente l'attaque de 1 par attaque (accumulation permanente).",
     "vol": "Ignore la première attaque subie.",
+    "tir précis": "Attaque à distance ignorant les obstacles avec +3 dégâts. (Utilisable 1 tour sur 2)",
     "venin incapacitant": "Une cible touchée ne peut plus se déplacer pour son prochain tour.",
     "sédition venimeuse": "La créature attaquée attaque une autre créature alliée adjacente s'il y en a une.",
     "tir précis": "Attaque à portée +1 avec dégâts x1.5 (tous les 2 tours).",

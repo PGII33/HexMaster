@@ -73,9 +73,10 @@ class Unite:
         # Définition des cooldowns par compétence (en tours d'attente)
         cooldowns = {
             # Compétences actives - 0 = utilisable chaque tour, 1 = un tour d'attente, etc.
-            "soin": 0,  # Utilisable chaque tour
+            "soin": 1,  # Utilisable chaque tour
             "bénédiction": 1,  # Un tour d'attente entre utilisations
-            "tir précis": 1,  # Un tour d'attente entre utilisations (tous les 2 tours)
+            "tir précis": 2,  # Un tours d'attente entre utilisations (utilisable 1 tour sur 2)
+            "pluie de flèches": 2,  # Un tours d'attente entre utilisations (utilisable 1 tour sur 2)
             # Compétences qui ne doivent pas avoir de cooldown (passives ou spéciales)
             "sangsue": 0,
             "zombification": 0,
