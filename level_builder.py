@@ -27,6 +27,11 @@ class LevelBuilder:
         self._derniere_composition = []
         self._positions_sauvegardees = []
         
+        # Système de scroll pour le menu de sélection d'unités
+        self.scroll_offset = 0
+        self.scroll_max = 0
+        self.items_visible = 0
+        
         self.text_data = {
             "numero": "01",
             "nom": "",
@@ -145,20 +150,51 @@ class LevelBuilder:
             self.ui.add_navigation_buttons(h, actions)
         
         elif self.etat == "selection_unite_deblocage":
-            # Boutons pour chaque unité disponible
+            # Boutons pour chaque unité disponible avec scroll
             if hasattr(self, 'unites_disponibles_pour_selection'):
                 y_start = 150
-                for i, unite in enumerate(self.unites_disponibles_pour_selection):
-                    y_pos = y_start + (i * 35)
-                    # Limiter l'affichage pour éviter de sortir de l'écran
-                    if y_pos > self.screen.get_height() - 100:
-                        break
+                item_height = 35
+                visible_area_height = self.screen.get_height() - 200  # Zone visible
+                self.items_visible = visible_area_height // item_height
+                
+                total_items = len(self.unites_disponibles_pour_selection)
+                self.scroll_max = max(0, total_items - self.items_visible)
+                
+                # Limiter le scroll_offset
+                self.scroll_offset = max(0, min(self.scroll_offset, self.scroll_max))
+                
+                # Afficher seulement les éléments visibles
+                start_idx = self.scroll_offset
+                end_idx = min(start_idx + self.items_visible, total_items)
+                
+                for i in range(start_idx, end_idx):
+                    unite = self.unites_disponibles_pour_selection[i]
+                    y_pos = y_start + ((i - start_idx) * item_height)
                     
                     # Bouton pour cette unité
                     button_text = f"{unite['nom']} ({unite['faction']}) - T{unite['tier']}"
                     self.ui.add_button((50, y_pos, 600, 30), button_text, 
                                      lambda u=unite: self.selectionner_unite_deblocage(u), 
                                      self.ui.font_small)
+                
+                # Indicateurs de scroll
+                if self.scroll_max > 0:
+                    # Flèche haut
+                    if self.scroll_offset > 0:
+                        self.ui.add_button((660, y_start - 30, 80, 25), "Haut", 
+                                         self.scroll_up, self.ui.font_small)
+                    
+                    # Flèche bas  
+                    if self.scroll_offset < self.scroll_max:
+                        bottom_y = y_start + (self.items_visible * item_height)
+                        self.ui.add_button((660, bottom_y + 10, 80, 25), "Bas", 
+                                         self.scroll_down, self.ui.font_small)
+                    
+                    # Indicateur de position
+                    scroll_info = f"{self.scroll_offset + 1}-{min(self.scroll_offset + self.items_visible, total_items)} / {total_items}"
+                    text_surface = self.ui.font_small.render(scroll_info, True, (100, 100, 100))
+                    info_y = y_start + (self.items_visible * item_height) + 40
+                    self.screen.blit(text_surface, (660, info_y))
             
             # Navigation
             actions = [
@@ -187,6 +223,23 @@ class LevelBuilder:
         self.etat = "enemy_selection"
         self.creer_boutons()
     
+    # ------ Méthodes de scroll ------
+    def scroll_up(self):
+        """Fait défiler vers le haut"""
+        if self.scroll_offset > 0:
+            self.scroll_offset -= 1
+            self.creer_boutons()
+    
+    def scroll_down(self):
+        """Fait défiler vers le bas"""
+        if self.scroll_offset < self.scroll_max:
+            self.scroll_offset += 1
+            self.creer_boutons()
+    
+    def reset_scroll(self):
+        """Remet le scroll à zéro"""
+        self.scroll_offset = 0
+
     # ------ Modification de niveau ------
     def modifier_niveau(self):
         """Lance l'interface de sélection de niveau à modifier"""
@@ -458,6 +511,7 @@ class LevelBuilder:
         self.unites_disponibles_pour_selection = unites_disponibles
         self.etat_precedent = self.etat
         self.etat = "selection_unite_deblocage"
+        self.reset_scroll()  # Remettre le scroll à zéro
         self.creer_boutons()
     def _afficher_prochaine_unite_disponible(self, x, y):
         """Affiche quelle unité sera ajoutée au prochain clic"""
@@ -1132,6 +1186,17 @@ class LevelBuilder:
         # Direction: 1 = scroll up (vers le haut), -1 = scroll down (vers le bas)
         self.scroll_offset = max(0, min(max_offset, self.scroll_offset - direction))
     
+    def _handle_unit_selection_scroll(self, direction):
+        """Gère le scroll dans la sélection d'unités de récompense"""
+        if hasattr(self, 'unites_disponibles_pour_selection') and self.scroll_max > 0:
+            # Direction: 1 = scroll up (vers le haut), -1 = scroll down (vers le bas)
+            old_offset = self.scroll_offset
+            self.scroll_offset = max(0, min(self.scroll_max, self.scroll_offset - direction))
+            
+            # Recréer les boutons seulement si le scroll a changé
+            if old_offset != self.scroll_offset:
+                self.creer_boutons()
+
     def afficher_config_generale(self):
         """Affiche l'interface de configuration générale"""
         self._ensure_text_data_complete()
@@ -1330,32 +1395,15 @@ class LevelBuilder:
         # Instructions
         self.ui.draw_text("Choisissez l'unité à ajouter aux récompenses:", 50, 120, color=(50, 50, 150))
         
-        # Afficher les unités disponibles
-        if hasattr(self, 'unites_disponibles_pour_selection'):
-            y = 150
-            faction_actuelle = None
-            
-            for unite in self.unites_disponibles_pour_selection:
-                # Afficher un séparateur de faction
-                if unite['faction'] != faction_actuelle:
-                    if faction_actuelle is not None:
-                        y += 10  # Espacement entre factions
-                    self.ui.draw_text(f"--- {unite['faction']} ---", 70, y, color=(100, 100, 100))
-                    faction_actuelle = unite['faction']
-                    y += 30
-                
-                # Les boutons sont créés dans creer_boutons(), ici on fait juste l'espacement
-                y += 35
-                
-                # Limiter l'affichage
-                if y > self.screen.get_height() - 100:
-                    nb_restantes = len([u for u in self.unites_disponibles_pour_selection 
-                                      if self.unites_disponibles_pour_selection.index(u) > 
-                                      self.unites_disponibles_pour_selection.index(unite)])
-                    if nb_restantes > 0:
-                        self.ui.draw_text(f"... et {nb_restantes} autres unités", 70, y, 
-                                        color=(100, 100, 100), font=self.ui.font_small)
-                    break
+        # Information sur le scroll si nécessaire
+        if hasattr(self, 'unites_disponibles_pour_selection') and len(self.unites_disponibles_pour_selection) > 0:
+            total_items = len(self.unites_disponibles_pour_selection)
+            if hasattr(self, 'items_visible') and self.items_visible < total_items:
+                self.ui.draw_text("Utilisez la molette de souris ou les boutons ↑↓ pour naviguer", 50, 140, 
+                                color=(100, 100, 150), font=self.ui.font_small)
+        
+        # Les unités sont maintenant affichées via les boutons créés dans creer_boutons()
+        # avec gestion automatique du scroll
         
         self.ui.draw_buttons()
     
@@ -1392,6 +1440,8 @@ class LevelBuilder:
                 elif event.type == pygame.MOUSEWHEEL:
                     if self.etat == "selection_niveau" or self.etat == "selection_niveau_custom":
                         self._handle_scroll(event.y)
+                    elif self.etat == "selection_unite_deblocage":
+                        self._handle_unit_selection_scroll(event.y)
             
             # Affichage selon l'état
             if self.etat == "main_menu":
