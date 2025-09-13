@@ -1,56 +1,42 @@
 {
-  "nom": "Chambre magmatique",
+  "nom": "La foret sombre",
   "description": "",
-  "chapitre": "02_Elementaires",
-  "numero": 5,
+  "chapitre": "04_Chimeres",
+  "numero": 4,
   "type_restriction": "faction_unique",
   "unites_imposees": [],
   "placement_impose": false,
   "factions_autorisees": [],
   "faction_unique_requise": false,
   "faction_imposee": "",
-  "cp_disponible": 14,
-  "max_unites": 8,
+  "cp_disponible": 5,
+  "max_unites": 14,
   "unites_ennemis": [
     [
-      "Gnome",
-      [
-        0,
-        4
-      ]
-    ],
-    [
-      "Golem",
-      [
-        1,
-        4
-      ]
-    ],
-    [
-      "Ifrit",
+      "Loup_Garou",
       [
         2,
         4
       ]
     ],
     [
-      "Golem",
+      "Loup_Garou",
       [
-        3,
+        0,
         4
       ]
     ],
     [
-      "Gnome",
+      "Loup_Garou",
       [
-        4,
+        3,
         4
       ]
     ]
   ],
   "difficulte_ennemis": "normale",
   "recompense_cp": 1,
-  "recompense_pa": 80,
+  "recompense_pa": 0,
   "unites_debloquees": [],
   "recompenses_autres": [],
   "completable_plusieurs_fois": false

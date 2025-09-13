@@ -1,8 +1,8 @@
 {
-  "nom": "Tunel brumeux",
+  "nom": "Noyeau de braises",
   "description": "",
   "chapitre": "02_Elementaires",
-  "numero": 4,
+  "numero": 5,
   "type_restriction": "faction_unique",
   "unites_imposees": [],
   "placement_impose": false,
@@ -20,44 +20,23 @@
       ]
     ],
     [
+      "Ifrit",
+      [
+        2,
+        5
+      ]
+    ],
+    [
       "Golem",
       [
         2,
         4
       ]
-    ],
-    [
-      "Gnome",
-      [
-        4,
-        4
-      ]
-    ],
-    [
-      "Gnome",
-      [
-        1,
-        4
-      ]
-    ],
-    [
-      "Gnome",
-      [
-        0,
-        5
-      ]
-    ],
-    [
-      "Gnome",
-      [
-        4,
-        5
-      ]
     ]
   ],
   "difficulte_ennemis": "normale",
   "recompense_cp": 1,
-  "recompense_pa": 0,
+  "recompense_pa": 80,
   "unites_debloquees": [],
   "recompenses_autres": [],
   "completable_plusieurs_fois": false

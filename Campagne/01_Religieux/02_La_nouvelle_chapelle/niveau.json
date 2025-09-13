@@ -1,5 +1,5 @@
 {
-  "nom": "Eglise corrompue",
+  "nom": "La nouvelle chapelle",
   "description": "",
   "chapitre": "01_Religieux",
   "numero": 2,
@@ -13,38 +13,24 @@
   "max_unites": 5,
   "unites_ennemis": [
     [
-      "Fanatique",
+      "Clerc",
       [
-        -1,
-        4
-      ]
-    ],
-    [
-      "Fanatique",
-      [
-        0,
-        4
-      ]
-    ],
-    [
-      "Fanatique",
-      [
-        6,
-        4
-      ]
-    ],
-    [
-      "Esprit_Saint",
-      [
-        2,
-        5
+        1,
+        6
       ]
     ],
     [
       "Clerc",
       [
         3,
-        5
+        6
+      ]
+    ],
+    [
+      "Missionnaire",
+      [
+        2,
+        4
       ]
     ],
     [
@@ -55,9 +41,9 @@
       ]
     ],
     [
-      "Missionnaire",
+      "Fanatique",
       [
-        2,
+        5,
         4
       ]
     ]

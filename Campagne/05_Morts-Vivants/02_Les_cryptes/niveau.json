@@ -1,77 +1,56 @@
 {
-  "nom": "La grande cathédrale",
-  "description": "Rien",
-  "chapitre": "01_Religieux",
-  "numero": 3,
+  "nom": "Les cryptes",
+  "description": "",
+  "chapitre": "05_Morts-Vivants",
+  "numero": 2,
   "type_restriction": "faction_unique",
   "unites_imposees": [],
   "placement_impose": false,
   "factions_autorisees": [],
   "faction_unique_requise": false,
   "faction_imposee": "",
-  "cp_disponible": 8,
-  "max_unites": 8,
+  "cp_disponible": 5,
+  "max_unites": 14,
   "unites_ennemis": [
     [
-      "Clerc",
-      [
-        1,
-        6
-      ]
-    ],
-    [
-      "Missionnaire",
+      "Goule",
       [
         2,
         4
       ]
     ],
     [
-      "Missionnaire",
+      "Goule",
       [
         3,
         4
       ]
     ],
     [
-      "Esprit_Saint",
+      "Goule",
+      [
+        1,
+        4
+      ]
+    ],
+    [
+      "Zombie",
       [
         2,
         5
       ]
     ],
     [
-      "Missionnaire",
-      [
-        3,
-        5
-      ]
-    ],
-    [
-      "Missionnaire",
+      "Zombie",
       [
         1,
         5
-      ]
-    ],
-    [
-      "Missionnaire",
-      [
-        2,
-        6
-      ]
-    ],
-    [
-      "Clerc",
-      [
-        3,
-        6
       ]
     ]
   ],
   "difficulte_ennemis": "normale",
   "recompense_cp": 1,
-  "recompense_pa": 80,
+  "recompense_pa": 0,
   "unites_debloquees": [],
   "recompenses_autres": [],
   "completable_plusieurs_fois": false

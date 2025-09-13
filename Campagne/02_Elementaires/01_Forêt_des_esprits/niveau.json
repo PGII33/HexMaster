@@ -13,7 +13,7 @@
   "max_unites": 5,
   "unites_ennemis": [
     [
-      "Driade",
+      "Esprit",
       [
         0,
         4
@@ -22,40 +22,12 @@
     [
       "Esprit",
       [
-        1,
-        5
-      ]
-    ],
-    [
-      "Esprit",
-      [
         2,
         5
       ]
     ],
     [
       "Esprit",
-      [
-        3,
-        5
-      ]
-    ],
-    [
-      "Esprit",
-      [
-        2,
-        4
-      ]
-    ],
-    [
-      "Esprit",
-      [
-        3,
-        4
-      ]
-    ],
-    [
-      "Driade",
       [
         5,
         4

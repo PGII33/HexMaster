@@ -13,6 +13,20 @@
   "max_unites": 3,
   "unites_ennemis": [
     [
+      "Esprit",
+      [
+        3,
+        4
+      ]
+    ],
+    [
+      "Esprit",
+      [
+        4,
+        4
+      ]
+    ],
+    [
       "Ondine",
       [
         2,
@@ -20,21 +34,21 @@
       ]
     ],
     [
-      "Golem",
+      "Driade",
       [
-        2,
+        0,
         4
       ]
     ],
     [
-      "Golem",
+      "Ondine",
       [
-        3,
-        4
+        -1,
+        5
       ]
     ],
     [
-      "Gnome",
+      "Ondine",
       [
         4,
         5

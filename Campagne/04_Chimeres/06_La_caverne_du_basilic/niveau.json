@@ -1,57 +1,50 @@
 {
-  "nom": "Tunel brumeux",
+  "nom": "La caverne du basilic",
   "description": "",
-  "chapitre": "02_Elementaires",
-  "numero": 4,
+  "chapitre": "04_Chimeres",
+  "numero": 6,
   "type_restriction": "faction_unique",
   "unites_imposees": [],
   "placement_impose": false,
   "factions_autorisees": [],
   "faction_unique_requise": false,
   "faction_imposee": "",
-  "cp_disponible": 14,
-  "max_unites": 8,
+  "cp_disponible": 5,
+  "max_unites": 14,
   "unites_ennemis": [
     [
-      "Golem",
-      [
-        3,
-        4
-      ]
-    ],
-    [
-      "Golem",
-      [
-        2,
-        4
-      ]
-    ],
-    [
-      "Gnome",
-      [
-        4,
-        4
-      ]
-    ],
-    [
-      "Gnome",
+      "Loup_Garou",
       [
         1,
         4
       ]
     ],
     [
-      "Gnome",
+      "Loup_Garou",
       [
-        0,
+        5,
+        4
+      ]
+    ],
+    [
+      "Basilic",
+      [
+        2,
         5
       ]
     ],
     [
-      "Gnome",
+      "Loup_Garou",
       [
         4,
-        5
+        4
+      ]
+    ],
+    [
+      "Loup_Garou",
+      [
+        0,
+        4
       ]
     ]
   ],

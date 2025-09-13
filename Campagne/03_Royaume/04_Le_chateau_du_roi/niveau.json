@@ -1,8 +1,8 @@
 {
-  "nom": "Les gardes du village",
+  "nom": "Le chateau du roi",
   "description": "",
   "chapitre": "03_Royaume",
-  "numero": 1,
+  "numero": 4,
   "type_restriction": "faction_unique",
   "unites_imposees": [],
   "placement_impose": false,
@@ -13,44 +13,37 @@
   "max_unites": 5,
   "unites_ennemis": [
     [
-      "Guerrier",
+      "Garde_Royal",
       [
-        5,
+        2,
         4
       ]
     ],
     [
-      "Guerrier",
+      "Garde_Royal",
+      [
+        3,
+        4
+      ]
+    ],
+    [
+      "Garde_Royal",
       [
         4,
         4
       ]
     ],
     [
-      "Guerrier",
+      "Garde_Royal",
       [
-        0,
-        5
-      ]
-    ],
-    [
-      "Guerrier",
-      [
-        -1,
-        6
-      ]
-    ],
-    [
-      "Guerrier",
-      [
-        0,
-        6
+        1,
+        4
       ]
     ]
   ],
   "difficulte_ennemis": "normale",
   "recompense_cp": 1,
-  "recompense_pa": 20,
+  "recompense_pa": 80,
   "unites_debloquees": [],
   "recompenses_autres": [],
   "completable_plusieurs_fois": false

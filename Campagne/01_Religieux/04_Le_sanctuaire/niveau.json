@@ -1,7 +1,7 @@
 {
-  "nom": "Tunel brumeux",
-  "description": "",
-  "chapitre": "02_Elementaires",
+  "nom": "Le sanctuaire",
+  "description": "Rien",
+  "chapitre": "01_Religieux",
   "numero": 4,
   "type_restriction": "faction_unique",
   "unites_imposees": [],
@@ -9,55 +9,62 @@
   "factions_autorisees": [],
   "faction_unique_requise": false,
   "faction_imposee": "",
-  "cp_disponible": 14,
+  "cp_disponible": 8,
   "max_unites": 8,
   "unites_ennemis": [
     [
-      "Golem",
+      "Missionnaire",
+      [
+        4,
+        4
+      ]
+    ],
+    [
+      "Esprit_Saint",
+      [
+        3,
+        5
+      ]
+    ],
+    [
+      "Esprit_Saint",
+      [
+        2,
+        5
+      ]
+    ],
+    [
+      "Missionnaire",
       [
         3,
         4
       ]
     ],
     [
-      "Golem",
+      "Missionnaire",
       [
         2,
         4
       ]
     ],
     [
-      "Gnome",
-      [
-        4,
-        4
-      ]
-    ],
-    [
-      "Gnome",
+      "Clerc",
       [
         1,
-        4
+        6
       ]
     ],
     [
-      "Gnome",
+      "Clerc",
       [
-        0,
-        5
-      ]
-    ],
-    [
-      "Gnome",
-      [
-        4,
-        5
+        3,
+        6
       ]
     ]
   ],
   "difficulte_ennemis": "normale",
   "recompense_cp": 1,
-  "recompense_pa": 0,
+  "recompense_pa": 80,
   "unites_debloquees": [],
   "recompenses_autres": [],
   "completable_plusieurs_fois": false

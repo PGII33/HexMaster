@@ -1,63 +1,35 @@
 {
-  "nom": "Tunel brumeux",
+  "nom": "Le village de l'Est",
   "description": "",
-  "chapitre": "02_Elementaires",
-  "numero": 4,
+  "chapitre": "03_Royaume",
+  "numero": 1,
   "type_restriction": "faction_unique",
   "unites_imposees": [],
   "placement_impose": false,
   "factions_autorisees": [],
   "faction_unique_requise": false,
   "faction_imposee": "",
-  "cp_disponible": 14,
-  "max_unites": 8,
+  "cp_disponible": 5,
+  "max_unites": 5,
   "unites_ennemis": [
     [
-      "Golem",
-      [
-        3,
-        4
-      ]
-    ],
-    [
-      "Golem",
+      "Guerrier",
       [
         2,
         4
       ]
     ],
     [
-      "Gnome",
+      "Guerrier",
       [
-        4,
+        3,
         4
-      ]
-    ],
-    [
-      "Gnome",
-      [
-        1,
-        4
-      ]
-    ],
-    [
-      "Gnome",
-      [
-        0,
-        5
-      ]
-    ],
-    [
-      "Gnome",
-      [
-        4,
-        5
       ]
     ]
   ],
   "difficulte_ennemis": "normale",
   "recompense_cp": 1,
-  "recompense_pa": 0,
+  "recompense_pa": 20,
   "unites_debloquees": [],
   "recompenses_autres": [],
   "completable_plusieurs_fois": false

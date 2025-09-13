@@ -1,70 +1,49 @@
 {
-  "nom": "Lumière Vengeresse",
+  "nom": "La pièce secrète",
   "description": "",
-  "chapitre": "01_Religieux",
-  "numero": 5,
+  "chapitre": "03_Royaume",
+  "numero": 6,
   "type_restriction": "faction_unique",
   "unites_imposees": [],
   "placement_impose": false,
   "factions_autorisees": [],
   "faction_unique_requise": false,
   "faction_imposee": "",
-  "cp_disponible": 14,
-  "max_unites": 10,
+  "cp_disponible": 5,
+  "max_unites": 14,
   "unites_ennemis": [
     [
-      "Fanatique",
+      "Garde_Royal",
+      [
+        1,
+        4
+      ]
+    ],
+    [
+      "Garde_Royal",
       [
         2,
         4
       ]
     ],
     [
-      "Fanatique",
-      [
-        3,
-        4
-      ]
-    ],
-    [
-      "Fanatique",
+      "Garde_Royal",
       [
         4,
         4
       ]
     ],
     [
-      "Esprit_Saint",
+      "Garde_Royal",
       [
         3,
-        6
+        4
       ]
     ],
     [
-      "Esprit_Saint",
-      [
-        1,
-        6
-      ]
-    ],
-    [
-      "Ange",
+      "Marionettiste",
       [
         2,
-        6
-      ]
-    ],
-    [
-      "Paladin",
-      [
-        2,
-        5
-      ]
-    ],
-    [
-      "Paladin",
-      [
-        3,
         5
       ]
     ]

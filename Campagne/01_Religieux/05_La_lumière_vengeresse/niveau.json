@@ -1,63 +1,63 @@
 {
-  "nom": "Tunel brumeux",
+  "nom": "La lumière vengeresse",
   "description": "",
-  "chapitre": "02_Elementaires",
-  "numero": 4,
+  "chapitre": "01_Religieux",
+  "numero": 5,
   "type_restriction": "faction_unique",
   "unites_imposees": [],
   "placement_impose": false,
   "factions_autorisees": [],
   "faction_unique_requise": false,
   "faction_imposee": "",
-  "cp_disponible": 14,
-  "max_unites": 8,
+  "cp_disponible": 10,
+  "max_unites": 10,
   "unites_ennemis": [
     [
-      "Golem",
-      [
-        3,
-        4
-      ]
-    ],
-    [
-      "Golem",
+      "Paladin",
       [
         2,
         4
       ]
     ],
     [
-      "Gnome",
-      [
-        4,
-        4
-      ]
-    ],
-    [
-      "Gnome",
+      "Esprit_Saint",
       [
         1,
-        4
-      ]
-    ],
-    [
-      "Gnome",
-      [
-        0,
         5
       ]
     ],
     [
-      "Gnome",
+      "Esprit_Saint",
       [
         4,
         5
+      ]
+    ],
+    [
+      "Ange",
+      [
+        3,
+        5
+      ]
+    ],
+    [
+      "Ange",
+      [
+        2,
+        5
+      ]
+    ],
+    [
+      "Paladin",
+      [
+        4,
+        4
       ]
     ]
   ],
   "difficulte_ennemis": "normale",
   "recompense_cp": 1,
-  "recompense_pa": 0,
+  "recompense_pa": 200,
   "unites_debloquees": [],
   "recompenses_autres": [],
   "completable_plusieurs_fois": false

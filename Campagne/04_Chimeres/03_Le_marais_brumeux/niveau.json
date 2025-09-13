@@ -1,63 +1,56 @@
 {
-  "nom": "Brigade des fanatiques",
+  "nom": "Le marais brumeux",
   "description": "",
-  "chapitre": "01_Religieux",
-  "numero": 1,
+  "chapitre": "04_Chimeres",
+  "numero": 3,
   "type_restriction": "faction_unique",
   "unites_imposees": [],
   "placement_impose": false,
   "factions_autorisees": [],
   "faction_unique_requise": false,
   "faction_imposee": "",
-  "cp_disponible": 4,
-  "max_unites": 4,
+  "cp_disponible": 5,
+  "max_unites": 14,
   "unites_ennemis": [
     [
-      "Missionnaire",
+      "Lamia",
       [
-        2,
+        0,
         4
       ]
     ],
     [
-      "Missionnaire",
+      "Lamia",
       [
-        3,
+        1,
         4
       ]
     ],
     [
-      "Fanatique",
+      "Lamia",
       [
         0,
         5
       ]
     ],
     [
-      "Fanatique",
+      "Centaure",
       [
-        5,
+        4,
+        4
+      ]
+    ],
+    [
+      "Centaure",
+      [
+        4,
         5
-      ]
-    ],
-    [
-      "Fanatique",
-      [
-        6,
-        6
-      ]
-    ],
-    [
-      "Fanatique",
-      [
-        -1,
-        6
       ]
     ]
   ],
   "difficulte_ennemis": "normale",
   "recompense_cp": 1,
-  "recompense_pa": 20,
+  "recompense_pa": 0,
   "unites_debloquees": [],
   "recompenses_autres": [],
   "completable_plusieurs_fois": false

@@ -1,57 +1,50 @@
 {
-  "nom": "Tunel brumeux",
+  "nom": "Le cimetière abandonné",
   "description": "",
-  "chapitre": "02_Elementaires",
-  "numero": 4,
+  "chapitre": "05_Morts-Vivants",
+  "numero": 1,
   "type_restriction": "faction_unique",
   "unites_imposees": [],
   "placement_impose": false,
   "factions_autorisees": [],
   "faction_unique_requise": false,
   "faction_imposee": "",
-  "cp_disponible": 14,
-  "max_unites": 8,
+  "cp_disponible": 5,
+  "max_unites": 14,
   "unites_ennemis": [
     [
-      "Golem",
+      "Squelette",
       [
         3,
         4
       ]
     ],
     [
-      "Golem",
-      [
-        2,
-        4
-      ]
-    ],
-    [
-      "Gnome",
+      "Squelette",
       [
         4,
         4
       ]
     ],
     [
-      "Gnome",
+      "Squelette",
+      [
+        0,
+        4
+      ]
+    ],
+    [
+      "Squelette",
       [
         1,
         4
       ]
     ],
     [
-      "Gnome",
+      "Squelette",
       [
-        0,
-        5
-      ]
-    ],
-    [
-      "Gnome",
-      [
-        4,
-        5
+        5,
+        4
       ]
     ]
   ],

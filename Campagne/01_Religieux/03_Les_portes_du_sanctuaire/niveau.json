@@ -1,56 +1,63 @@
 {
-  "nom": "Tunel brumeux",
+  "nom": "Les portes du sanctuaire",
   "description": "",
-  "chapitre": "02_Elementaires",
-  "numero": 4,
+  "chapitre": "01_Religieux",
+  "numero": 3,
   "type_restriction": "faction_unique",
   "unites_imposees": [],
   "placement_impose": false,
   "factions_autorisees": [],
   "faction_unique_requise": false,
   "faction_imposee": "",
-  "cp_disponible": 14,
+  "cp_disponible": 10,
   "max_unites": 8,
   "unites_ennemis": [
     [
-      "Golem",
-      [
-        3,
-        4
-      ]
-    ],
-    [
-      "Golem",
+      "Paladin",
       [
         2,
         4
       ]
     ],
     [
-      "Gnome",
+      "Paladin",
+      [
+        3,
+        4
+      ]
+    ],
+    [
+      "Paladin",
       [
         4,
         4
       ]
     ],
     [
-      "Gnome",
+      "Esprit_Saint",
       [
-        1,
-        4
-      ]
-    ],
-    [
-      "Gnome",
-      [
-        0,
+        2,
         5
       ]
     ],
     [
-      "Gnome",
+      "Esprit_Saint",
       [
-        4,
+        3,
+        5
+      ]
+    ],
+    [
+      "Fanatique",
+      [
+        5,
+        5
+      ]
+    ],
+    [
+      "Fanatique",
+      [
+        0,
         5
       ]
     ]
