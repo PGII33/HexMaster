@@ -217,9 +217,7 @@ class Unite:
             # Les dégâts vont directement aux PV
             self.pv -= degats
         
-        # Vérifier si l'unité doit mourir
-        if self.pv <= 0 and self.vivant:
-            self.mourir([])  # Appel basique, sera surchargé si nécessaire
+        # Note: Ne pas appeler mourir() ici, c'est la responsabilité de la méthode attaquer()
         
         return degats  # Retourner les dégâts réellement subis (après armure)
     
@@ -374,6 +372,12 @@ class Unite:
         if not co.est_competence_active(self.comp):
             return False
         return self.cooldown_actuel <= 0  # Utilisable seulement si pas en cooldown
+    
+    def possede_competence_active(self):
+        """Retourne True si l'unité possède une compétence active (indépendamment du cooldown)."""
+        if not self.comp:
+            return False
+        return co.est_competence_active(self.comp)
     
     def get_cooldown_info(self):
         """Retourne des informations sur le cooldown de la compétence."""

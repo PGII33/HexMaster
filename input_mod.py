@@ -38,7 +38,7 @@ def handle_click(jeu, mx, my):
         competence_utilisee = getattr(jeu.selection, 'competence_utilisee_ce_tour', False)
         
         # Compétences qui ne nécessitent pas d'attaque restante
-        competences_sans_attaque = ["soin"]
+        competences_sans_attaque = ["soin", "pluie de flèches", "commandement"]
         comp_name = jeu.selection.get_competence()
         attaque_necessaire = comp_name not in competences_sans_attaque
         

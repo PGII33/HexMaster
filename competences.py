@@ -698,7 +698,11 @@ def utiliser_competence_active(unite, nom_competence, cible, toutes_unites=None)
     elif nom_competence == "cristalisation":
         return cristalisation(unite, cible, toutes_unites)
     elif nom_competence == "pluie de flèches":
-        return pluie_de_fleches(unite, cible, toutes_unites)
+        # Gérer le cas où cible est déjà une position (tuple) ou un objet avec .pos
+        if isinstance(cible, tuple):
+            return pluie_de_fleches(unite, cible, toutes_unites)
+        else:
+            return pluie_de_fleches(unite, cible.pos if cible else None, toutes_unites)
     elif nom_competence == "monture libéré":
         return monture_libere(unite, cible, toutes_unites)
     elif nom_competence == "commandement":
