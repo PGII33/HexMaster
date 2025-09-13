@@ -35,7 +35,7 @@ jobs:
           if (-not (Test-Path "custom_levels/.keep")) { 
             "# Placeholder file" | Out-File -FilePath "custom_levels/.keep" -Encoding UTF8 
           }
-          pyinstaller main.spec
+          pyinstaller --clean --noconfirm main.spec
 
       - name: Generate version tag
         id: version

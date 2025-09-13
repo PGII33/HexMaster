@@ -34,8 +34,8 @@ jobs:
             "# Placeholder file" | Out-File -FilePath "custom_levels/.keep" -Encoding UTF8 
           }
           
-          Write-Host "Running PyInstaller..."
-          pyinstaller main.spec
+          Write-Host "Running PyInstaller with --clean for security..."
+          pyinstaller --clean --noconfirm main.spec
           
           # Vérifier que le dossier et l'EXE ont été créés (mode onedir)
           if (-not (Test-Path "dist/HexMaster/HexMaster.exe")) {
@@ -173,14 +173,24 @@ jobs:
           🔧 Commit: ${{ steps.version.outputs.COMMIT_SHORT }}
           🚀 Branch: ${{ github.ref_name }}
           
-          Comment jouer:
+          ## Comment jouer:
           1. Téléchargez HexMaster.zip ci-dessous
           2. Extrayez l'archive dans un dossier de votre choix
           3. Lancez HexMaster.exe dans le dossier extrait
           4. Amusez-vous bien!
           
-          Note: Cette version utilise le mode "onedir" de PyInstaller pour une meilleure compatibilité.
-          L'archive contient tous les fichiers nécessaires au fonctionnement du jeu.
+          ## Informations de build (traçabilité):
+          - **Mode**: PyInstaller onedir (sans UPX)
+          - **Commande**: \`pyinstaller --clean --noconfirm main.spec\`
+          - **Source**: [main.spec](https://github.com/${{ github.repository }}/blob/${{ github.sha }}/main.spec)
+          - **Code source**: [Commit ${{ steps.version.outputs.COMMIT_SHORT }}](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
+          - **PyInstaller**: Latest stable version
+          
+          ## Sécurité:
+          Cette version utilise le mode "onedir" sans compression UPX pour réduire les faux positifs d'antivirus.
+          Le binaire peut être recompilé de manière identique en utilisant le fichier main.spec du dépôt.
+          
+          **Hash SHA256**: (sera calculé après upload)
           "@
           
           $headers = @{
@@ -203,6 +213,11 @@ jobs:
             $release = Invoke-RestMethod -Uri $uri -Headers $headers -Method Post -Body $body
             Write-Host "✅ Release created with ID: $($release.id)"
             
+            # Calculate SHA256 hash for verification
+            Write-Host "Calculating SHA256 hash..."
+            $zipHash = (Get-FileHash "dist/HexMaster.zip" -Algorithm SHA256).Hash.ToLower()
+            Write-Host "SHA256: $zipHash"
+            
             # Upload the ZIP asset
             Write-Host "Uploading HexMaster.zip..."
             $uploadUri = "https://uploads.github.com/repos/${{ github.repository }}/releases/$($release.id)/assets?name=HexMaster.zip"
@@ -211,6 +226,22 @@ jobs:
             $fileBytes = [System.IO.File]::ReadAllBytes("dist/HexMaster.zip")
             $asset = Invoke-RestMethod -Uri $uploadUri -Headers $headers -Method Post -Body $fileBytes
             Write-Host "✅ HexMaster.zip uploaded successfully (ID: $($asset.id))"
+            
+            # Update release description with SHA256
+            Write-Host "Updating release description with SHA256..."
+            $updatedNotes = $notes -replace "\*\*Hash SHA256\*\*: \(sera calculé après upload\)", "**Hash SHA256**: ``$zipHash``"
+            $updateBody = @{
+              'body' = $updatedNotes
+            } | ConvertTo-Json -Depth 10
+            
+            $updateUri = "https://api.github.com/repos/${{ github.repository }}/releases/$($release.id)"
+            $headers['Content-Type'] = 'application/json'
+            try {
+              Invoke-RestMethod -Uri $updateUri -Headers $headers -Method Patch -Body $updateBody
+              Write-Host "✅ Release description updated with SHA256"
+            } catch {
+              Write-Host "⚠️ Could not update release description: $($_.Exception.Message)"
+            }
           } catch {
             Write-Host "❌ Error creating release: $($_.Exception.Message)"
             if ($_.Exception.Response) {
