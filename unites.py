@@ -401,7 +401,7 @@ class Unite:
         """Utilise la compétence active de l'unité."""
         # Vérifier les conditions d'utilisation
         # Compétences qui ne nécessitent pas d'attaque restante
-        competences_sans_attaque = ["soin"]
+        competences_sans_attaque = ["soin", "pluie de flèches"]
         attaque_necessaire = self.comp not in competences_sans_attaque
         
         if (self.a_competence_active() and 
