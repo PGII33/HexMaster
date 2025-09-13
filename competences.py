@@ -323,32 +323,32 @@ def appliquer_bonus_commandement(unite):
     return unite.dmg
 
 def divertissement(self, toutes_unites):
-    """S'il lui reste une attaque, marque les ennemis adjacents comme divertis (perdront 1 attaque au prochain tour)."""
+    """S'il lui reste une attaque, marque toutes les unités adjacentes comme diverties (perdront 1 attaque au prochain tour)."""
     # Vérifier que l'unité a encore au moins une attaque
     if self.attaque_restantes <= 0:
         return
     
-    # Trouver les ennemis adjacents
+    # Trouver toutes les unités adjacentes (alliées et ennemies)
     directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
     q, r = self.pos
     
-    ennemis_divertis = []
+    unites_diverties = []
     for dq, dr in directions:
         pos_adjacente = (q + dq, r + dr)
         
-        # Chercher une unité ennemie à cette position
+        # Chercher une unité à cette position (peu importe l'équipe)
         for unite in toutes_unites:
             if (unite.pos == pos_adjacente and 
                 unite.vivant and 
-                unite.equipe != self.equipe):
+                unite != self):  # Exclure le bouffon lui-même
                 
                 # Marquer l'unité comme divertie pour le prochain tour
                 unite.diverti = True
-                ennemis_divertis.append(unite)
+                unites_diverties.append(unite)
                 break  # Une seule unité par case
     
-    if ennemis_divertis:
-        print(f"{self.nom} divertit {len(ennemis_divertis)} ennemi(s) adjacent(s)!")
+    if unites_diverties:
+        print(f"{self.nom} divertit {len(unites_diverties)} unité(s) adjacente(s)!")
 
 def manipulation(self, toutes_unites):
     """Toutes les unités avec 4PV ou moins passent dans votre camp tant qu'elles ont ≤4 PV."""
@@ -733,7 +733,7 @@ COMPETENCES = {
     "pluie de flèches": "Attaque de zone : inflige des dégâts à toutes les unités (alliées et ennemies) sur la cible et les cases adjacentes. Ne consomme pas l'attaque.",
     "monture libéré": "Se transforme en Guerrier et invoque un Cheval allié sur une case adjacente.",
     "commandement": "Augmente l'attaque d'un allié de +3 et lui donne +2 dégâts pour le prochain tour.",
-    "divertissement": "Si il a encore des attaques en fin de tour, réduit les attaques des ennemis adjacents de 1.",
+    "divertissement": "Si il a encore des attaques en fin de tour, réduit les attaques de toutes les unités adjacentes (alliées et ennemies) de 1.",
     "protection": "Subit les dégâts à la place des alliés adjacents attaqués (dégâts partagés entre protecteurs).",
     "manipulation": "Toutes les unités avec 4PV ou moins passent dans votre camp (fin de tour, tant qu'elles ont ≤4 PV).",
     "regard mortel": "L'ennemi touché est mort instantanément s'il est de tier 2 ou moins.",
