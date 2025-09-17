@@ -428,23 +428,36 @@ def protection(cible_originale, degats, toutes_unites):
     3. Chaque protecteur applique ses propres défenses
     Retourne les dégâts totaux effectivement infligés.
     """
-    # Trouver tous les protecteurs adjacents à la cible
-    protecteurs = []
+    # Trouver tous les protecteurs connectés (adjacents à la cible ou entre eux)
     directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
     q, r = cible_originale.pos
     
+    # 1. Trouver tous les protecteurs connectés (BFS)
+    protecteurs = set()
+    visited = set()
+    queue = []
+    # Démarre par les protecteurs adjacents à la cible
     for dq, dr in directions:
-        pos_adjacente = (q + dq, r + dr)
-        
-        # Chercher une unité alliée avec protection à cette position
+        pos_adj = (q + dq, r + dr)
         for unite in toutes_unites:
-            if (unite.pos == pos_adjacente and 
-                unite.vivant and 
-                unite.equipe == cible_originale.equipe and
-                unite.comp == "protection"):
-                
-                protecteurs.append(unite)
-                break  # Une seule unité par case
+            if (unite.comp == "protection" and unite.pos == pos_adj and unite.vivant and unite.equipe == cible_originale.equipe):
+                protecteurs.add(unite)
+                queue.append(unite)
+                visited.add(unite)
+                break
+    # Étendre à tous les protecteurs connectés (adjacents entre eux)
+    while queue:
+        current = queue.pop(0)
+        cq, cr = current.pos
+        for dq, dr in directions:
+            pos_adj = (cq + dq, cr + dr)
+            for unite in toutes_unites:
+                if (unite.pos == pos_adj and unite.vivant and unite.equipe == cible_originale.equipe and unite.comp == "protection"):
+                    if unite not in visited:
+                        protecteurs.add(unite)
+                        queue.append(unite)
+                        visited.add(unite)
+    protecteurs = list(protecteurs)
     
     if not protecteurs:
         # Pas de protection, la cible subit tous les dégâts normalement
@@ -453,28 +466,28 @@ def protection(cible_originale, degats, toutes_unites):
     # ÉTAPE 1: Appliquer l'armure de pierre de la cible originale si elle en a
     degats_apres_armure_cible = degats
     if cible_originale.comp == "armure de pierre":
-        degats_apres_armure_cible = max(0, degats - 2)  # Fonction armure_de_pierre inline
+        degats_apres_armure_cible = max(0, degats - 2)
         print(f" {cible_originale.nom} a armure de pierre: {degats} → {degats_apres_armure_cible} dégâts")
     
-    # ÉTAPE 2: Les protecteurs vont subir les dégâts réduits à la place
-    if len(protecteurs) == 1:
-        # Un seul protecteur, il prend tous les dégâts (déjà réduits par l'armure de la cible)
-        protecteur = protecteurs[0]
-        print(f" {protecteur.nom} protège {cible_originale.nom}!")
-        # Le protecteur applique ses propres défenses sur les dégâts déjà réduits
-        degats_infliges = protecteur.subir_degats(degats_apres_armure_cible)
-        return degats_infliges
-    else:
-        # Plusieurs protecteurs : celui avec le plus de PV prend tous les dégâts
-        print(f" {len(protecteurs)} gardes protègent {cible_originale.nom}!")
-        
-        # Choisir le protecteur avec le plus de PV
-        protecteur_choisi = max(protecteurs, key=lambda u: u.pv)
-        print(f" {protecteur_choisi.nom} (le plus résistant) prend tous les dégâts!")
-        
-        # Le protecteur choisi applique ses propres défenses sur les dégâts déjà réduits
-        degats_infliges = protecteur_choisi.subir_degats(degats_apres_armure_cible)
-        return degats_infliges
+    # ÉTAPE 2: Répartir les dégâts pour équilibrer les PV restants
+    n = len(protecteurs)
+    pv_initiaux = [p.pv for p in protecteurs]
+    degats_restants = degats_apres_armure_cible
+    parts = [0] * n
+    # On va donner les dégâts un par un à celui qui a le plus de PV restant
+    pv_apres = pv_initiaux[:]
+    while degats_restants > 0:
+        # Trouver l'indice du protecteur avec le plus de PV actuel
+        idx = pv_apres.index(max(pv_apres))
+        parts[idx] += 1
+        pv_apres[idx] -= 1
+        degats_restants -= 1
+    print(f" {n} protecteurs protègent {cible_originale.nom} ! Dégâts répartis pour équilibrer les PV :")
+    total_inflige = 0
+    for i, protecteur in enumerate(protecteurs):
+        print(f"  {protecteur.nom} subit {parts[i]} dégâts (PV initiaux: {pv_initiaux[i]} → finaux: {pv_initiaux[i]-parts[i]})")
+        total_inflige += protecteur.subir_degats(parts[i])
+    return total_inflige
 
 # ========== COMPÉTENCES ÉLÉMENTAIRES ==========
 
@@ -510,6 +523,7 @@ def renaissance(self, toutes_unites):
     
     # La renaissance se déclenche quand l'unité est sur le point de mourir (PV <= 0)
     if self.vivant and self.pv <= 0 and random.random() < 0.8:  # 80% de chance
+        print("I revived")
         self.pv = self.pv_max
         # Réinitialiser les actions pour le tour suivant
         self.pm = self.mv
@@ -549,9 +563,9 @@ def gerer_combustion_differee(unite, toutes_unites):
 def regard_mortel(attaquant, cible):
     """L'ennemi touché est mort s'il est de tier 2 ou moins."""
     if cible.tier <= 2 and cible.equipe != attaquant.equipe and cible.vivant:
-        print(f"💀 {attaquant.nom} utilise son regard mortel sur {cible.nom} (tier {cible.tier})!")
+        print(f"{attaquant.nom} utilise son regard mortel sur {cible.nom} (tier {cible.tier})!")
         cible.pv = 0  # Tue instantanément l'unité
-        print(f"💀 {cible.nom} succombe au regard mortel!")
+        print(f"{cible.nom} succombe au regard mortel!")
         return True
     return False
 
@@ -564,7 +578,7 @@ def rage(attaquant):
     # Augmente le stack de rage
     attaquant.rage_stacks += 1
     attaquant.dmg += 1
-    print(f"⚡ {attaquant.nom} entre en RAGE ! Attaque +{attaquant.rage_stacks} (Total: {attaquant.dmg})")
+    print(f"{attaquant.nom} entre en RAGE ! Attaque +{attaquant.rage_stacks} (Total: {attaquant.dmg})")
 
 def vol(defenseur, degats):
     """Ignore la première attaque subie (retourne les dégâts après réduction)."""
@@ -575,7 +589,7 @@ def vol(defenseur, degats):
     # Si c'est la première attaque, l'ignorer
     if not defenseur.vol_utilise:
         defenseur.vol_utilise = True
-        print(f"🪶 {defenseur.nom} utilise VOL ! La première attaque est ignorée.")
+        print(f"{defenseur.nom} utilise VOL ! La première attaque est ignorée.")
         return 0  # Aucun dégât subi
     
     # Les attaques suivantes passent normalement
@@ -586,7 +600,7 @@ def venin_incapacitant(attaquant, cible):
     if cible.vivant and cible.equipe != attaquant.equipe:
         # Marquer la cible comme empoisonnée (ne peut pas bouger au prochain tour)
         cible.venin_incapacite = True
-        print(f"🐍 {attaquant.nom} empoisonne {cible.nom} ! Elle ne pourra pas se déplacer au prochain tour.")
+        print(f"{attaquant.nom} empoisonne {cible.nom} ! Elle ne pourra pas se déplacer au prochain tour.")
         return True
     return False
 
@@ -650,14 +664,14 @@ def tir_precis(attaquant, cible, toutes_unites):
     portee_etendue = attaquant.portee + 1
     
     if distance > portee_etendue:
-        print(f"❌ {cible.nom} est trop loin pour le tir précis (distance {distance}, portée max {portee_etendue})")
+        print(f"{cible.nom} est trop loin pour le tir précis (distance {distance}, portée max {portee_etendue})")
         return False
     
     # Tir précis activé : dégâts x1.5
     degats_base = attaquant.get_attaque_totale()
     degats_precis = int(degats_base * 1.5)
     
-    print(f"🏹 {attaquant.nom} utilise TIR PRÉCIS ! Dégâts augmentés à {degats_precis} !")
+    print(f"{attaquant.nom} utilise TIR PRÉCIS ! Dégâts augmentés à {degats_precis} !")
     
     # Appliquer les dégâts avec protection
     degats_infliges = attaquant.appliquer_degats_avec_protection(cible, degats_precis, toutes_unites)

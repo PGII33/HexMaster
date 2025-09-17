@@ -216,9 +216,9 @@ class Unite:
         else:
             # Les dégâts vont directement aux PV
             self.pv -= degats
-        
-        # Note: Ne pas appeler mourir() ici, c'est la responsabilité de la méthode attaquer()
-        
+
+        if self.comp == "protection" and self.pv <= 0:
+            self.mourir()
         return degats  # Retourner les dégâts réellement subis (après armure)
     
     def appliquer_degats_avec_protection(self, cible, degats, toutes_unites):
@@ -297,7 +297,7 @@ class Unite:
             if self.comp == "sédition venimeuse" and autre.vivant:
                 co.sedition_venimeuse(self, autre, toutes_unites)
 
-    def mourir(self, toutes_unites):
+    def mourir(self, toutes_unites=None):
         """Gère la mort de l'unité et les compétences déclenchées.
         Retourne True si l'unité était vivante et est maintenant morte."""
         if self.vivant:
