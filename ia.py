@@ -389,28 +389,45 @@ def ia_tactique_avancee(unite, ennemis, unites):
     # Phase 2: Compétences de support prioritaires
     if hasattr(unite, 'comp') and peut_utiliser_competence_active(unite, unite.comp, unites):
         competence = unite.comp
-        
         # Soigner un allié critique en priorité (logique assouplie)
         if competence == "soin":
             meilleure_cible = trouver_meilleure_cible_competence(unite, competence, unites)
             if meilleure_cible:
                 unite.utiliser_competence(meilleure_cible, unites)
                 return "competence_soin"
-        
-        # Bénédiction sur l'allié le plus offensif qui peut attaquer
+        # Bénédiction : ne pas buff une unité déjà buffée, et comparer à l'intérêt d'attaquer
         elif competence == "bénédiction":
-            meilleure_cible = trouver_meilleure_cible_competence(unite, competence, unites)
-            if meilleure_cible:
+            # Filtrer les alliés non buffés
+            allies_non_buffes = [u for u in unites if u.vivant and u.equipe == unite.equipe and not getattr(u, 'buff_bénédiction', False)]
+            meilleure_cible = None
+            print(allies_non_buffes.__len__)
+            meilleur_score = 0
+            for cible in allies_non_buffes:
+                score = evaluer_utilite_competence(unite, competence, cible, unites)
+                if score > meilleur_score:
+                    meilleur_score = score
+                    meilleure_cible = cible
+            # Calculer l'intérêt d'attaquer
+            score_attaque = 0
+            if unite.attaque_restantes > 0:
+                # On prend la meilleure cible ennemie
+                ennemis_vivants = [e for e in ennemis if e.vivant]
+                if ennemis_vivants:
+                    score_attaque = max(_evaluer_cible(unite, e, unites, [a for a in unites if a.vivant and a.equipe == unite.equipe and a != unite]) for e in ennemis_vivants)
+            # Si le buff est plus intéressant que l'attaque, on buff
+            print(meilleure_cible, score_attaque, meilleur_score)
+            if meilleure_cible and meilleur_score > score_attaque:
                 unite.utiliser_competence(meilleure_cible, unites)
                 return "competence_benediction"
-        
+            # Si aucune cible à bénir, passer à l'attaque normale
+            elif not allies_non_buffes:
+                pass  # Permet à l'IA de continuer et d'attaquer comme une unité classique
         # Commandement : donner une attaque supplémentaire
         elif competence == "commandement":
             meilleure_cible = trouver_meilleure_cible_competence(unite, competence, unites)
             if meilleure_cible:
                 unite.utiliser_competence(meilleure_cible, unites)
                 return "competence_commandement"
-        
         # Attaques spéciales à cooldown
         elif competence in ["pluie de flèches", "tir précis"]:
             meilleure_cible = trouver_meilleure_cible_competence(unite, competence, unites)
