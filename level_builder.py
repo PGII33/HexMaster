@@ -5,7 +5,11 @@ from niveau_structure import NiveauConfig, TypeRestriction, sauvegarder_niveau, 
 from ui_commons import UIManager, ScrollableList
 import unites
 from placement import PlacementPhase
-from unit_selector import UnitSelector
+from unit_selector import UnitSelector, UNIT_MAX
+
+# Constantes
+CP_MAX = UNIT_MAX * 4 # Car les boss coûtent 4 CP
+PA_MAX = 10000
 
 class LevelBuilder:
     def __init__(self, screen):
@@ -453,12 +457,12 @@ class LevelBuilder:
     def modifier_max_units(self, delta):
         """Modifie le nombre max d'unités pour le joueur"""
         new_value = self.niveau_config.max_unites + delta
-        self.niveau_config.max_unites = max(1, min(20, new_value))
+        self.niveau_config.max_unites = max(1, min(UNIT_MAX, new_value))
     
     def modifier_cp_joueur(self, delta):
         """Modifie les CP disponibles pour le joueur"""
         new_value = self.niveau_config.cp_disponible + delta
-        self.niveau_config.cp_disponible = max(1, min(20, new_value))
+        self.niveau_config.cp_disponible = max(1, min(96, new_value))
     
     def changer_type_restriction(self):
         """Change le type de restriction cycliquement"""
@@ -472,12 +476,12 @@ class LevelBuilder:
     def modifier_cp_recompense(self, delta):
         """Modifie les CP de récompense"""
         new_value = self.niveau_config.recompense_cp + delta
-        self.niveau_config.recompense_cp = max(0, min(10, new_value))
+        self.niveau_config.recompense_cp = max(0, min(CP_MAX, new_value))
     
     def modifier_pa_recompense(self, delta):
         """Modifie les PA de récompense"""
         new_value = self.niveau_config.recompense_pa + delta
-        self.niveau_config.recompense_pa = max(0, min(500, new_value))  # Max 500 PA
+        self.niveau_config.recompense_pa = max(0, min(PA_MAX, new_value))
     
     def ajouter_unite_debloquee(self):
         """Lance l'interface de sélection d'unité à débloquer"""

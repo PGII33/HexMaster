@@ -17,6 +17,7 @@ def zombification(self, cible):
         cible.attaque_restantes = 0
 
 def tas_d_os(self):
+    """Transforme l'unité morte en tas d'os."""
     from unites import Tas_D_Os
     # Transformation en tas d'os : c'est une nouvelle unité vivante
     self.__class__ = Tas_D_Os
@@ -86,7 +87,7 @@ def nécromancie(self, toutes_unites, plateau, q_range=None, r_range=None):
             break
 
 def invocation(self, toutes_unites, plateau, q_range=None, r_range=None):
-    """Invoque une unité Morts-Vivants de tier 1 ou 2 sur une case adjacente vide à chaque tour."""
+    """Invoque deux unité Morts-Vivants de tier 1 ou 2 sur une case adjacente vide à chaque tour."""
     from unites import Goule, Squelette, Spectre, Zombie, Vampire
     import random
     
@@ -141,7 +142,7 @@ def explosion_sacrée(self, toutes_unites, cible_attaquee=None):
     self.explosion_sacree_pending = True
 
 def bouclier_de_la_foi(self, toutes_unites):
-    """2 Bouclier sur les unités autour de soi."""
+    """Applique 1 bouclier sur les unités alliées adjacentes."""
     directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
     q, r = self.pos
     
@@ -151,20 +152,16 @@ def bouclier_de_la_foi(self, toutes_unites):
             for dq, dr in directions:
                 if (q+dq, r+dr) == (unite_q, unite_r):
                     # Ajouter un bouclier temporaire
-                    if not hasattr(unite, 'bouclier'):
-                        unite.bouclier = 0
                     unite.bouclier += 1
                     break
 
 def bénédiction(self, cible):
-    """Augmente l'attaque et la défense de la cible."""
+    """Augmente l'attaque de 2 et applique 1 bouclier à la cible."""
     if cible.equipe == self.equipe and cible.vivant:
         # Ajouter un buff permanent
         if not hasattr(cible, 'buff_bénédiction'):
             cible.buff_bénédiction = True
-            cible.dmg += 2
-            if not hasattr(cible, 'bouclier'):
-                cible.bouclier = 0
+            cible.ba_benediction = 2
             cible.bouclier += 1
         return True
     return False
@@ -194,7 +191,8 @@ def cristalisation(self, cible_pos, toutes_unites):
 
 def lumière_vengeresse(self, cible):
     """Regagne son attaque lorsqu'il tue un Mort-Vivant."""
-    # La vérification de faction est faite dans unites.py avant l'appel
+    if cible.get_faction() != "Morts-Vivants":
+        return
     self.attaque_restantes += 1
     # Flag pour indiquer que cette unité devrait continuer à agir
     self._lumiere_vengeresse_activee = True
@@ -210,9 +208,8 @@ def aura_sacrée(self, toutes_unites):
             for dq, dr in directions:
                 if (q+dq, r+dr) == (unite_q, unite_r):
                     # Bonus permanent tant que l'ArchAnge est vivant
-                    if not hasattr(unite, 'aura_sacrée_bonus'):
-                        unite.aura_sacrée_bonus = True
-                        unite.dmg += 3
+                    if not hasattr(unite, 'ba_aura_sacree'):
+                        unite.ba_aura_sacree = 3
                     break
 
 # ========== COMPÉTENCES ROYAUME ==========
@@ -278,7 +275,6 @@ def monture_libere(self, case_pos, toutes_unites):
     toutes_unites.append(cheval)
     
     # Transformer le cavalier en guerrier à la nouvelle position
-    ancienne_pos = self.pos
     self.pos = case_pos
     
     # Changer les stats pour devenir un guerrier (garder les PV actuels)
@@ -292,7 +288,7 @@ def monture_libere(self, case_pos, toutes_unites):
     return True
 
 def commandement(unite, cible, toutes_unites):
-    """Augmente l'attaque d'un allié de +3, lui donne +2 dégâts pour le prochain tour, et +1 attaque supplémentaire."""
+    """Augmente l'attaque d'un allié de l'attaque actuelle du roi, et +1 attaque supplémentaire."""
     from ia import hex_distance
     
     # Vérifier si c'est un allié
@@ -306,25 +302,16 @@ def commandement(unite, cible, toutes_unites):
             return False
         
         # Appliquer les boosts
-        cible.boost_attaque_temporaire = getattr(cible, 'boost_attaque_temporaire', 0) + 3
-        
+        cible.ba_commandement = getattr(cible, 'ba_commandement', 0) + unite.get_attaque_totale()
+
         # Donner +1 attaque supplémentaire
         cible.attaque_restantes += 1
-        
-        print(f"{unite.nom} commande {cible.nom} ! (+3 attaque, +2 dégâts, +1 attaque supplémentaire)")
-        
+
+        print(f"{unite.nom} commande {cible.nom} ! (+{unite.get_attaque_totale()} attaque, +1 attaque supplémentaire)")
+
         return True
     
     return False
-
-# Fonction pour appliquer le bonus de commandement lors d'une attaque
-def appliquer_bonus_commandement(unite):
-    """Retourne les dégâts avec bonus de commandement et consomme le bonus."""
-    if hasattr(unite, 'bonus_commandement') and unite.bonus_commandement > 0:
-        bonus = unite.bonus_commandement
-        unite.bonus_commandement = 0  # Consommer le bonus après utilisation
-        return unite.dmg + bonus
-    return unite.dmg
 
 def divertissement(self, toutes_unites):
     """S'il lui reste une attaque, marque toutes les unités adjacentes comme diverties (perdront 1 attaque au prochain tour)."""
@@ -476,6 +463,7 @@ def protection(cible_originale, degats, toutes_unites):
     parts = [0] * n
     # On va donner les dégâts un par un à celui qui a le plus de PV restant
     pv_apres = pv_initiaux[:]
+    degats_a_rediriger = 0
     while degats_restants > 0:
         # Trouver l'indice du protecteur avec le plus de PV actuel
         idx = pv_apres.index(max(pv_apres))
@@ -487,6 +475,16 @@ def protection(cible_originale, degats, toutes_unites):
     for i, protecteur in enumerate(protecteurs):
         print(f"  {protecteur.nom} subit {parts[i]} dégâts (PV initiaux: {pv_initiaux[i]} → finaux: {pv_initiaux[i]-parts[i]})")
         total_inflige += protecteur.subir_degats(parts[i])
+        if protecteur.pv <= 0 and protecteur.vivant:
+            protecteur.mourir(toutes_unites)
+        degats_a_rediriger += max(0, parts[i] - (pv_initiaux[i]))  # Dégâts non absorbés par ce protecteur
+    
+    # ÉTAPE 3: Si des dégâts restent, la cible originale les subit
+    if degats_a_rediriger > 0:
+        print(f"  {cible_originale.nom} subit {degats_a_rediriger} dégâts restants (aucun protecteur n'a pu les absorber)")
+        total_inflige += cible_originale.subir_degats(degats_a_rediriger)
+        if cible_originale.pv <= 0 and cible_originale.vivant:
+            cible_originale.mourir(toutes_unites)
     return total_inflige
 
 # ========== COMPÉTENCES ÉLÉMENTAIRES ==========
@@ -523,7 +521,7 @@ def renaissance(self, toutes_unites):
     
     # La renaissance se déclenche quand l'unité est sur le point de mourir (PV <= 0)
     if self.vivant and self.pv <= 0 and random.random() < 0.8:  # 80% de chance
-        print("I revived")
+        print("Renaissance de", self.nom, "!")
         self.pv = self.pv_max
         # Réinitialiser les actions pour le tour suivant
         self.pm = self.mv
@@ -534,8 +532,7 @@ def renaissance(self, toutes_unites):
 
 def armure_de_pierre(degats_recus):
     """Réduit tous les dégâts reçus de 2 points (minimum 0)."""
-    degats_reduits = max(0, degats_recus - 2)
-    return degats_reduits
+    return max(0, degats_recus - 2)
 
 def combustion_differee(attaquant, cible):
     """Marque la cible pour mourir dans 3 tours."""
@@ -561,24 +558,23 @@ def gerer_combustion_differee(unite, toutes_unites):
                 delattr(unite, 'combustion_attaquant')
 
 def regard_mortel(attaquant, cible):
-    """L'ennemi touché est mort s'il est de tier 2 ou moins."""
+    """Renvoie 0 si la cible est de tier 2 ou moins, sinon renvoie les dégâts normaux."""
     if cible.tier <= 2 and cible.equipe != attaquant.equipe and cible.vivant:
         print(f"{attaquant.nom} utilise son regard mortel sur {cible.nom} (tier {cible.tier})!")
-        cible.pv = 0  # Tue instantanément l'unité
         print(f"{cible.nom} succombe au regard mortel!")
-        return True
-    return False
+        cible.pv = 0  # Tue la cible immédiatement
+        return 0
+    return attaquant.dmg  # Dégâts normaux si la cible est de tier > 2
 
 def rage(attaquant):
     """Augmente l'attaque de 1 par attaque (accumulation permanente)."""
     # Initialise le compteur de rage s'il n'existe pas
-    if not hasattr(attaquant, 'rage_stacks'):
-        attaquant.rage_stacks = 0
+    if not hasattr(attaquant, 'ba_rage'):
+        attaquant.ba_rage = 0
     
     # Augmente le stack de rage
-    attaquant.rage_stacks += 1
-    attaquant.dmg += 1
-    print(f"{attaquant.nom} entre en RAGE ! Attaque +{attaquant.rage_stacks} (Total: {attaquant.dmg})")
+    attaquant.ba_rage += 1
+    print(f"{attaquant.nom} entre en RAGE ! Attaque +{attaquant.ba_rage} (Total: {attaquant.get_attaque_totale()})")
 
 def vol(defenseur, degats):
     """Ignore la première attaque subie (retourne les dégâts après réduction)."""

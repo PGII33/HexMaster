@@ -6,6 +6,8 @@ import sauvegarde
 from competences import COMPETENCES
 from faction_colors import get_faction_color
 
+UNIT_MAX = 24
+
 class UnitSelector:
     def __init__(self, screen, mode, **kwargs):
         self.screen = screen
@@ -83,7 +85,7 @@ class UnitSelector:
         elif self.mode == "builder_enemy":
             return {
                 "titre": "Level Builder - Sélection des Ennemis",
-                "max_units": 999,  # Pas de limite
+                "max_units": UNIT_MAX,  # Limite de UNIT_MAX unités
                 "use_cp": False,   # Pas de contrainte CP
                 "cp_disponible": 999,
                 "faction_unique": False,  # Toutes factions autorisées

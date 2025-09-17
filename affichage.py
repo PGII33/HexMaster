@@ -8,12 +8,16 @@ NOIR = (0,0,0)
 GRIS = (180,180,180)
 VERT = (50,200,50)
 ROUGE = (200,50,50)
+VERT_VIE = (30, 120, 30)
 BLEU_BOUCLIER = (100, 150, 255)
+ROUGE_DMG_TOTAL = (255, 100, 100)
 JAUNE_CIBLE = (255, 255, 100)
+
+DO_PRINT = False
 
 def dessiner(jeu):
     # Debug mode sélection
-    if hasattr(jeu, 'mode_selection_competence') and jeu.mode_selection_competence:
+    if hasattr(jeu, 'mode_selection_competence') and jeu.mode_selection_competence and DO_PRINT:
         print(f"🎯 MODE SELECTION ACTIF: {jeu.competence_en_cours}, cibles: {len(jeu.cibles_possibles) if hasattr(jeu, 'cibles_possibles') else 0}")
         if hasattr(jeu, 'cibles_possibles'):
             print(f"   Cibles: {jeu.cibles_possibles}")
@@ -135,13 +139,21 @@ def dessiner(jeu):
         # utilise la fonction d'animation
         x, y = dessiner_unite_animee(jeu, u, x, y, color)
 
+        # Affichage vie (cercle vert et nombre de PV à gauche)
+        vie_txt = jeu.font_small.render(f"{u.get_pv()}", True, VERT_VIE)
+        jeu.screen.blit(vie_txt, (x - jeu.unit_radius - 5 - vie_txt.get_width(), y - jeu.unit_radius - 5))
+
         # Affichage du bouclier si présent
-        if hasattr(u, 'bouclier') and u.bouclier > 0:
+        if u.get_bouclier() > 0:
             # Dessiner un cercle bleu autour de l'unité pour le bouclier
             pygame.draw.circle(jeu.screen, BLEU_BOUCLIER, (x, y), jeu.unit_radius + 8, 4)
-            # Afficher le nombre de points de bouclier
-            bouclier_txt = jeu.font_small.render(f"{u.bouclier}", True, BLEU_BOUCLIER)
+            # Afficher le nombre de points de bouclier à droite
+            bouclier_txt = jeu.font_small.render(f"{u.get_bouclier()}", True, BLEU_BOUCLIER)
             jeu.screen.blit(bouclier_txt, (x + jeu.unit_radius + 5, y - jeu.unit_radius - 5))
+
+        # Affichage des dégâts totaux (rouge)
+        dmg_tot_txt = jeu.font_small.render(f"{u.get_attaque_totale()}", True, ROUGE_DMG_TOTAL)
+        jeu.screen.blit(dmg_tot_txt, (x - jeu.unit_radius - 5 - dmg_tot_txt.get_width(), y + jeu.unit_radius - 5))
 
         # Indicateur de cible possible pour compétence (unités)
         if (hasattr(jeu, 'mode_selection_competence') and jeu.mode_selection_competence and 
@@ -191,19 +203,16 @@ def dessiner(jeu):
         u = jeu.selection
         pygame.draw.rect(jeu.screen, (225,225,225), jeu.info_panel, border_radius=8)
         lignes = [
-            f"Nom: {u.nom}",
-            f"Faction: {u.faction}",
-            f"PV: {u.pv}/{u.pv_max}",
-            f"DMG: {u.dmg}",
-            f"Portée: {u.portee}",
-            f"Attaques restantes: {u.attaque_restantes}/{u.attaque_max}",
+            f"Nom: {u.get_nom()}",
+            f"Faction: {u.get_faction()}",
+            f"PV: {u.get_pv()}/{u.get_pv_max()}",
+            f"Bouclier: {u.get_bouclier()}",
+            f"DMG: {u.get_attaque_totale()}",
+            f"Portée: {u.get_portee()}",
+            f"Attaques restantes: {u.get_attaque_restantes()}/{u.get_attaque_max()}",
             f"PM restants: {u.pm}/{u.mv}",
             f"Equipe: {u.equipe}",
         ]
-        
-        # Ajouter l'affichage du bouclier dans le panneau
-        if hasattr(u, 'bouclier') and u.bouclier > 0:
-            lignes.append(f"Bouclier: {u.bouclier}")
         
         if u.comp:
             lignes.append(f"Compétence: {u.comp}")
@@ -228,8 +237,6 @@ def dessiner(jeu):
         
         for i, l in enumerate(lignes):
             color_text = NOIR
-            if "Bouclier:" in l:
-                color_text = BLEU_BOUCLIER
             txt = jeu.font_norm.render(l, True, color_text)
             jeu.screen.blit(txt, (jeu.info_panel.x + 10, jeu.info_panel.y + 10 + i * (txt.get_height() + 4)))
 
@@ -254,7 +261,7 @@ def dessiner(jeu):
                 btn_color = (100, 200, 100)  # Vert si utilisable
                 text_color = NOIR
                 btn_text = f"Utiliser {u.get_competence()}"
-                print(f"🟢 BOUTON COMPETENCE AFFICHE: {u.get_competence()} pour {u.nom}")
+                #print(f"🟢 BOUTON COMPETENCE AFFICHE: {u.get_competence()} pour {u.nom}")
             else:
                 btn_color = (150, 150, 150)  # Gris si en cooldown ou déjà utilisée
                 text_color = (100, 100, 100)
@@ -283,10 +290,10 @@ def dessiner(jeu):
             # Stocker le rectangle pour la détection de clic seulement si utilisable
             if competence_utilisable:
                 jeu.competence_btn_rect = btn_rect
-                print(f"🟢 BOUTON CLIQUABLE DEFINI: {btn_rect}")
+                #print(f"🟢 BOUTON CLIQUABLE DEFINI: {btn_rect}")
             else:
                 jeu.competence_btn_rect = None
-                print(f"🔴 BOUTON NON CLIQUABLE: {u.get_competence()}")
+                #print(f"🔴 BOUTON NON CLIQUABLE: {u.get_competence()}")
         else:
             jeu.competence_btn_rect = None
 

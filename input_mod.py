@@ -3,6 +3,8 @@ from layout import hex_to_pixel
 from tour import reset_actions_tour
 import competences as co
 
+DO_PRINT = False  # Activer les prints de debug
+
 def handle_click(jeu, mx, my):
     # Bouton retour au menu principal (priorité absolue si menu fin de combat affiché)
     if (hasattr(jeu, 'show_end_menu') and jeu.show_end_menu and 
@@ -31,7 +33,7 @@ def handle_click(jeu, mx, my):
         jeu.competence_btn_rect.collidepoint(mx, my) and jeu.selection and 
         jeu.selection.equipe == jeu.tour):
         
-        print(f"🔵 CLIC SUR BOUTON COMPETENCE: {jeu.selection.get_competence()}")
+        if DO_PRINT : print(f"🔵 CLIC SUR BOUTON COMPETENCE: {jeu.selection.get_competence()}")
         
         # Vérifier que la compétence est utilisable (pas en cooldown et pas déjà utilisée)
         cooldown_restant = getattr(jeu.selection, 'cooldown_actuel', 0)
@@ -46,7 +48,7 @@ def handle_click(jeu, mx, my):
             (not attaque_necessaire or jeu.selection.attaque_restantes > 0) and 
             cooldown_restant == 0 and not competence_utilisee):
             
-            print(f"🟢 ACTIVATION: {comp_name}")
+            #print(f"🟢 ACTIVATION: {comp_name}")
             
             # Compétences qui ne nécessitent pas de cible
             if comp_name == "explosion sacrée":
@@ -158,11 +160,11 @@ def _handle_competence_target_selection(jeu, mx, my):
             x, y = hex_to_pixel(jeu, q, r)
             # Vérifier si le clic est dans cette case hexagonale
             if (mx-x)**2 + (my-y)**2 <= (jeu.taille_hex)**2:
-                print(f"🟢 CLIC SUR CASE VIDE: {cible_pos}")
+                #print(f"🟢 CLIC SUR CASE VIDE: {cible_pos}")
                 # Utiliser la compétence sur cette position
                 success = jeu.unite_utilisant_competence.utiliser_competence(cible_pos, jeu.unites)
                 if success:
-                    print(f"🟢 COMPETENCE UTILISEE SUR CASE VIDE")
+                    #print(f"🟢 COMPETENCE UTILISEE SUR CASE VIDE")
                     # Sortir du mode sélection
                     jeu.mode_selection_competence = False
                     jeu.competence_en_cours = None

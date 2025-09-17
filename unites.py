@@ -30,6 +30,7 @@ class Unite:
         self.portee = portee
         self.attaque_max = attaque_max
         self.attaque_restantes = attaque_max
+        self.bouclier = 0
         # prix selon le nouveau système : Tier 1=20, Tier 2=80, Tier 3=200, Tier 4=non achetable
         if prix is not None:
             self.prix = prix
@@ -49,7 +50,7 @@ class Unite:
         
         # Système de cooldown pour les compétences actives
         self.cooldown_actuel = 0  # Tours restants avant de pouvoir réutiliser la compétence
-        self.cooldown_max = self._get_cooldown_competence()  # Cooldown maximum de la compétence
+        self.cooldown_max = self.get_cooldown_competence()  # Cooldown maximum de la compétence
         self.competence_utilisee_ce_tour = False  # Flag pour éviter la réduction immédiate
         
         self.vivant = True
@@ -60,12 +61,16 @@ class Unite:
     def get_pv(self): return self.pv
     def get_dmg(self): return self.dmg
     def get_mv(self): return self.mv
+    def get_pm(self): return self.pm
+    def get_bouclier(self): return self.bouclier
+    def get_attaque_max(self): return self.attaque_max
+    def get_attaque_restantes(self): return self.attaque_restantes
     def get_tier(self): return self.tier
     def get_prix(self): return "Bloqué" if self.prix < 0 else self.prix
     def get_name(self): return self.nom
     def get_faction(self): return self.faction
 
-    def _get_cooldown_competence(self):
+    def get_cooldown_competence(self):
         """Retourne le cooldown maximum pour la compétence de cette unité."""
         if not self.comp:
             return 0
@@ -129,14 +134,13 @@ class Unite:
         """Calcule l'attaque totale incluant les boosts temporaires."""
         attaque_base = self.dmg
         
-        # Ajouter les boosts temporaires
-        boost_attaque = getattr(self, 'boost_attaque_temporaire', 0)
-        
-        return attaque_base + boost_attaque
+        # Ajouter les boosts attaque (ba)
+        ba_benediction = getattr(self, 'ba_benediction', 0)
+        ba_commandement = getattr(self, 'ba_commandement', 0)
+        ba_aura_sacree = getattr(self, 'ba_aura_sacree', 0)
+        ba_rage = getattr(self, 'ba_rage', 0)
 
-    def get_degats_supplementaires(self):
-        """Calcule les dégâts supplémentaires temporaires."""
-        return getattr(self, 'boost_degats_temporaire', 0)
+        return attaque_base + ba_benediction + ba_commandement + ba_aura_sacree + ba_rage
 
     def cases_accessibles(self, toutes_unites, q_range=None, r_range=None):
         if self.pm <= 0:
@@ -187,10 +191,7 @@ class Unite:
 
     # ---------- Combat ----------
     def subir_degats(self, degats):
-        """Subit des dégâts en tenant compte du vol, bouclier et de l'armure de pierre."""
-        if not hasattr(self, 'bouclier'):
-            self.bouclier = 0
-        
+        """Subit des dégâts en tenant compte du vol, bouclier et de l'armure de pierre."""        
         degats_originaux = degats
         
         # Appliquer vol si l'unité a cette compétence (avant tout le reste)
@@ -216,12 +217,9 @@ class Unite:
         else:
             # Les dégâts vont directement aux PV
             self.pv -= degats
-
-        if self.comp == "protection" and self.pv <= 0:
-            self.mourir()
         return degats  # Retourner les dégâts réellement subis (après armure)
     
-    def appliquer_degats_avec_protection(self, cible, degats, toutes_unites):
+    def appliquer_degats_avec_protection(self, cible, degats, toutes_unites): #TODO
         """Applique les dégâts en tenant compte de la protection."""
         # La fonction protection gère maintenant tout le processus
         return co.protection(cible, degats, toutes_unites)
@@ -240,25 +238,17 @@ class Unite:
             # Gestion spéciale pour explosion sacrée
             if self.comp == "explosion sacrée":
                 # Le Fanatique inflige ses PV en dégâts et se sacrifie après l'animation
-                co.explosion_sacrée(self, toutes_unites, autre)  # Passer toutes les unités et la cible
-                # Ne pas faire l'attaque normale, l'explosion sacrée remplace tout
+                co.explosion_sacrée(self, toutes_unites, autre) 
             else:
                 # Compétence regard mortel : tue instantanément les unités tier ≤ 2
                 if self.comp == "regard mortel":
-                    regard_mortel_actif = co.regard_mortel(self, autre)
-                    if not regard_mortel_actif:
-                        # Si regard mortel n'a pas d'effet, appliquer les dégâts normaux
-                        degats_base = self.get_attaque_totale()
-                        degats_supplementaires = self.get_degats_supplementaires()
-                        degats_totaux = degats_base + degats_supplementaires
-                        degats_infliges = self.appliquer_degats_avec_protection(autre, degats_totaux, toutes_unites)
-                    else:
-                        degats_infliges = autre.pv_max  # Pour les statistiques
+                    
+                    if co.regard_mortel(self, autre) == 0:
+                        degats_infliges = autre.pv_max  # one shot si regard mortel actif
                 else:
                     # Attaque normale - calculer les dégâts avec boosts
-                    degats_base = self.get_attaque_totale()
-                    degats_supplementaires = self.get_degats_supplementaires()
-                    degats_totaux = degats_base + degats_supplementaires
+                    degats_totaux = self.get_attaque_totale()
+                    self.ba_commandement = 0 # Réinitialiser après utilisation
                     
                     # Appliquer la protection si applicable
                     degats_infliges = self.appliquer_degats_avec_protection(autre, degats_totaux, toutes_unites)
@@ -279,7 +269,7 @@ class Unite:
                 cible_tuée = result  # True si l'unité était vivante et est maintenant morte
             
             # Compétences après l'attaque (quand on sait si la cible est tuée)
-            if self.comp == "lumière vengeresse" and cible_tuée and faction_originale == "Morts-Vivants":
+            if self.comp == "lumière vengeresse" and cible_tuée:
                 co.lumière_vengeresse(self, autre)
             
             if self.comp == "zombification" and cible_tuée:

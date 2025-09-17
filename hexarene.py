@@ -5,6 +5,8 @@ import unites
 from placement import PlacementPhase
 from unit_selector import UnitSelector
 
+MAX_UNITS = 24
+
 class HexArène:
     def __init__(self, screen):
         self.screen = screen
@@ -12,7 +14,7 @@ class HexArène:
         self.font_small = pygame.font.SysFont(None, 28)
 
         self.selected_units = []
-        self.max_units = 14
+        self.max_units = MAX_UNITS
         self.running = True
         self.unit_positions = []  # contiendra (classe, pos) après placement
 
