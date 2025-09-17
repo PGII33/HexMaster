@@ -3,7 +3,7 @@
   "description": "",
   "chapitre": "02_Elementaires",
   "numero": 3,
-  "type_restriction": "faction_libre",
+  "type_restriction": "faction_unique",
   "unites_imposees": [],
   "placement_impose": false,
   "factions_autorisees": [],

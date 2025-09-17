@@ -10,7 +10,7 @@
   "faction_unique_requise": false,
   "faction_imposee": "",
   "cp_disponible": 3,
-  "max_unites": 14,
+  "max_unites": 3,
   "unites_ennemis": [
     [
       "Squelette",
