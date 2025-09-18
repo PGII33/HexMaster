@@ -291,6 +291,12 @@ class Unite:
         """Gère la mort de l'unité et les compétences déclenchées.
         Retourne True si l'unité était vivante et est maintenant morte."""
         if self.vivant:
+            # Si l'unité est sélectionnée dans le jeu, la désélectionner
+            for jeu in [u for u in toutes_unites if hasattr(u, 'selection')]:
+                if jeu.selection == self:
+                    jeu.selection = None
+                    jeu.deplacement_possibles = {}
+                    
             # Compétence de renaissance : tentative de résurrection avant la mort
             if self.comp == "renaissance":
                 if co.renaissance(self, toutes_unites):

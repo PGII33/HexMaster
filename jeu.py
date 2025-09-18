@@ -322,6 +322,10 @@ class Jeu:
             if u.equipe == self.tour and u.vivant and hasattr(u, 'fin_tour'):
                 u.fin_tour(self.unites)
         
+        # Désélectionner l'unité en cours
+        self.selection = None
+        self.deplacement_possibles = {}
+        
         # Gérer la combustion différée en fin de tour ennemi
         if self.tour == "ennemi":
             for u in self.unites:
