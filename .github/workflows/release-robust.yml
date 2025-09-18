@@ -1,9 +1,7 @@
 name: Build and Release EXE (Robust)
 
 on:
-  push:
-    branches: [ "main" ]
-  workflow_dispatch:
+  workflow_dispatch:  # Uniquement déclenchement manuel
 
 jobs:
   build-and-release:
