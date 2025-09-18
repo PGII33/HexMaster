@@ -275,8 +275,13 @@ class PlacementPhase:
             if can_place:
                 # Placer l'unité
                 self.placed_units[best_pos] = cls
-                # On ne décrémente pas le compteur ici car il a déjà été décrémenté lors de la sélection
-                self.selected_unit_to_place = None
+                
+                # Si l'unité venait de la liste et qu'il en reste, en resélectionner une automatiquement
+                if source_type == "list" and self.available_units.get(cls, 0) > 0:
+                    self.selected_unit_to_place = (cls, "list", source_pos)
+                    self.available_units[cls] -= 1
+                else:
+                    self.selected_unit_to_place = None
             else:
                 # Clic sur une zone invalide
                 # Vérifier si on clique sur une autre unité pour changer la sélection
@@ -299,8 +304,19 @@ class PlacementPhase:
                         clicked_on_unit = True
                         return
                 
-                # Vérifier les cartes d'unités
+                # Vérifier les cartes d'unités et la zone de menu
                 if not clicked_on_unit:
+                    # Vérifier si on est dans la zone du menu (panneau de droite)
+                    sidebar_x = self.largeur - self.sidebar_w
+                    if mx >= sidebar_x:
+                        # Si on clique dans le menu avec une unité du plateau sélectionnée,
+                        # on la remet dans la liste au lieu de la remettre sur le plateau
+                        if source_type == "board":
+                            self.available_units[cls] = self.available_units.get(cls, 0) + 1
+                            self.selected_unit_to_place = None
+                            return
+                    
+                    # Gestion normale des clics sur les cartes d'unités
                     unique_classes = list(set(self.selected_units))
                     card_index = 0
                     for other_cls in unique_classes:
@@ -312,7 +328,7 @@ class PlacementPhase:
                         if rect.collidepoint(mx, my):
                             # Remettre l'unité actuelle si possible
                             if source_type == "board":
-                                self.placed_units[source_pos] = cls
+                                self.available_units[cls] = self.available_units.get(cls, 0) + 1
                             elif source_type == "list":
                                 # Si l'unité venait de la liste, on réincrémente son compteur
                                 self.available_units[cls] += 1
@@ -335,6 +351,18 @@ class PlacementPhase:
                         self.available_units[cls] += 1
                     self.selected_unit_to_place = None
     
+    def _handle_right_click(self):
+        """Gère le clic droit pour déselectionner l'unité ou la remettre dans la liste"""
+        if self.selected_unit_to_place:
+            cls, source_type, source_pos = self.selected_unit_to_place
+            if source_type == "board":
+                # Au lieu de remettre l'unité sur le plateau, on l'ajoute à la liste
+                self.available_units[cls] = self.available_units.get(cls, 0) + 1
+            elif source_type == "list":
+                # Si l'unité venait de la liste, on réincrémente son compteur
+                self.available_units[cls] += 1
+            self.selected_unit_to_place = None
+    
     def run(self):
         """Lance la phase de placement"""
         while self.running:
@@ -347,10 +375,13 @@ class PlacementPhase:
                     self.screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
                     recalculer_layout(self)
                     self._create_buttons()
-                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    self._handle_mouse_click(event.pos)
-                    self.retour_btn.handle_event(event)
-                    self.valider_btn.handle_event(event)
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:  # Clic gauche
+                        self._handle_mouse_click(event.pos)
+                        self.retour_btn.handle_event(event)
+                        self.valider_btn.handle_event(event)
+                    elif event.button == 3:  # Clic droit
+                        self._handle_right_click()
             # Gestion du scroll du panneau d'unités (utilitaire)
             mx, my = pygame.mouse.get_pos()
             sidebar_x = self.largeur - self.sidebar_w
