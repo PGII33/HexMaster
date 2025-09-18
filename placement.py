@@ -230,7 +230,6 @@ class PlacementPhase:
                     self.selected_unit_to_place = (cls, "board", (q, r))
                     # Retirer temporairement l'unité du plateau
                     del self.placed_units[(q, r)]
-                    self.available_units[cls] = self.available_units.get(cls, 0) + 1
                     return
             
             # Vérifier si on clique sur une carte d'unité
@@ -245,6 +244,7 @@ class PlacementPhase:
                 if rect.collidepoint(mx, my):
                     # Sélectionner l'unité de la liste
                     self.selected_unit_to_place = (cls, "list", card_index)
+                    self.available_units[cls] -= 1  # Décrémenter immédiatement le compteur
                     return
                 
                 card_index += 1
@@ -275,7 +275,7 @@ class PlacementPhase:
             if can_place:
                 # Placer l'unité
                 self.placed_units[best_pos] = cls
-                self.available_units[cls] -= 1
+                # On ne décrémente pas le compteur ici car il a déjà été décrémenté lors de la sélection
                 self.selected_unit_to_place = None
             else:
                 # Clic sur une zone invalide
@@ -289,12 +289,13 @@ class PlacementPhase:
                         # Remettre l'unité actuelle en arrière si possible
                         if source_type == "board":
                             self.placed_units[source_pos] = cls
-                            self.available_units[cls] -= 1
+                        elif source_type == "list":
+                            # Si l'unité venait de la liste, on réincrémente son compteur
+                            self.available_units[cls] += 1
                         
                         # Sélectionner la nouvelle unité
                         self.selected_unit_to_place = (other_cls, "board", (q, r))
                         del self.placed_units[(q, r)]
-                        self.available_units[other_cls] += 1
                         clicked_on_unit = True
                         return
                 
@@ -312,21 +313,26 @@ class PlacementPhase:
                             # Remettre l'unité actuelle si possible
                             if source_type == "board":
                                 self.placed_units[source_pos] = cls
-                                self.available_units[cls] -= 1
+                            elif source_type == "list":
+                                # Si l'unité venait de la liste, on réincrémente son compteur
+                                self.available_units[cls] += 1
                             
                             # Sélectionner la nouvelle unité
                             self.selected_unit_to_place = (other_cls, "list", card_index)
+                            self.available_units[other_cls] -= 1
                             clicked_on_unit = True
                             return
                         
                         card_index += 1
                 
-                # Si on n'a cliqué sur rien de valide, annuler la sélection
+                    # Si on n'a cliqué sur rien de valide, annuler la sélection
                 if not clicked_on_unit:
-                    # Remettre l'unité à sa place d'origine si elle venait du plateau
+                    # Remettre l'unité à sa place d'origine
                     if source_type == "board":
                         self.placed_units[source_pos] = cls
-                        self.available_units[cls] -= 1
+                    elif source_type == "list":
+                        # Si l'unité venait de la liste, on réincrémente son compteur
+                        self.available_units[cls] += 1
                     self.selected_unit_to_place = None
     
     def run(self):
