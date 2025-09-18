@@ -33,34 +33,22 @@ class Inventaire:
             lines.append(cur)
         return lines or [""]
 
-    def _calculer_hauteur_max_carte(self, card_w):
-        """Calcule la hauteur maximale nécessaire pour toutes les cartes d'inventaire."""
-        max_height = 0
-        
-        for nom in self.data.get("unites", []):
-            classes_dict = {cls("joueur", (0,0)).get_nom(): cls for cls in CLASSES_UNITES}
-            cls = classes_dict.get(nom)
-            if not cls:
-                continue
-                
-            tmp = cls("joueur", (0,0))
-            comp = tmp.get_competence()
-            comp_desc = "" if not comp else COMPETENCES.get(comp, "")
-            
-            base_lines = [
-                f"{nom}",
-                f"{tmp.faction}",
-                f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
-                f"Attaques: {tmp.attaque_max} | Portée: {tmp.portee}",
-                f"Tier: {tmp.get_tier()}",
-                f"Compétence: {'Aucune' if not comp else comp}",
-            ]
-            desc_lines = self.wrap_text(comp_desc, card_w - 20)
-            card_h = 20 + len(base_lines) * 30 + len(desc_lines) * 26 + 20
-            
-            max_height = max(max_height, card_h)
-        
-        return max_height
+    def _get_card_height(self, card_w, cls):
+        from utils import wrap_text
+        tmp = cls("joueur", (0,0))
+        comp = tmp.get_competence()
+        comp_desc = "" if not comp else COMPETENCES.get(comp, "")
+        base_lines = [
+            f"{tmp.get_nom()}",
+            f"{tmp.faction}",
+            f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
+            f"Attaques: {tmp.attaque_max} | Portée: {tmp.portee}",
+            f"Tier: {tmp.get_tier()}",
+            f"Compétence: {'Aucune' if not comp else comp}",
+        ]
+        desc_lines = wrap_text(comp_desc, self.font, card_w - 20)
+        card_h = 20 + len(base_lines) * 30 + len(desc_lines) * 26 + 20
+        return card_h
 
     def _grid_specs(self):
         screen_w, screen_h = self.screen.get_size()
@@ -86,22 +74,27 @@ class Inventaire:
         self.running = False
 
     def afficher(self):
+        from utils import draw_bandeau
         self.creer_boutons()
         self.running = True
         self.scroll_y = 0
 
-        # AJOUTE CETTE LIGNE AVANT LA BOUCLE
+        # Dictionnaire nom -> classe
         classes_dict = {}
         for classe in CLASSES_UNITES:
             tmp_instance = classe("joueur", (0,0))
             classes_dict[tmp_instance.get_nom()] = classe
 
+        bandeau_h = 70  # Hauteur du bandeau
+
+        from utils import get_grid_specs
         while self.running:
             self.screen.fill((250, 245, 230))
-            screen_w, screen_h, margin, cols, card_w, start_y = self._grid_specs()
-            
-            # Calculer la hauteur uniforme pour toutes les cartes
-            card_h = self._calculer_hauteur_max_carte(card_w)
+            screen_w, screen_h, margin, cols, card_w, start_y, card_h = get_grid_specs(
+                self.screen,
+                CLASSES_UNITES,
+                self._get_card_height
+            )
 
             # --- SCROLL LIMITS ---
             total_height = start_y
@@ -121,9 +114,7 @@ class Inventaire:
             max_scroll = max(0, total_height - (screen_h - start_y - 40))
             # --- FIN SCROLL LIMITS ---
 
-            titre = self.title_font.render("Inventaire", True, (30, 30, 60))
-            self.screen.blit(titre, (margin, 30))
-
+            # Placement des cartes sous le bandeau
             x, y, col = margin, start_y - self.scroll_y, 0
             for nom in self.data.get("unites", []):
                 cls = classes_dict.get(nom)
@@ -142,7 +133,8 @@ class Inventaire:
                     f"Tier: {tmp.get_tier()}",
                     f"Compétence: {comp_nom}",
                 ]
-                desc_lines = self.wrap_text(comp_desc, card_w - 20)
+                from utils import wrap_text
+                desc_lines = wrap_text(comp_desc, self.font, card_w - 20)
 
                 rect = pygame.Rect(x, y, card_w, card_h)
                 # Utiliser la couleur de faction comme fond de carte
@@ -175,7 +167,23 @@ class Inventaire:
 
             self.boutons[-1].draw(self.screen)
 
-            for event in pygame.event.get():
+            # --- BANDEAU EN HAUT (toujours dessiné en dernier, donc au 1er plan) ---
+            # Utilisation de la fonction utilitaire
+            draw_bandeau(
+                self.screen,
+                screen_w,
+                bandeau_h,
+                margin,
+                self.font,
+                self.title_font,
+                self.data.get("pa", 0),
+                titre="Inventaire",
+                secret_click_rect_container=None
+            )
+
+            events = pygame.event.get()
+            from utils import handle_scroll_events
+            for event in events:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
@@ -183,10 +191,12 @@ class Inventaire:
                     self.screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
                     self.creer_boutons()
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    # Bloquer tout clic dans la zone du bandeau
+                    if event.pos[1] < bandeau_h:
+                        continue  # Empêche tout clic dans le bandeau
                     for b in self.boutons:
                         b.handle_event(event)
-                elif event.type == pygame.MOUSEWHEEL:
-                    self.scroll_y -= event.y * self.scroll_speed
-                    self.scroll_y = max(0, min(self.scroll_y, max_scroll))
+            # Gestion du scroll
+            self.scroll_y = handle_scroll_events(events, self.scroll_y, self.scroll_speed, max_scroll, bandeau_h)
 
             pygame.display.flip()

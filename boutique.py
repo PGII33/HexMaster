@@ -33,34 +33,22 @@ class Boutique:
                     return True
         return False
 
-    def _calculer_hauteur_max_carte(self, card_w):
-        """Calcule la hauteur maximale nécessaire pour toutes les cartes visibles."""
-        max_height = 0
-        
-        for cls in CLASSES_UNITES:
-            tmp = cls("joueur", (0,0))
-            
-            # Vérifier si la faction est débloquée
-            if not self.est_faction_debloquee(tmp.faction):
-                continue
-            
-            comp = tmp.get_competence()
-            comp_desc = "" if not comp else COMPETENCES.get(comp, "")
-            
-            base_lines = [
-                f"{tmp.get_nom()}",
-                f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
-                f"Attaques: {tmp.attaque_max} | Portée: {tmp.portee}",
-                f"Faction: {tmp.faction}",
-                f"Tier: {tmp.get_tier()}",
-                f"Compétence: {'Aucune' if not comp else comp}",
-            ]
-            desc_lines = self.wrap_text(comp_desc, card_w - 20)
-            card_h = 20 + len(base_lines) * 30 + len(desc_lines) * 26 + 60
-            
-            max_height = max(max_height, card_h)
-        
-        return max_height
+    def _get_card_height(self, card_w, cls):
+        from utils import wrap_text
+        tmp = cls("joueur", (0,0))
+        comp = tmp.get_competence()
+        comp_desc = "" if not comp else COMPETENCES.get(comp, "")
+        base_lines = [
+            f"{tmp.get_nom()}",
+            f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
+            f"Attaques: {tmp.attaque_max} | Portée: {tmp.portee}",
+            f"Faction: {tmp.faction}",
+            f"Tier: {tmp.get_tier()}",
+            f"Compétence: {'Aucune' if not comp else comp}",
+        ]
+        desc_lines = wrap_text(comp_desc, self.font, card_w - 20)
+        card_h = 20 + len(base_lines) * 30 + len(desc_lines) * 26 + 60
+        return card_h
 
     def _grid_specs(self):
         screen_w, screen_h = self.screen.get_size()
@@ -146,34 +134,35 @@ class Boutique:
         return lines or [""]
 
     def afficher(self):
+        from utils import draw_bandeau
         self.running = True
         self.scroll_y = 0
+        bandeau_h = 70  # Hauteur du bandeau
+        from utils import get_grid_specs
         while self.running:
             self.screen.fill((240,240,250))
-            screen_w, screen_h, margin, cols, card_w, start_y = self._grid_specs()
+            screen_w, screen_h, margin, cols, card_w, start_y, card_h = get_grid_specs(
+                self.screen,
+                CLASSES_UNITES,
+                self._get_card_height
+            )
 
             # Recréer les boutons à chaque frame pour éviter l'accumulation
             self.boutons = []
-            
+
             # Bouton retour (ajouté en premier)
             bouton_retour = Button((20, screen_h - 70, 160, 44), "Retour", self.retour_menu, self.font)
             self.boutons.append(bouton_retour)
-
-            # Calculer la hauteur maximale des cartes pour l'uniformité
-            card_h = self._calculer_hauteur_max_carte(card_w)
 
             # --- SCROLL LIMITS ---
             total_height = start_y
             x, y, col = margin, start_y, 0
             unites_visibles = []
-            
+
             for cls in CLASSES_UNITES:
                 tmp = cls("joueur", (0,0))
-                
-                # Vérifier si la faction est débloquée
                 if not self.est_faction_debloquee(tmp.faction):
                     continue
-                
                 unites_visibles.append(cls)
                 total_height = max(total_height, y + card_h)
                 col += 1
@@ -186,13 +175,10 @@ class Boutique:
             max_scroll = max(0, total_height - (screen_h - start_y - 40))
             # --- FIN SCROLL LIMITS ---
 
-            titre = self.title_font.render("Boutique", True, (30, 30, 60))
-            self.screen.blit(titre, (margin, 30))
-
+            # Placement des cartes sous le bandeau
             x, y, col = margin, start_y - self.scroll_y, 0
             for cls in unites_visibles:
                 tmp = cls("joueur", (0,0))
-                
                 nom = tmp.get_nom()
                 prix = tmp.get_prix()
                 comp = tmp.get_competence()
@@ -209,11 +195,12 @@ class Boutique:
                     f"Tier: {tmp.get_tier()}",
                     f"Compétence: {comp_nom}",
                 ]
-                desc_lines = self.wrap_text(comp_desc, card_w - 20)
+                from utils import wrap_text
+                desc_lines = wrap_text(comp_desc, self.font, card_w - 20)
 
                 # Couleur de fond selon la faction
                 faction_color = get_faction_color(tmp.faction)
-                
+
                 rect = pygame.Rect(x, y, card_w, card_h)
                 pygame.draw.rect(self.screen, faction_color, rect, border_radius=12)
                 pygame.draw.rect(self.screen, (0,0,0), rect, width=2, border_radius=12)
@@ -250,8 +237,8 @@ class Boutique:
                     self.font,
                     base_color=couleur
                 )
-                btn.draw(self.screen)
                 self.boutons.append(btn)
+                btn.draw(self.screen)
 
                 x += card_w + margin
                 col += 1
@@ -263,12 +250,26 @@ class Boutique:
             # Dessiner le bouton retour par-dessus
             bouton_retour.draw(self.screen)
 
-            solde = self.font.render(f"Points d'âmes : {self.data['pa']}", True, (0,0,0))
-            solde_rect = pygame.Rect(self.screen.get_width() - solde.get_width() - 20, 20, solde.get_width(), solde.get_height())
-            self.secret_click_rect = solde_rect  # Stocker pour les clics
-            self.screen.blit(solde, (self.screen.get_width() - solde.get_width() - 20, 20))
+            # --- BANDEAU EN HAUT (toujours dessiné en dernier, donc au 1er plan) ---
+            # Utilisation de la fonction utilitaire
+            secret_click_rect_container = [None]
+            draw_bandeau(
+                self.screen,
+                screen_w,
+                bandeau_h,
+                margin,
+                self.font,
+                self.title_font,
+                self.data["pa"],
+                titre="Boutique",
+                secret_click_rect_container=secret_click_rect_container
+            )
+            self.secret_click_rect = secret_click_rect_container[0]
 
-            for event in pygame.event.get():
+            # --- GESTION DES EVENEMENTS ---
+            events = pygame.event.get()
+            from utils import handle_scroll_events
+            for event in events:
                 if event.type == pygame.QUIT:
                     sauvegarde.sauvegarder(self.data)
                     pygame.quit()
@@ -277,31 +278,27 @@ class Boutique:
                     self.screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
                     self.creer_boutons()
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    # Vérifier si clic sur "Points d'âmes" pour déblocage secret
-                    if self.secret_click_rect and self.secret_click_rect.collidepoint(event.pos):
-                        self.secret_clicks += 1
-                        print(f"🔍 Clic secret {self.secret_clicks}/5")
-                        
-                        if self.secret_clicks >= 5:
-                            self.debloquer_tier4_secret()
-                            self.secret_clicks = 0  # Reset compteur
-                    else:
-                        # Gérer les clics normaux sur les boutons avec priorité au bouton retour
-                        button_clicked = False
-                        
-                        # D'abord vérifier le bouton retour (priorité absolue)
-                        if self.boutons[0].rect.collidepoint(event.pos):
-                            self.boutons[0].handle_event(event)
-                            button_clicked = True
-                        
-                        # Seulement si le bouton retour n'est pas cliqué, vérifier les boutons d'achat
-                        if not button_clicked:
-                            for i in range(1, len(self.boutons)):
-                                if self.boutons[i].rect.collidepoint(event.pos):
-                                    self.boutons[i].handle_event(event)
-                                    break
-                elif event.type == pygame.MOUSEWHEEL:
-                    self.scroll_y -= event.y * self.scroll_speed
-                    self.scroll_y = max(0, min(self.scroll_y, max_scroll))
+                    # Bloquer tout clic dans la zone du bandeau
+                    if event.pos[1] < bandeau_h:
+                        # Clic dans le bandeau
+                        if self.secret_click_rect and self.secret_click_rect.collidepoint(event.pos):
+                            self.secret_clicks += 1
+                            print(f"🔍 Clic secret {self.secret_clicks}/5")
+                            if self.secret_clicks >= 5:
+                                self.debloquer_tier4_secret()
+                                self.secret_clicks = 0
+                        continue  # Empêche tout autre clic dans le bandeau
+                    # Gérer les clics normaux sur les boutons avec priorité au bouton retour
+                    button_clicked = False
+                    if self.boutons and self.boutons[0].rect.collidepoint(event.pos):
+                        self.boutons[0].handle_event(event)
+                        button_clicked = True
+                    if not button_clicked:
+                        for i in range(1, len(self.boutons)):
+                            if self.boutons[i].rect.collidepoint(event.pos):
+                                self.boutons[i].handle_event(event)
+                                break
+            # Gestion du scroll
+            self.scroll_y = handle_scroll_events(events, self.scroll_y, self.scroll_speed, max_scroll, bandeau_h)
 
             pygame.display.flip()

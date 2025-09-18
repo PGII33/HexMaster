@@ -1,3 +1,58 @@
+def handle_scroll_events(events, scroll_y, scroll_speed, max_scroll, bandeau_h=0):
+    """
+    Gère le scroll vertical (MOUSEWHEEL) et bloque le scroll si la souris est sur le bandeau (optionnel).
+    Retourne le nouveau scroll_y.
+    """
+    for event in events:
+        if event.type == 1027:  # pygame.MOUSEWHEEL
+            scroll_y -= event.y * scroll_speed
+            scroll_y = max(0, min(scroll_y, max_scroll))
+    return scroll_y
+def wrap_text(text, font, max_width):
+    """
+    Découpe le texte en lignes pour ne pas dépasser max_width (en pixels) avec la police donnée.
+    """
+    if not text:
+        return [""]
+    words = text.split()
+    lines, cur = [], ""
+    for w in words:
+        test = (cur + " " + w).strip()
+        if font.size(test)[0] <= max_width:
+            cur = test
+        else:
+            if cur:
+                lines.append(cur)
+            cur = w
+    if cur:
+        lines.append(cur)
+    return lines or [""]
+def get_grid_specs(screen, CLASSES_UNITES, get_card_height_func, min_card_w=200, min_margin=20, titre_h=70):
+    """
+    Calcule la grille (largeur, hauteur, margin, colonnes, largeur carte, start_y, hauteur carte)
+    en prenant en compte toutes les unités (pour une taille de carte constante).
+    get_card_height_func(card_w, cls) doit retourner la hauteur de carte pour une classe donnée et une largeur donnée.
+    """
+    screen_w, screen_h = screen.get_size()
+    margin = max(min_margin, screen_w // 40)
+    cols = 3
+    card_w = (screen_w - margin * (cols + 1)) // cols
+    if card_w < 260:
+        cols = 2
+        card_w = (screen_w - margin * (cols + 1)) // cols
+    if card_w < 220:
+        cols = 1
+        card_w = (screen_w - margin * (cols + 1)) // cols
+    card_w = max(min_card_w, card_w)
+    start_y = max(100, int(0.12 * screen_h))
+
+    # Calcul de la hauteur maximale de carte sur toutes les unités
+    max_card_h = 0
+    for cls in CLASSES_UNITES:
+        h = get_card_height_func(card_w, cls)
+        max_card_h = max(max_card_h, h)
+
+    return screen_w, screen_h, margin, cols, card_w, start_y, max_card_h
 import pygame
 import sys
 import os
@@ -49,3 +104,27 @@ class Button:
                     self.action()
                 return True
         return False
+
+
+def draw_bandeau(screen, screen_w, bandeau_h, margin, font, title_font, pa, titre="Boutique", secret_click_rect_container=None):
+    """
+    Dessine le bandeau en haut de l'écran avec le titre et le solde PA.
+    Retourne le rect du solde PA (pour gestion du clic secret).
+    secret_click_rect_container: si fourni (liste d'un seul élément), le rect sera stocké dedans[0].
+    """
+    import pygame
+    bandeau_rect = pygame.Rect(0, 0, screen_w, bandeau_h)
+    pygame.draw.rect(screen, (220, 220, 240), bandeau_rect)
+    pygame.draw.line(screen, (120, 120, 160), (0, bandeau_h), (screen_w, bandeau_h), 3)
+
+    titre_surf = title_font.render(titre, True, (30, 30, 60))
+    screen.blit(titre_surf, (margin, (bandeau_h - titre_surf.get_height()) // 2))
+
+    solde = font.render(f"Points d'âmes : {pa}", True, (0,0,0))
+    solde_x = screen_w - solde.get_width() - 20
+    solde_y = (bandeau_h - solde.get_height()) // 2
+    solde_rect = pygame.Rect(solde_x, solde_y, solde.get_width(), solde.get_height())
+    screen.blit(solde, (solde_x, solde_y))
+    if secret_click_rect_container is not None:
+        secret_click_rect_container[0] = solde_rect
+    return solde_rect
