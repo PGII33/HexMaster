@@ -1,13 +1,7 @@
 name: Build HexMaster EXE with External Data Support
 
 on:
-  push:
-    branches: [ main ]
-    tags:
-      - 'v*.*.*'
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:  # Déclenchement manuel
+  workflow_dispatch:  # Uniquement déclenchement manuel
 
 jobs:
   build-windows:
