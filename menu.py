@@ -262,19 +262,6 @@ class HexaMaster:
             
             if player_units is None:  # Annulé
                 return
-                
-        elif config.type_restriction.value == "factions_definies":
-            # Sélection avec factions limitées
-            selector = UnitSelector(self.screen, "campagne_definies",
-                                  cp_max=config.cp_disponible,
-                                  max_units=config.max_unites,
-                                  factions_autorisees=config.factions_autorisees,
-                                  faction_unique=config.faction_unique_requise,
-                                  faction_imposee=config.faction_imposee)
-            player_units = selector.run()
-            
-            if player_units is None:  # Annulé
-                return
         
         if player_units is None:
             print("Erreur: Aucune unité sélectionnée")

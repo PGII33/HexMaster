@@ -99,8 +99,8 @@ class LevelBuilder:
             else:
                 base_y += 25
             
-            # Bouton faction unique (seulement pour FACTION_LIBRE et FACTIONS_DEFINIES)
-            if self.niveau_config.type_restriction in [TypeRestriction.FACTION_LIBRE, TypeRestriction.FACTIONS_DEFINIES]:
+            # Bouton faction unique (seulement pour FACTION_LIBRE)
+            if self.niveau_config.type_restriction == TypeRestriction.FACTION_LIBRE:
                 self.ui.add_button((550, base_y, 120, 30), "Toggle", self.toggle_faction_unique, self.ui.font_small)
                 base_y += 45
             
@@ -894,7 +894,6 @@ class LevelBuilder:
                 inventaire_joueur=inventaire_test,
                 type_restriction=self.niveau_config.type_restriction,
                 unites_imposees=self.niveau_config.unites_imposees,
-                factions_definies=self.niveau_config.factions_autorisees,
                 faction_unique_requise=self.niveau_config.faction_unique_requise,
                 cp_disponible=self.niveau_config.cp_disponible,
                 max_unites=self.niveau_config.max_unites,
@@ -930,8 +929,6 @@ class LevelBuilder:
             return "campagne_libre"
         elif self.niveau_config.type_restriction == TypeRestriction.FACTION_UNIQUE:
             return "campagne_faction"
-        elif self.niveau_config.type_restriction == TypeRestriction.FACTIONS_DEFINIES:
-            return "campagne_definies"
         else:  # TypeRestriction.UNITES_IMPOSEES
             return "campagne"  # Mode prédéfini pour unités imposées
     
@@ -1134,13 +1131,6 @@ class LevelBuilder:
                                           max_units=config.max_unites,
                                           faction_unique=True,
                                           faction_imposee=config.faction_imposee)
-                elif config.type_restriction.value == "factions_definies":
-                    selector = UnitSelector(self.screen, "campagne_definies",
-                                          cp_max=config.cp_disponible,
-                                          max_units=config.max_unites,
-                                          factions_autorisees=config.factions_autorisees,
-                                          faction_unique=config.faction_unique_requise,
-                                          faction_imposee=config.faction_imposee)
                 else:
                     # Par défaut, sélection libre
                     selector = UnitSelector(self.screen, "campagne_libre", 
@@ -1261,8 +1251,8 @@ class LevelBuilder:
         else:
             y += 25
         
-        # Faction unique (seulement pour certains types)
-        if self.niveau_config.type_restriction in [TypeRestriction.FACTION_LIBRE, TypeRestriction.FACTIONS_DEFINIES]:
+        # Faction unique (seulement pour faction libre)
+        if self.niveau_config.type_restriction == TypeRestriction.FACTION_LIBRE:
             self.ui.draw_text("Faction unique requise:", 70, y)
             faction_text = "Oui" if self.niveau_config.faction_unique_requise else "Non"
             self.ui.draw_text(faction_text, 350, y)

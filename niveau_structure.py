@@ -14,7 +14,6 @@ DEFAULT_MAX_UNITES = 5
 class TypeRestriction(Enum):
     """Types de restrictions pour la composition de l'équipe joueur"""
     UNITES_IMPOSEES = "unites_imposees"  # Des unités spécifiques sont imposées
-    FACTIONS_DEFINIES = "factions_definies"  # Restriction à un ensemble de factions
     FACTION_UNIQUE = "faction_unique"  # Une seule faction autorisée
     FACTION_LIBRE = "faction_libre"  # Aucune restriction de faction
 
@@ -67,9 +66,6 @@ class NiveauConfig:
         if self.type_restriction == TypeRestriction.UNITES_IMPOSEES:
             if not self.unites_imposees:
                 erreurs.append("Des unités imposées doivent être définies pour ce type de restriction")
-        elif self.type_restriction == TypeRestriction.FACTIONS_DEFINIES:
-            if not self.factions_autorisees:
-                erreurs.append("Au moins une faction doit être autorisée")
         
         if self.cp_disponible <= 0:
             erreurs.append("Le nombre de CP disponibles doit être positif")
@@ -83,14 +79,13 @@ class NiveauConfig:
         """Vérifie si une faction est autorisée selon les restrictions"""
         if self.type_restriction == TypeRestriction.FACTION_LIBRE:
             return True
-        elif self.type_restriction == TypeRestriction.FACTIONS_DEFINIES:
-            return faction in self.factions_autorisees
         elif self.type_restriction == TypeRestriction.FACTION_UNIQUE:
             # Pour faction unique, on autorise toutes les factions, 
             # mais on vérifiera la cohérence au moment de la sélection
             return True
-        else:  # UNITES_IMPOSEES
+        elif self.type_restriction == TypeRestriction.UNITES_IMPOSEES:
             return True  # Pas de restriction puisque les unités sont imposées
+        return True  # Par défaut, autoriser
     
     def peut_melanger_factions(self) -> bool:
         """Vérifie si le mélange de factions est autorisé"""

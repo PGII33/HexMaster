@@ -45,7 +45,6 @@ Créez un fichier `niveau.json` avec cette structure :
   "type_restriction": "faction_libre",
   "unites_imposees": [],
   "placement_impose": false,
-  "factions_autorisees": [],
   "faction_unique_requise": false,
   "faction_imposee": "",
   "cp_disponible": 5,
@@ -78,30 +77,22 @@ Créez un fichier `niveau.json` avec cette structure :
 {
   "type_restriction": "faction_libre",
   "cp_disponible": 6,
-  "max_unites": 10
+  "max_unites": 10,
+  "faction_unique_requise": false
 }
 ```
-Le joueur peut choisir n'importe quelle combinaison d'unités.
+Le joueur peut choisir n'importe quelle combinaison d'unités. 
+L'option `faction_unique_requise` peut être activée pour forcer l'utilisation d'une seule faction.
 
 ##### `"faction_unique"` - Une Seule Faction
 ```json
 {
   "type_restriction": "faction_unique",
-  "faction_unique_requise": true,
-  "cp_disponible": 5
+  "cp_disponible": 5,
+  "faction_imposee": "Religieux"
 }
 ```
-Le joueur doit choisir une faction et s'y tenir.
-
-##### `"factions_definies"` - Factions Limitées
-```json
-{
-  "type_restriction": "factions_definies",
-  "factions_autorisees": ["Religieux", "Royaume"],
-  "cp_disponible": 6
-}
-```
-Seules certaines factions sont autorisées.
+Le joueur doit utiliser une seule faction. La faction peut être imposée ou laissée au choix.
 
 ##### `"unites_imposees"` - Unités Prédéfinies
 ```json
@@ -246,8 +237,8 @@ Créez un fichier `meta.json` pour définir votre chapitre :
 {
   "nom": "Pureté Religieuse",
   "description": "Seule la foi peut triompher",
-  "type_restriction": "factions_definies", 
-  "factions_autorisees": ["Religieux"],
+  "type_restriction": "faction_unique", 
+  "faction_imposee": "Religieux",
   "cp_disponible": 5,
   "unites_ennemis": [
     ["Vampire", [6, 1]],
