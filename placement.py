@@ -1,6 +1,6 @@
 import pygame
 import sys
-from utils import Button
+from utils import Button, handle_scroll_events, wrap_text
 from layout import recalculer_layout, hex_to_pixel, pixel_to_hex
 import math
 
@@ -332,30 +332,25 @@ class PlacementPhase:
     def run(self):
         """Lance la phase de placement"""
         while self.running:
-            # Événements
-            for event in pygame.event.get():
+            events = pygame.event.get()
+            for event in events:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
-                
                 elif event.type == pygame.VIDEORESIZE:
                     self.screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
                     recalculer_layout(self)
                     self._create_buttons()
-                
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     self._handle_mouse_click(event.pos)
                     self.retour_btn.handle_event(event)
                     self.valider_btn.handle_event(event)
-                
-                elif event.type == pygame.MOUSEWHEEL:
-                    # Scroll seulement si on est dans la zone du panneau d'unités
-                    mx, my = pygame.mouse.get_pos()
-                    sidebar_x = self.largeur - self.sidebar_w
-                    if mx >= sidebar_x:
-                        max_scroll = self._calculate_scroll_limits()
-                        self.scroll_y -= event.y * self.scroll_speed
-                        self.scroll_y = max(0, min(self.scroll_y, max_scroll))
+            # Gestion du scroll du panneau d'unités (utilitaire)
+            mx, my = pygame.mouse.get_pos()
+            sidebar_x = self.largeur - self.sidebar_w
+            if mx >= sidebar_x:
+                max_scroll = self._calculate_scroll_limits()
+                self.scroll_y = handle_scroll_events(events, self.scroll_y, self.scroll_speed, max_scroll)
             
             # Dessin
             self.screen.fill((255, 255, 255))
