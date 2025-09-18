@@ -29,7 +29,9 @@ class HexaMaster:
         self.windowed_height = int(self.screen_height * 0.8)
         
         # Démarrer en plein écran
-        self.is_fullscreen = True
+        # Modes d'affichage possibles: "windowed", "fullscreen"
+        self.display_mode = "fullscreen"
+        self.is_fullscreen = True  # Pour le VIDEORESIZE event
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height), pygame.FULLSCREEN)
         pygame.display.set_caption("HexaMaster")
         self.clock = pygame.time.Clock()
@@ -68,7 +70,29 @@ class HexaMaster:
             Button((center_x-160, h//2+120, 320, 70), "Quitter", lambda: sys.exit(), self.font_med),
         ]
 
-        # Bouton Options en haut à droite - présent sur tous les écrans
+        # Menu principal des options
+        self.boutons_options_main = [
+            Button((center_x-200, h//2-100, 400, 70), "Affichage", self.open_option_display, self.font_med, BLEU),
+            Button((center_x-200, h//2, 400, 70), "Sauvegarde", self.open_option_save, self.font_med, BLEU),
+            Button((center_x-200, h//2+100, 400, 70), "Retour", self.retour_options, self.font_med, BLEU),
+        ]
+
+        # Menu des options d'affichage
+        self.boutons_options_display = [
+            Button((center_x-200, h//2-100, 400, 70), "Plein écran", lambda: self.set_display_mode("fullscreen"), self.font_med, BLEU),
+            Button((center_x-200, h//2, 400, 70), "Fenêtré", lambda: self.set_display_mode("windowed"), self.font_med, BLEU),
+            Button((center_x-200, h//2+100, 400, 70), "Retour", self.retour_options, self.font_med, BLEU),
+        ]
+
+        # Menu des options de sauvegarde
+        import sauvegarde
+        self.boutons_options_save = [
+            Button((center_x-200, h//2-100, 400, 70), "Debug Sauvegarde", self.debug_sauvegarde, self.font_med, BLEU),
+            Button((center_x-200, h//2, 400, 70), "Réinitialiser Sauvegarde", lambda: sauvegarde.sauvegarder(sauvegarde.creer_sauvegarde_defaut()), self.font_med, BLEU),
+            Button((center_x-200, h//2+100, 400, 70), "Retour", self.retour_options, self.font_med, BLEU),
+        ]
+
+        # Bouton Options en haut à droite - présent sur tous les écrans sauf dans les menus d'options
         self.bouton_option = Button((w-140, 20, 120, 50), "Options", self.open_option, self.font_med)
 
         # Menu Jouer principal
@@ -147,8 +171,37 @@ class HexaMaster:
         self.creer_boutons()
 
     def open_option(self):
-        """Affiche l'écran d'options"""
-        self.etat = "options"
+        """Affiche le menu principal des options"""
+        self.etat = "options_main"
+
+    def open_option_display(self):
+        """Affiche le menu des options d'affichage"""
+        self.etat = "options_display"
+
+    def open_option_save(self):
+        """Affiche le menu des options de sauvegarde"""
+        self.etat = "options_save"
+        
+    def retour_options(self):
+        """Retourne au menu précédent depuis un menu d'options"""
+        if self.etat in ["options_display", "options_save"]:
+            self.etat = "options_main"
+        else:
+            self.etat = "menu"
+
+    def set_display_mode(self, mode):
+        """Change le mode d'affichage (windowed ou fullscreen)"""
+        self.display_mode = mode
+        if mode == "windowed":
+            self.screen = pygame.display.set_mode((self.windowed_width, self.windowed_height), pygame.RESIZABLE)
+            self.is_fullscreen = False
+        else:  # fullscreen
+            self.screen = pygame.display.set_mode((self.screen_width, self.screen_height), pygame.FULLSCREEN)
+            self.is_fullscreen = True
+        self.creer_boutons()
+        if self.jeu:
+            self.jeu.screen = self.screen
+            self.jeu.recalculer_layout()
 
     def debug_sauvegarde(self):
         """Affiche les informations de debug sur la sauvegarde"""
@@ -463,6 +516,12 @@ class HexaMaster:
                 if self.etat == "menu":
                     for b in self.boutons_menu: b.handle_event(event)
                     self.bouton_option.handle_event(event)
+                elif self.etat == "options_main":
+                    for b in self.boutons_options_main: b.handle_event(event)
+                elif self.etat == "options_display":
+                    for b in self.boutons_options_display: b.handle_event(event)
+                elif self.etat == "options_save":
+                    for b in self.boutons_options_save: b.handle_event(event)
                 elif self.etat == "playmenu":
                     for b in self.boutons_playmenu: b.handle_event(event)
                     self.bouton_option.handle_event(event)
@@ -480,9 +539,6 @@ class HexaMaster:
                     self.bouton_option.handle_event(event)
                 elif self.etat in ["missions", "unite_builder_construction"]:
                     for b in self.boutons_retour_placeholder: b.handle_event(event)
-                elif self.etat == "options":
-                    for b in self.boutons_options: b.handle_event(event)
-                    # Pas de bouton option sur les écrans de construction
                 elif self.etat == "jeu":
                     if self.jeu:
                         self.jeu.handle_event(event)
@@ -501,8 +557,31 @@ class HexaMaster:
                 self.afficher_custom_menu()
             elif self.etat in ["missions", "unite_builder_construction"]:
                 self.afficher_placeholder()
-            elif self.etat == "options":
-                self.afficher_options()
+            elif self.etat == "options_main":
+                self.screen.fill(BLANC)
+                title = self.font_big.render("Options", True, (30, 30, 60))
+                self.screen.blit(title, (self.screen.get_width()//2 - title.get_width()//2, 50))
+                for b in self.boutons_options_main: b.draw(self.screen)
+                pygame.display.flip()  # Ajout du flip() ici
+            elif self.etat == "options_display":
+                self.screen.fill(BLANC)
+                title = self.font_big.render("Options d'Affichage", True, (30, 30, 60))
+                self.screen.blit(title, (self.screen.get_width()//2 - title.get_width()//2, 50))
+                # Afficher le mode actuel en vert
+                for b in self.boutons_options_display:
+                    if (b.text == "Plein écran" and self.display_mode == "fullscreen") or \
+                       (b.text == "Fenêtré" and self.display_mode == "windowed"):
+                        b.base_color = BLEU
+                    else:
+                        b.base_color = (200, 200, 200)
+                    b.draw(self.screen)
+                pygame.display.flip()  # Ajout du flip() ici
+            elif self.etat == "options_save":
+                self.screen.fill(BLANC)
+                title = self.font_big.render("Options de Sauvegarde", True, (30, 30, 60))
+                self.screen.blit(title, (self.screen.get_width()//2 - title.get_width()//2, 50))
+                for b in self.boutons_options_save: b.draw(self.screen)
+                pygame.display.flip()  # Ajout du flip() ici
             elif self.etat == "jeu":
                 if self.jeu:
                     # Vérifier si le jeu est terminé
