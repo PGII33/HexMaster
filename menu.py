@@ -18,7 +18,19 @@ BLEU = (50, 150, 250)
 class HexaMaster:
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((1200, 900), pygame.RESIZABLE)
+        
+        # Obtenir la résolution de l'écran
+        screen_info = pygame.display.Info()
+        self.screen_width = screen_info.current_w
+        self.screen_height = screen_info.current_h
+        
+        # Dimensions par défaut en mode fenêtré (80% de l'écran)
+        self.windowed_width = int(self.screen_width * 0.8)
+        self.windowed_height = int(self.screen_height * 0.8)
+        
+        # Démarrer en plein écran
+        self.is_fullscreen = True
+        self.screen = pygame.display.set_mode((self.screen_width, self.screen_height), pygame.FULLSCREEN)
         pygame.display.set_caption("HexaMaster")
         self.clock = pygame.time.Clock()
 
@@ -30,6 +42,18 @@ class HexaMaster:
         self.jeu = None
 
         self.creer_boutons()
+
+    def toggle_fullscreen(self):
+        """Bascule entre le mode plein écran et le mode fenêtré"""
+        self.is_fullscreen = not self.is_fullscreen
+        if self.is_fullscreen:
+            self.screen = pygame.display.set_mode((self.screen_width, self.screen_height), pygame.FULLSCREEN)
+        else:
+            self.screen = pygame.display.set_mode((self.windowed_width, self.windowed_height), pygame.RESIZABLE)
+        self.creer_boutons()
+        if self.jeu:
+            self.jeu.screen = self.screen
+            self.jeu.recalculer_layout()
 
     def creer_boutons(self):
         w, h = self.screen.get_size()
@@ -422,12 +446,19 @@ class HexaMaster:
                     pygame.quit()
                     sys.exit()
 
-                if event.type == pygame.VIDEORESIZE:
-                    self.screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
+                if event.type == pygame.VIDEORESIZE and not self.is_fullscreen:
+                    # Limiter la taille minimale et maximale de la fenêtre
+                    w = max(800, min(event.w, self.screen_width))
+                    h = max(600, min(event.h, self.screen_height))
+                    self.screen = pygame.display.set_mode((w, h), pygame.RESIZABLE)
                     self.creer_boutons()
                     if self.jeu:
                         self.jeu.screen = self.screen
                         self.jeu.recalculer_layout()
+                
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_F11 or (event.key == pygame.K_RETURN and event.mod & pygame.KMOD_ALT):
+                        self.toggle_fullscreen()
 
                 if self.etat == "menu":
                     for b in self.boutons_menu: b.handle_event(event)
