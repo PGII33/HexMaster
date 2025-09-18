@@ -3,6 +3,7 @@ import sys
 import os
 from niveau_structure import NiveauConfig, TypeRestriction, sauvegarder_niveau, obtenir_factions_disponibles
 from ui_commons import UIManager, ScrollableList
+from utils import handle_scroll_events
 import unites
 from placement import PlacementPhase
 from unit_selector import UnitSelector, UNIT_MAX
@@ -1169,25 +1170,7 @@ class LevelBuilder:
             traceback.print_exc()
             # Continuer dans le level builder en cas d'erreur
     
-    def _handle_scroll(self, direction):
-        """Gère le scroll dans la liste de niveaux"""
-        if not hasattr(self, 'scroll_offset'):
-            self.scroll_offset = 0
-        
-        max_visible = 12
-        max_offset = max(0, len(self.niveaux_disponibles) - max_visible)
-        
-        # Direction: 1 = scroll up (vers le haut), -1 = scroll down (vers le bas)
-        self.scroll_offset = max(0, min(max_offset, self.scroll_offset - direction))
-    
-    def _handle_unit_selection_scroll(self, direction):
-        """Gère le scroll dans la sélection d'unités de récompense"""
-        if hasattr(self, 'unites_disponibles_pour_selection') and self.scroll_max > 0:
-            # Direction: 1 = scroll up (vers le haut), -1 = scroll down (vers le bas)
-            old_offset = self.scroll_offset
-            self.scroll_offset = max(0, min(self.scroll_max, self.scroll_offset - direction))
-            
-            # Recréer les boutons seulement si le scroll a changé
+
             if old_offset != self.scroll_offset:
                 self.creer_boutons()
 
@@ -1392,9 +1375,6 @@ class LevelBuilder:
         # Information sur le scroll si nécessaire
         if hasattr(self, 'unites_disponibles_pour_selection') and len(self.unites_disponibles_pour_selection) > 0:
             total_items = len(self.unites_disponibles_pour_selection)
-            if hasattr(self, 'items_visible') and self.items_visible < total_items:
-                self.ui.draw_text("Utilisez la molette de souris ou les boutons ↑↓ pour naviguer", 50, 140, 
-                                color=(100, 100, 150), font=self.ui.font_small)
         
         # Les unités sont maintenant affichées via les boutons créés dans creer_boutons()
         # avec gestion automatique du scroll
@@ -1433,9 +1413,13 @@ class LevelBuilder:
                 
                 elif event.type == pygame.MOUSEWHEEL:
                     if self.etat == "selection_niveau" or self.etat == "selection_niveau_custom":
-                        self._handle_scroll(event.y)
+                        # Direction: 1 = scroll up (vers le haut), -1 = scroll down (vers le bas)
+                        max_visible = 12
+                        max_offset = max(0, len(self.niveaux_disponibles) - max_visible)
+                        self.scroll_offset = handle_scroll_events([event], self.scroll_offset, 1, max_offset)
                     elif self.etat == "selection_unite_deblocage":
-                        self._handle_unit_selection_scroll(event.y)
+                        if hasattr(self, 'unites_disponibles_pour_selection'):
+                            self.scroll_offset = handle_scroll_events([event], self.scroll_offset, 1, self.scroll_max)
             
             # Affichage selon l'état
             if self.etat == "main_menu":

@@ -1,6 +1,6 @@
 import pygame
 import sys
-from utils import Button
+from utils import Button, handle_scroll_events, draw_bandeau
 import unites
 import sauvegarde
 from competences import COMPETENCES
@@ -25,15 +25,17 @@ class UnitSelector:
         preselected_units = kwargs.get('preselected_units', [])
         self.selected_units = preselected_units[:]  # Copie de la liste
         
+        # Variables de l'interface
         self.running = True
         self.cancelled = False
         self.scroll_y = 0
         self.scroll_speed = 40
-        self.max_scroll = 0  # Ajouter cette ligne
+        self.max_scroll = 0
         
         # Pour stocker les boutons dynamiques
         self.unit_buttons = []
-
+        
+        # Créer les boutons
         self.creer_boutons()
     
     def _get_mode_config(self, **kwargs):
@@ -408,17 +410,10 @@ class UnitSelector:
         # Calculer la hauteur uniforme pour toutes les cartes
         card_h = self._calculer_hauteur_max_carte_disponible(card_w)
         
-        titre = self.title_font.render(self.config["titre"], True, (30, 30, 60))
-        self.screen.blit(titre, (margin, 30))
-        
-        # Affichage des informations de sélection
-        if self.config.get("use_cp", False):
-            cp_used = self._calculate_cp_cost(self.selected_units)
-            cp_info = self.font.render(f"CP: {cp_used}/{self.config['cp_disponible']}", True, (0, 0, 0))
-            self.screen.blit(cp_info, (screen_w - 200, 30))
-        
-        units_info = self.font.render(f"Unités: {len(self.selected_units)}/{self.config['max_units']}", True, (0, 0, 0))
-        self.screen.blit(units_info, (screen_w - 200, 60))
+        # Initialiser les variables du bandeau pour plus tard
+        bandeau_h = 60
+        margin = 20
+        pa_text = ""
         
         # Calculer les limites de scroll
         total_height = start_y
@@ -634,8 +629,7 @@ class UnitSelector:
                         btn.handle_event(event)
                 
                 elif event.type == pygame.MOUSEWHEEL:
-                    self.scroll_y -= event.y * self.scroll_speed
-                    self.scroll_y = max(0, min(self.scroll_y, self.max_scroll))
+                    self.scroll_y = handle_scroll_events([event], self.scroll_y, self.scroll_speed, self.max_scroll)
             
             # Affichage selon le mode
             if self.mode == "campagne":
@@ -658,6 +652,29 @@ class UnitSelector:
                 self.valider_btn.text_color = (100, 100, 100)
             
             self.valider_btn.draw(self.screen)
+            
+            # Afficher le bandeau en dernier pour qu'il soit au premier plan
+            screen_w = self.screen.get_width()
+            bandeau_h = 60
+            margin = 20
+            pa_text = ""
+            
+            # Ajouter les informations de CP
+            if self.config.get("use_cp", False):
+                cp_used = self._calculate_cp_cost(self.selected_units)
+                pa_text = f"CP: {cp_used}/{self.config['cp_disponible']}"
+            
+            # Ajouter le compte d'unités
+            if pa_text:
+                pa_text += " | "
+            pa_text += f"Unités: {len(self.selected_units)}/{self.config['max_units']}"
+            
+            # Ajouter la restriction si elle existe
+            if self.config.get("restriction_type"):
+                pa_text += f" | Restriction: {self.config['restriction_type'].name}"
+            
+            # Dessiner le bandeau en dernier
+            draw_bandeau(self.screen, screen_w, bandeau_h, margin, self.font, self.title_font, pa_text, titre=self.config["titre"])
             
             pygame.display.flip()
         
