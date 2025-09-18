@@ -74,7 +74,7 @@ def handle_click(jeu, mx, my):
         if not u.vivant:
             continue
         x, y = hex_to_pixel(jeu, u.pos[0], u.pos[1])
-        if (mx-x)**2 + (my-y)**2 <= (jeu.unit_radius)**2:
+        if (mx-x)**2 + (my-y)**2 <= (jeu.taille_hex)**2:  # Utiliser la taille de l'hexagone pour la détection
             # Vérifier si c'est l'unité du joueur courant
             if u.equipe == jeu.tour:
                 # Sélection/désélection de ses propres unités
@@ -112,7 +112,7 @@ def handle_click(jeu, mx, my):
                 continue
                 
             cx, cy = hex_to_pixel(jeu, q, r)
-            if (mx-cx)**2 + (my-cy)**2 <= (jeu.unit_radius)**2:
+            if (mx-cx)**2 + (my-cy)**2 <= (jeu.taille_hex)**2:  # Utiliser la taille de l'hexagone pour la détection
                 occupee = any(x.pos == case and x.vivant for x in jeu.unites)
                 if not occupee and jeu.selection.pm >= cout:
                     jeu.selection.pos = case
