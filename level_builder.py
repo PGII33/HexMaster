@@ -6,11 +6,10 @@ from ui_commons import UIManager, ScrollableList
 from utils import handle_scroll_events
 import unites
 from placement import PlacementPhase
-from unit_selector import UnitSelector, UNIT_MAX
+from unit_selector import UnitSelector
+from const import MAX_CP, MAX_PA
 
 # Constantes
-CP_MAX = UNIT_MAX * 4 # Car les boss coûtent 4 CP
-PA_MAX = 10000
 
 class LevelBuilder:
     def __init__(self, screen):
@@ -477,12 +476,12 @@ class LevelBuilder:
     def modifier_cp_recompense(self, delta):
         """Modifie les CP de récompense"""
         new_value = self.niveau_config.recompense_cp + delta
-        self.niveau_config.recompense_cp = max(0, min(CP_MAX, new_value))
+        self.niveau_config.recompense_cp = max(0, min(MAX_CP, new_value))
     
     def modifier_pa_recompense(self, delta):
         """Modifie les PA de récompense"""
         new_value = self.niveau_config.recompense_pa + delta
-        self.niveau_config.recompense_pa = max(0, min(PA_MAX, new_value))
+        self.niveau_config.recompense_pa = max(0, min(MAX_PA, new_value))
     
     def ajouter_unite_debloquee(self):
         """Lance l'interface de sélection d'unité à débloquer"""

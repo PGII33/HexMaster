@@ -1,6 +1,6 @@
 import json
 import os
-import sys
+from const import D_CP, D_PA, D_UNITES
 
 # Utiliser le nouveau système de chemins unifié
 from path_utils import get_save_path
@@ -12,7 +12,7 @@ def charger():
             data = json.load(f)
             # Ajouter CP si pas présent
             if "cp" not in data:
-                data["cp"] = 5  # CP de départ
+                data["cp"] = D_CP  # CP de départ
             if "campagne_progression" not in data:
                 data["campagne_progression"] = {
                     "Religieux": {"niveaux_completes": [], "disponible": True}
@@ -20,10 +20,7 @@ def charger():
             # S'assurer que le premier chapitre (Religieux) est toujours disponible
             if "Religieux" not in data["campagne_progression"]:
                 data["campagne_progression"]["Religieux"] = {"niveaux_completes": [], "disponible": True}
-                
-            # Vérifier que la Goule est débloquée par défaut
-            if "unites" in data and "Goule" not in data["unites"]:
-                data["unites"].append("Goule")
+
             return data
     except FileNotFoundError:
         return creer_sauvegarde_defaut()
@@ -37,13 +34,14 @@ def charger():
 def creer_sauvegarde_defaut():
     """Crée une sauvegarde par défaut"""
     data = {
-        "pa": 0,
-        "unites": ["Goule"],  # Goule débloquée par défaut
-        "cp": 5,  # CP de départ
+        "pa": D_PA,  # Points d'âmes de départ
+        "unites": [unite for unite in D_UNITES],  # Goule débloquée par défaut
+        "cp": D_CP,  # CP de départ
         "campagne_progression": {
             "Religieux": {"niveaux_completes": [], "disponible": True}
         }
     }
+    print(data["unites"])
     return data
 
 def sauvegarder(data):

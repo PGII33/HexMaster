@@ -7,9 +7,7 @@ import os
 from typing import Dict, List, Tuple, Optional, Union, Any
 from enum import Enum
 import unites
-
-DEFAULT_CP = 5
-DEFAULT_MAX_UNITES = 5
+from const import D_CP, MAX_UNITE
 
 class TypeRestriction(Enum):
     """Types de restrictions pour la composition de l'équipe joueur"""
@@ -37,8 +35,8 @@ class NiveauConfig:
         self.faction_imposee: str = ""  # Faction imposée (force l'utilisation d'une faction spécifique)
         
         # Contraintes générales pour le joueur (si pas d'unités imposées)
-        self.cp_disponible: int = DEFAULT_CP
-        self.max_unites: int = DEFAULT_MAX_UNITES
+        self.cp_disponible: int = D_CP
+        self.max_unites: int = MAX_UNITE
 
         # Configuration des unités ennemies (générées par l'IA)
         self.unites_ennemis: List[Tuple[type, Tuple[int, int]]] = []  # [(classe, position)]
