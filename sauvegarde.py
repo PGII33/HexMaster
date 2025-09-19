@@ -41,7 +41,6 @@ def creer_sauvegarde_defaut():
             "Religieux": {"niveaux_completes": [], "disponible": True}
         }
     }
-    print(data["unites"])
     return data
 
 def sauvegarder(data):

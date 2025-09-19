@@ -2,16 +2,9 @@ import math
 import pygame
 from layout import hex_to_pixel
 from animations import dessiner_unite_animee
+from const import BLANC, NOIR, GRIS, VERT, ROUGE, VERT_VIE, BLEU_BOUCLIER, ROUGE_DMG_TOTAL, JAUNE_CIBLE
+from const import D_AIDES
 
-BLANC = (255,255,255)
-NOIR = (0,0,0)
-GRIS = (180,180,180)
-VERT = (50,200,50)
-ROUGE = (200,50,50)
-VERT_VIE = (30, 120, 30)
-BLEU_BOUCLIER = (100, 150, 255)
-ROUGE_DMG_TOTAL = (255, 100, 100)
-JAUNE_CIBLE = (255, 255, 100)
 
 DO_PRINT = False
 
@@ -146,11 +139,12 @@ def dessiner(jeu):
         x, y = dessiner_unite_animee(jeu, u, x, y, color)
 
         # Affichage vie (cercle vert et nombre de PV à gauche)
-        vie_txt = jeu.font_small.render(f"{u.get_pv()}", True, VERT_VIE)
-        jeu.screen.blit(vie_txt, (x - jeu.unit_radius - 5 - vie_txt.get_width(), y - jeu.unit_radius - 5))
+        if D_AIDES["PV"]:
+            vie_txt = jeu.font_small.render(f"{u.get_pv()}", True, VERT_VIE)
+            jeu.screen.blit(vie_txt, (x - jeu.unit_radius - 5 - vie_txt.get_width(), y - jeu.unit_radius - 5))
 
         # Affichage du bouclier si présent
-        if u.get_bouclier() > 0:
+        if u.get_bouclier() > 0 and D_AIDES["BOUCLIER"]:
             # Dessiner un cercle bleu autour de l'unité pour le bouclier
             pygame.draw.circle(jeu.screen, BLEU_BOUCLIER, (x, y), jeu.unit_radius + 8, 4)
             # Afficher le nombre de points de bouclier à droite
@@ -158,8 +152,9 @@ def dessiner(jeu):
             jeu.screen.blit(bouclier_txt, (x + jeu.unit_radius + 5, y - jeu.unit_radius - 5))
 
         # Affichage des dégâts totaux (rouge)
-        dmg_tot_txt = jeu.font_small.render(f"{u.get_attaque_totale()}", True, ROUGE_DMG_TOTAL)
-        jeu.screen.blit(dmg_tot_txt, (x - jeu.unit_radius - 5 - dmg_tot_txt.get_width(), y + jeu.unit_radius - 5))
+        if D_AIDES["DMG"]:
+            dmg_tot_txt = jeu.font_small.render(f"{u.get_attaque_totale()}", True, ROUGE_DMG_TOTAL)
+            jeu.screen.blit(dmg_tot_txt, (x - jeu.unit_radius - 5 - dmg_tot_txt.get_width(), y + jeu.unit_radius - 5))
 
         # Indicateur de cible possible pour compétence (unités)
         if (hasattr(jeu, 'mode_selection_competence') and jeu.mode_selection_competence and 
