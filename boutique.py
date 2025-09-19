@@ -260,7 +260,7 @@ class Boutique:
                 margin,
                 self.font,
                 self.title_font,
-                self.data["pa"],
+                "Points d'âmes : " + str(self.data["pa"]),
                 titre="Boutique",
                 secret_click_rect_container=secret_click_rect_container
             )

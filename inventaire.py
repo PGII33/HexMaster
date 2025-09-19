@@ -176,7 +176,7 @@ class Inventaire:
                 margin,
                 self.font,
                 self.title_font,
-                self.data.get("pa", 0),
+                "Points d'âmes : " + str(self.data.get("pa", 0)),
                 titre="Inventaire",
                 secret_click_rect_container=None
             )
