@@ -119,37 +119,73 @@ Les unités du jeu sont séparés en différentes "factions" il s'agit de groupe
 | Basilic   | 4    |Regard Mortel     |
 
 ## Description des compétences
-    
-    Aura sacrée : Augmente définitivement l'attaque de +3 pour tous les alliés adjacents tant qu'il vit.
-    Armure de pierre : Réduit tous les dégâts reçus de 2 points (minimum 0).
-    Bénédiction : Augmente définitivement l'attaque de +2 et donne 1 bouclier à un allié.
-    Bouclier de la foi : Donne 1 point de bouclier à tous les alliés adjacents chaque tour.
-    Combustion différée : L'unité touchée meurt automatiquement au bout de 3 tours ennemis.
-    Commandement : Donne +3 attaque temporaire et +1 attaque supplémentaire à un allié (portée 2). N'utilise pas d'attaque.
-    Cristalisation : Crée un cristal de 10PV sur une case adjacente sélectionnée qui se brise au prochain tour.
-    Divertissement : Si il reste des attaques en fin de tour, toutes les unités adjacentes perdent 1 attaque au tour suivant.
-    Enracinement : Régénère 2 PV en fin de tour si l'unité n'a pas bougé.
-    Explosion sacrée : Se sacrifie pour infliger ses PV actuels en dégâts à la cible attaquée uniquement.
-    Fantomatique : Traverse les unités gratuitement (0 PM pour traverser, 1 PM par case vide).
-    Invocation : Invoque aléatoirement une unité Morts-Vivants (tier 1-2) sur une case adjacente libre chaque tour.
-    Lumière vengeresse : Regagne 1 attaque et peut continuer d'agir quand il tue un Mort-Vivant.
-    Manipulation : Toutes les unités ennemies avec ≤4 PV rejoignent temporairement votre camp tant qu'elles ont ≤4 PV.
-    Monture libéré : Se transforme en Guerrier à une case adjacente libre et crée un Cheval allié à sa position d'origine.
-    Nécromancie : Invoque un Squelette sur une case adjacente libre chaque tour.
-    Rage : Gagne définitivement +1 attaque après chaque attaque effectuée.
-    Regard mortel : Tue instantanément les unités ennemies de tier ≤2 touchées.
-    Renaissance : 80% de chance de revenir à la vie avec tous ses PV quand elle meurt.
-    Pluie de flèches : Attaque de zone (portée 3) : inflige des dégâts à la cible et toutes les cases adjacentes, y compris aux alliés. Utilisable tous les 2 tours.
-    Protection : Subit les dégâts à la place des alliés adjacents (le protecteur le plus résistant prend tous les dégâts).
-    Tas d'os : À la mort, se transforme en Tas d'Os de 1 PV.
-    Sangsue : Récupère des PV égaux aux dégâts infligés (peut dépasser le maximum).
-    Sédition venimeuse : L'unité attaquée est forcée d'attaquer un allié adjacent si possible.
-    Soin : Soigne un allié de 5 PV (maximum PV max de la cible).
-    Tir précis : Attaque à portée +1 avec dégâts x1.5. Utilisable tous les 2 tours.
-    Vague apaisante : Soigne tous les alliés adjacents de 2 PV chaque tour.
-    Venin incapacitant : L'unité touchée ne peut pas se déplacer au tour suivant.
-    Vol : Ignore complètement la première attaque subie.
-    Zombification : Transforme l'unité ennemie tuée en zombie allié.
+>Aura sacrée (Passif) : Augmente définitivement les DMG de +3 pour tous les alliés adjacents tant que l'unité est en vie.
+(Non stackable)
+
+>Armure de pierre (Passif) : Réduit tous les dégâts reçus de 2 points (minimum 0).
+
+> Bénédiction (Actif) : Augmente définitivement l'attaque de +2 et donne 1 bouclier à un allié.
+(Non stackable, portée : 3).
+
+> Bouclier de la foi (Passif) : Donne 1 point de bouclier à tous les alliés adjacents.
+(Chaque tour)
+
+> Combustion différée (Passif) : L'unité touchée meurt automatiquement au bout de 3 tours ennemis.
+
+> Commandement (Actif) : Donne +3 DMG temporaire et +1 attaque supplémentaire temporaire à un allié.
+(Non stackable, Portée : 2)
+
+> Cristalisation (Actif) : Crée un cristal de 10PV sur une case adjacente sélectionnée.
+
+> Divertissement (Passif) : S'il reste au moins une attaque en fin de tour à l'unité, toutes les unités adjacentes perdent une attaque au tour suivant.
+
+> Enracinement (Passif) : Régénère 2 PV en fin de tour si l'unité n'a pas bougé.
+
+> Explosion sacrée (Passif) : Se sacrifie pour infliger ses PV actuels en dégâts à la cible attaquée.
+
+> Fantomatique (Passif) : Permet de passer au travers des unités (ne coûte pas de PM).
+
+> Invocation (Passif) : Invoque aléatoirement une unité Morts-Vivants (tier 1-2) sur une case adjacente libre chaque tour.
+
+> Lumière vengeresse (Passif) : L'unité regagne 1 attaque quand elle tue une unité de la faction Mort-Vivant.
+
+> Manipulation (Passif) : Toutes les unités ennemies avec 4 PV ou moins rejoignent votre équipe tant qu'elles ont 4 PV ou moins.
+
+> Monture libéré (Actif) : L'unité se transforme en Guerrier sur une case adjacente libre et crée un Cheval allié sur sa position d'origine.
+
+> Nécromancie (Passif) : Invoque un Squelette sur une case adjacente libre chaque tour.
+
+> Rage (Passif) : L'unité gagne +1 DMG après chaque attaque effectuée.
+(Stackable)
+
+> Regard mortel (Passif) : Tue instantanément les unités ennemies de tier 2 ou moins touchées.
+
+> Renaissance (Passif) : L'unité a 80% de chance de revenir à la vie avec tous ses PV quand elle meurt.
+
+> Pluie de flèches (Actif) : L'unité inflige des dégâts à la cible et toutes les unités adjacentes. 
+(Portée : 3, Rechargement : 1 tour)
+
+> Protection (Passif) : Les unités subissent les dégâts à la place des alliés adjacents les dégats s'équilibrent pour que chaque protecteur aient le même nombre de poits de vie.
+
+> Tas d'os (Passif) : À la mort de l'unité, se transforme en Tas d'Os.
+
+> Sangsue (Passif) : L'unité gagné des PV égaux aux dégâts infligés (peut dépasser le maximum).
+
+> Sédition venimeuse (Passif) : L'unité attaquée est forcée d'attaquer un allié adjacent si possible.
+
+> Soin (Actif) : Soigne un allié de 5 PV.
+(Portée : 2)
+
+> Tir précis (Actif) : L'unité attaque à portée +1 avec dmg x1.5.
+(Rechargement : 1 tour)
+
+> Vague apaisante (Passif) : Soigne tous les alliés adjacents de 2 PV chaque tour.
+
+> Venin incapacitant (Passif) : L'unité touchée ne peut pas se déplacer au tour suivant.
+
+> Vol (Passif) : Ignore complètement la première attaque subie.
+
+> Zombification (Passif) : Transforme l'unité ennemie tuée en zombie allié (de).
 
 ## Extra
 

@@ -107,7 +107,7 @@ class Unite:
 
     # ---------- Logique ----------
     def reset_actions(self):
-        self.attaque_restantes = self.attaque_max
+        self.attaque_restantes = max(self.attaque_max, self.attaque_restantes)
         self.pm = self.mv
         
         # Appliquer l'effet venin incapacitant si l'unité a été empoisonnée

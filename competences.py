@@ -14,7 +14,6 @@ def zombification(self, cible):
         cible.pm = 0
         cible.attaque_restantes = 0
         cible.comp = "zombification"
-        cible.attaque_restantes = 0
 
 def tas_d_os(self):
     """Transforme l'unité morte en tas d'os."""
@@ -164,29 +163,6 @@ def bénédiction(self, cible):
             cible.ba_benediction = 2
             cible.bouclier += 1
         return True
-    return False
-
-def cristalisation(self, cible_pos, toutes_unites):
-    """Crée un Cristal sur une case adjacente à 1 de portée."""
-    from unites import Cristal
-    directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
-    q, r = self.pos
-    
-    # Vérifier si la cible est adjacente
-    for dq, dr in directions:
-        if (q+dq, r+dr) == cible_pos:
-            # Vérifier que la case est vide
-            case_libre = True
-            for unite in toutes_unites:
-                if unite.pos == cible_pos and unite.vivant:
-                    case_libre = False
-                    break
-            
-            if case_libre:
-                cristal = Cristal(self.equipe, cible_pos)
-                toutes_unites.append(cristal)
-                return True
-    
     return False
 
 def lumière_vengeresse(self, cible):
@@ -514,6 +490,29 @@ def vague_apaisante(self, toutes_unites):
                     else:
                         unite.pv = unite.pv_max
                     break
+
+def cristalisation(self, cible_pos, toutes_unites):
+    """Crée un Cristal sur une case adjacente à 1 de portée."""
+    from unites import Cristal
+    directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
+    q, r = self.pos
+    
+    # Vérifier si la cible est adjacente
+    for dq, dr in directions:
+        if (q+dq, r+dr) == cible_pos:
+            # Vérifier que la case est vide
+            case_libre = True
+            for unite in toutes_unites:
+                if unite.pos == cible_pos and unite.vivant:
+                    case_libre = False
+                    break
+            
+            if case_libre:
+                cristal = Cristal(self.equipe, cible_pos)
+                toutes_unites.append(cristal)
+                return True
+    
+    return False
 
 def renaissance(self, toutes_unites):
     """80% de chance de revenir à la vie avec tous ses PV."""
