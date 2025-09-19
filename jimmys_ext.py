@@ -55,7 +55,6 @@ def jimmy_tados(self):
 
 def jimmyfication(self, cible):
     """Transforme l'unite morte en zombie sous le contrôle du joueur de l'attaquant"""
-    from unites import Zombie_BASE
     if cible.nom == "Squelette":
         # Transformer la cible en Jimmy
         cible.__class__ = Jimmy

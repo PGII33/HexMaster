@@ -42,7 +42,7 @@ if jimmys:
             jimmys_everywhere(self, toutes_unites)
 
     def utiliser_competence_active_etendu(unite, nom_competence, cible, toutes_unites=None):
-        etat = Origutiliser_competence_active(unite, nom_competence, cible, toutes_unites=None)
+        etat = Origutiliser_competence_active(unite, nom_competence, cible, toutes_unites)
         if nom_competence == "Jimmiest":
             return superjimmy(cible)
         return etat
