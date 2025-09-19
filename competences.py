@@ -302,7 +302,7 @@ def commandement(unite, cible, toutes_unites):
             return False
         
         # Appliquer les boosts
-        cible.ba_commandement = getattr(cible, 'ba_commandement', 0) + unite.get_attaque_totale()
+        cible.ba_commandement = unite.get_attaque_totale()
 
         # Donner +1 attaque supplémentaire
         cible.attaque_restantes += 1
