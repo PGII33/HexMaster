@@ -58,19 +58,25 @@ def dessiner(jeu):
                      (jeu.largeur - jeu.sidebar_w, jeu.top_h),
                      (jeu.largeur - jeu.sidebar_w, jeu.hauteur), width=2)
 
-    # grille
+    # grille - dessiner en deux passes pour assurer que le bleu soit au dessus
+    # Première passe : hexagones gris
+    for q in jeu.q_range:
+        for r in jeu.r_range:
+            if (q,r) not in jeu.deplacement_possibles:
+                dessiner_hex(jeu, q, r, GRIS, max(1, int(jeu.taille_hex * 0.05)))
+    
+    # Deuxième passe : hexagones bleus des déplacements possibles
     for q in jeu.q_range:
         for r in jeu.r_range:
             if (q,r) in jeu.deplacement_possibles:
                 cout = jeu.deplacement_possibles[(q,r)]
-                intensite = max(70, 250 - cout * 40)
-                couleur = (50,50,intensite)
-                dessiner_hex(jeu, q, r, couleur, max(2, int(jeu.taille_hex * 0.08)))
+                couleur = (50, 120, 255)  # Bleu uniforme
+                epaisseur = max(2, int(jeu.taille_hex * 0.08))
+                dessiner_hex(jeu, q, r, couleur, epaisseur)
+                # Afficher le coût de déplacement
                 cx, cy = hex_to_pixel(jeu, q, r)
                 txtc = jeu.font_small.render(str(cout), True, (255,255,255))
                 jeu.screen.blit(txtc, (cx - txtc.get_width()//2, cy - txtc.get_height()//2))
-            else:
-                dessiner_hex(jeu, q, r, GRIS, max(1, int(jeu.taille_hex * 0.05)))
                 
             # Affichage des compétences (indépendant des mouvements)
             if (hasattr(jeu, 'mode_selection_competence') and jeu.mode_selection_competence and 
