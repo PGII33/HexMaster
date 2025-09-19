@@ -1,7 +1,9 @@
 import pygame
+import math
 from layout import hex_to_pixel
 from tour import reset_actions_tour
 import competences as co
+from utils import point_dans_polygone
 
 DO_PRINT = False  # Activer les prints de debug
 
@@ -73,8 +75,19 @@ def handle_click(jeu, mx, my):
     for u in jeu.unites:
         if not u.vivant:
             continue
+
         x, y = hex_to_pixel(jeu, u.pos[0], u.pos[1])
-        if (mx-x)**2 + (my-y)**2 <= (jeu.taille_hex)**2:  # Utiliser la taille de l'hexagone pour la détection
+
+        # recalcul des 6 sommets de l’hexagone
+        pts = []
+        for i in range(6):
+            ang = math.pi / 3 * i + math.pi / 6
+            px = x + jeu.taille_hex * math.cos(ang)
+            py = y + jeu.taille_hex * math.sin(ang)
+            pts.append((px, py))
+
+        # test clic dans l'hexagone
+        if point_dans_polygone(mx, my, pts):
             # Vérifier si c'est l'unité du joueur courant
             if u.equipe == jeu.tour:
                 # Sélection/désélection de ses propres unités
@@ -101,7 +114,7 @@ def handle_click(jeu, mx, my):
                     # Simplement sélectionner l'unité adverse pour voir ses stats
                     jeu.selection = u
                     jeu.deplacement_possibles = {}
-                return
+            return
 
     # clic sur une case accessible ?
     if jeu.selection and jeu.deplacement_possibles and jeu.selection.equipe == jeu.tour:

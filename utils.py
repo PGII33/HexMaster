@@ -128,3 +128,15 @@ def draw_bandeau(screen, screen_w, bandeau_h, margin, font, title_font, pa, titr
     if secret_click_rect_container is not None:
         secret_click_rect_container[0] = solde_rect
     return solde_rect
+
+def point_dans_polygone(px, py, pts):
+    inside = False
+    n = len(pts)
+    j = n - 1
+    for i in range(n):
+        xi, yi = pts[i]
+        xj, yj = pts[j]
+        if ((yi > py) != (yj > py)) and (px < (xj - xi) * (py - yi) / (yj - yi + 1e-9) + xi):
+            inside = not inside
+        j = i
+    return inside
