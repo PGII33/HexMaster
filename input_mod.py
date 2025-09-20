@@ -1,4 +1,3 @@
-import pygame
 import math
 from layout import hex_to_pixel
 from tour import reset_actions_tour
@@ -39,7 +38,6 @@ def handle_click(jeu, mx, my):
         
         # Vérifier que la compétence est utilisable (pas en cooldown et pas déjà utilisée)
         cooldown_restant = getattr(jeu.selection, 'cooldown_actuel', 0)
-        competence_utilisee = getattr(jeu.selection, 'competence_utilisee_ce_tour', False)
         
         # Compétences qui ne nécessitent pas d'attaque restante
         competences_sans_attaque = ["soin", "pluie de flèches", "commandement"]
@@ -48,19 +46,10 @@ def handle_click(jeu, mx, my):
         
         if (jeu.selection.a_competence_active() and 
             (not attaque_necessaire or jeu.selection.attaque_restantes > 0) and 
-            cooldown_restant == 0 and not competence_utilisee):
-            
-            #print(f"🟢 ACTIVATION: {comp_name}")
-            
-            # Compétences qui ne nécessitent pas de cible
-            if comp_name == "explosion sacrée":
-                print(f"   Explosion sacrée directe")
-                jeu.selection.utiliser_competence(None, jeu.unites)
-                jeu.deplacement_possibles = jeu.selection.cases_accessibles(jeu.unites, jeu.q_range, jeu.r_range)
-                return
+            cooldown_restant == 0):
             
             # Compétences qui nécessitent une cible
-            elif comp_name in ["soin", "bénédiction", "cristalisation", "pluie de flèches", "monture libéré", "commandement", "tir précis"]:
+            if comp_name in ["soin", "bénédiction", "cristalisation", "pluie de flèches", "monture libéré", "commandement", "tir précis"]:
                 # Entrer en mode sélection de cible
                 jeu.mode_selection_competence = True
                 jeu.competence_en_cours = comp_name
@@ -166,18 +155,17 @@ def _handle_competence_target_selection(jeu, mx, my):
                         jeu.deplacement_possibles = jeu.selection.cases_accessibles(jeu.unites, jeu.q_range, jeu.r_range)
                 return
     
-    # Vérifier les clics sur des cases vides (pour cristalisation)
+    # Vérifier les clics sur des cases vides
     for cible_pos in jeu.cibles_possibles:
         if isinstance(cible_pos, tuple):  # C'est une position de case vide
             q, r = cible_pos
             x, y = hex_to_pixel(jeu, q, r)
             # Vérifier si le clic est dans cette case hexagonale
             if (mx-x)**2 + (my-y)**2 <= (jeu.taille_hex)**2:
-                #print(f"🟢 CLIC SUR CASE VIDE: {cible_pos}")
                 # Utiliser la compétence sur cette position
                 success = jeu.unite_utilisant_competence.utiliser_competence(cible_pos, jeu.unites)
                 if success:
-                    #print(f"🟢 COMPETENCE UTILISEE SUR CASE VIDE")
+                    if DO_PRINT : print(f"🟢 COMPETENCE UTILISEE SUR CASE VIDE")
                     # Sortir du mode sélection
                     jeu.mode_selection_competence = False
                     jeu.competence_en_cours = None
@@ -187,7 +175,7 @@ def _handle_competence_target_selection(jeu, mx, my):
                     if jeu.selection:
                         jeu.deplacement_possibles = jeu.selection.cases_accessibles(jeu.unites, jeu.q_range, jeu.r_range)
                 else:
-                    print(f"🔴 ECHEC COMPETENCE SUR CASE VIDE")
+                    if DO_PRINT : print(f"ECHEC COMPETENCE SUR CASE VIDE")
                 return
     
     # Clic ailleurs = annuler la sélection de compétence
@@ -205,37 +193,39 @@ def _get_valid_targets(jeu, comp_name, unite_source):
         for u in jeu.unites:
             if u.vivant and u.equipe == unite_source.equipe:
                 # Vérifier la portée pour chaque compétence
-                if comp_name == "soin" and _is_in_range(unite_source, u, 2):
-                    valid_targets.append(u)
-                elif comp_name == "bénédiction" and _is_in_range(unite_source, u, 3):
-                    valid_targets.append(u)
-                elif comp_name == "commandement" and _is_in_range(unite_source, u, 2):
-                    valid_targets.append(u)
+                for comp_name in ["soin", "bénédiction", "commandement"]:
+                    if comp_name == "soin" and _is_in_range(unite_source, u, co.comp_portee.get(comp_name, 0)):
+                        valid_targets.append(u)
+                    if comp_name == "bénédiction" and _is_in_range(unite_source, u, co.comp_portee.get(comp_name, 0)):
+                        valid_targets.append(u)
+                    if comp_name == "commandement" and _is_in_range(unite_source, u, co.comp_portee.get(comp_name, 0)):
+                        valid_targets.append(u)
     
     if co.peut_cibler_ennemi(comp_name):
         # Peut cibler les ennemis
         for u in jeu.unites:
             if u.vivant and _are_enemies(unite_source.equipe, u.equipe, getattr(jeu, 'versus_mode', False)):
                 # Vérifier la portée pour les compétences qui en ont besoin
-                if comp_name == "tir précis":
-                    # Portée étendue pour tir précis (portée +1)
-                    if _is_in_range(unite_source, u, unite_source.portee + 1):
+                for comp_name in ["tir précis"]:
+                    if comp_name == "tir précis":
+                        if _is_in_range(unite_source, u, u.get_portee() + co.comp_portee.get(comp_name, 0)):
+                            valid_targets.append(u)
+                    else:
+                        # Autres compétences ennemies sans restriction de portée
                         valid_targets.append(u)
-                else:
-                    # Autres compétences ennemies sans restriction de portée
-                    valid_targets.append(u)
     
     if co.peut_cibler_case_vide(comp_name):
         # Gérer les différents types de ciblage de cases
-        if comp_name == "cristalisation":
-            # Cases vides adjacentes pour cristalisation
-            _add_adjacent_empty_cases(jeu, unite_source, valid_targets)
-        elif comp_name == "pluie de flèches":
-            # Cases dans la portée pour pluie de flèches (portée 3)
-            _add_cases_in_range(jeu, unite_source, valid_targets, 3)
-        elif comp_name == "monture libéré":
-            # Cases vides adjacentes pour monture libéré
-            _add_adjacent_empty_cases(jeu, unite_source, valid_targets)
+        for comp_name in ["cristalisation", "pluie de flèches", "monture libéré"]:
+            if comp_name == "cristalisation":
+                # Cases vides adjacentes pour cristalisation
+                _add_adjacent_empty_cases(jeu, unite_source, valid_targets)
+            elif comp_name == "pluie de flèches":
+                # Cases dans la portée pour pluie de flèches (portée 3)
+                _add_cases_in_range(jeu, unite_source, valid_targets, 3)
+            elif comp_name == "monture libéré":
+                # Cases vides adjacentes pour monture libéré
+                _add_adjacent_empty_cases(jeu, unite_source, valid_targets)
     
 
     return valid_targets

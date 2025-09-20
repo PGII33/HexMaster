@@ -2,16 +2,9 @@ import math
 import pygame
 from layout import hex_to_pixel
 from animations import dessiner_unite_animee
+from const import BLANC, NOIR, GRIS, VERT, ROUGE, VERT_VIE, BLEU_BOUCLIER, ROUGE_DMG_TOTAL, JAUNE_CIBLE
+from const import D_AIDES
 
-BLANC = (255,255,255)
-NOIR = (0,0,0)
-GRIS = (180,180,180)
-VERT = (50,200,50)
-ROUGE = (200,50,50)
-VERT_VIE = (30, 120, 30)
-BLEU_BOUCLIER = (100, 150, 255)
-ROUGE_DMG_TOTAL = (255, 100, 100)
-JAUNE_CIBLE = (255, 255, 100)
 
 DO_PRINT = False
 
@@ -146,11 +139,12 @@ def dessiner(jeu):
         x, y = dessiner_unite_animee(jeu, u, x, y, color)
 
         # Affichage vie (cercle vert et nombre de PV à gauche)
-        vie_txt = jeu.font_small.render(f"{u.get_pv()}", True, VERT_VIE)
-        jeu.screen.blit(vie_txt, (x - jeu.unit_radius - 5 - vie_txt.get_width(), y - jeu.unit_radius - 5))
+        if D_AIDES["PV"]:
+            vie_txt = jeu.font_small.render(f"{u.get_pv()}", True, VERT_VIE)
+            jeu.screen.blit(vie_txt, (x - jeu.unit_radius - 5 - vie_txt.get_width(), y - jeu.unit_radius - 5))
 
         # Affichage du bouclier si présent
-        if u.get_bouclier() > 0:
+        if u.get_bouclier() > 0 and D_AIDES["BOUCLIER"]:
             # Dessiner un cercle bleu autour de l'unité pour le bouclier
             pygame.draw.circle(jeu.screen, BLEU_BOUCLIER, (x, y), jeu.unit_radius + 8, 4)
             # Afficher le nombre de points de bouclier à droite
@@ -158,8 +152,9 @@ def dessiner(jeu):
             jeu.screen.blit(bouclier_txt, (x + jeu.unit_radius + 5, y - jeu.unit_radius - 5))
 
         # Affichage des dégâts totaux (rouge)
-        dmg_tot_txt = jeu.font_small.render(f"{u.get_attaque_totale()}", True, ROUGE_DMG_TOTAL)
-        jeu.screen.blit(dmg_tot_txt, (x - jeu.unit_radius - 5 - dmg_tot_txt.get_width(), y + jeu.unit_radius - 5))
+        if D_AIDES["DMG"]:
+            dmg_tot_txt = jeu.font_small.render(f"{u.get_attaque_totale()}", True, ROUGE_DMG_TOTAL)
+            jeu.screen.blit(dmg_tot_txt, (x - jeu.unit_radius - 5 - dmg_tot_txt.get_width(), y + jeu.unit_radius - 5))
 
         # Indicateur de cible possible pour compétence (unités)
         if (hasattr(jeu, 'mode_selection_competence') and jeu.mode_selection_competence and 
@@ -225,17 +220,8 @@ def dessiner(jeu):
             # Ajouter l'information de cooldown si la compétence est active
             if hasattr(u, 'a_competence_active') and u.a_competence_active():
                 cooldown_restant = getattr(u, 'cooldown_actuel', 0)
-                competence_utilisee = getattr(u, 'competence_utilisee_ce_tour', False)
-                
-                if competence_utilisee:
-                    # Toujours afficher "utilisé, dispo dans X tours" quand utilisée
-                    if cooldown_restant > 0:
-                        tours_text = "tour" if cooldown_restant == 1 else "tours"
-                        lignes.append(f"Utilisée, dispo dans {cooldown_restant} {tours_text}")
-                    else:
-                        # Cooldown 0 = disponible au prochain tour
-                        lignes.append(f"Utilisée, dispo dans 1 tour")
-                elif cooldown_restant > 0:
+
+                if cooldown_restant > 0:
                     tours_text = "tour" if cooldown_restant == 1 else "tours"
                     lignes.append(f"Cooldown: {cooldown_restant} {tours_text}")
                 else:
@@ -259,11 +245,9 @@ def dessiner(jeu):
             
             # Vérifier le cooldown et l'utilisation de la compétence
             cooldown_restant = getattr(u, 'cooldown_actuel', 0)
-            competence_utilisee = getattr(u, 'competence_utilisee_ce_tour', False)
-            competence_utilisable = (cooldown_restant == 0 and not competence_utilisee)
             
             # Couleur du bouton selon la disponibilité
-            if competence_utilisable:
+            if cooldown_restant == 0:
                 btn_color = (100, 200, 100)  # Vert si utilisable
                 text_color = NOIR
                 btn_text = f"Utiliser {u.get_competence()}"
@@ -272,18 +256,13 @@ def dessiner(jeu):
                 btn_color = (150, 150, 150)  # Gris si en cooldown ou déjà utilisée
                 text_color = (100, 100, 100)
                 
-                if competence_utilisee:
-                    # Toujours afficher "utilisé, dispo dans X tours" quand utilisée
-                    if cooldown_restant > 0:
-                        tours_text = "tour" if cooldown_restant == 1 else "tours"
-                        btn_text = f"{u.get_competence()} (utilisée, dispo dans {cooldown_restant} {tours_text})"
-                    else:
-                        # Cooldown 0 = disponible au prochain tour
-                        btn_text = f"{u.get_competence()} (utilisée, dispo dans 1 tour)"
-                else:
-                    # Pas utilisée mais en cooldown
+                # Toujours afficher "utilisé, dispo dans X tours" quand utilisée
+                if cooldown_restant > 0:
                     tours_text = "tour" if cooldown_restant == 1 else "tours"
-                    btn_text = f"{u.get_competence()} (cooldown: {cooldown_restant} {tours_text})"
+                    btn_text = f"{u.get_competence()} (utilisée, dispo dans {cooldown_restant} {tours_text})"
+                else:
+                    # Cooldown 0 = disponible au prochain tour
+                    btn_text = f"{u.get_competence()} (utilisée, dispo dans 1 tour)"
             
             pygame.draw.rect(jeu.screen, btn_color, btn_rect, border_radius=5)
             pygame.draw.rect(jeu.screen, NOIR, btn_rect, width=2, border_radius=5)
@@ -294,12 +273,12 @@ def dessiner(jeu):
             jeu.screen.blit(btn_text_surface, (text_x, text_y))
             
             # Stocker le rectangle pour la détection de clic seulement si utilisable
-            if competence_utilisable:
+            if cooldown_restant == 0:
                 jeu.competence_btn_rect = btn_rect
-                #print(f"🟢 BOUTON CLIQUABLE DEFINI: {btn_rect}")
+                if DO_PRINT : print(f"🟢 BOUTON CLIQUABLE DEFINI: {btn_rect}")
             else:
                 jeu.competence_btn_rect = None
-                #print(f"🔴 BOUTON NON CLIQUABLE: {u.get_competence()}")
+                if DO_PRINT : print(f"🔴 BOUTON NON CLIQUABLE: {u.get_competence()}")
         else:
             jeu.competence_btn_rect = None
 

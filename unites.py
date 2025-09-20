@@ -51,7 +51,6 @@ class Unite:
         # Système de cooldown pour les compétences actives
         self.cooldown_actuel = 0  # Tours restants avant de pouvoir réutiliser la compétence
         self.cooldown_max = self.get_cooldown_competence()  # Cooldown maximum de la compétence
-        self.competence_utilisee_ce_tour = False  # Flag pour éviter la réduction immédiate
         
         self.vivant = True
         self.anim = None
@@ -74,40 +73,14 @@ class Unite:
         """Retourne le cooldown maximum pour la compétence de cette unité."""
         if not self.comp:
             return 0
-        
-        # Définition des cooldowns par compétence (en tours d'attente)
-        cooldowns = {
-            # Compétences actives - 0 = utilisable chaque tour, 1 = un tour d'attente, etc.
-            "soin": 1,  # Utilisable chaque tour
-            "bénédiction": 1,  # Un tour d'attente entre utilisations
-            "tir précis": 2,  # Un tours d'attente entre utilisations (utilisable 1 tour sur 2)
-            "pluie de flèches": 2,  # Un tours d'attente entre utilisations (utilisable 1 tour sur 2)
-            # Compétences qui ne doivent pas avoir de cooldown (passives ou spéciales)
-            "sangsue": 0,
-            "zombification": 0,
-            "lumière vengeresse": 0,
-            "explosion sacrée": 0,  # Usage unique (mort)
-            "bouclier de la foi": 0,  # Passive au début du tour
-            "aura sacrée": 0,  # Passive au début du tour
-            "nécromancie": 0,  # Passive au début du tour
-            "invocation": 0,  # Passive au début du tour
-            "tas d'os": 0,  # Passive à la mort
-            "fantomatique": 0,  # Passive de déplacement
-            "enracinement": 0,  # Passive de fin de tour
-            "vague apaisante": 0,  # Passive au début du tour
-            "renaissance": 0,  # Passive à la mort
-            "armure de pierre": 0,  # Passive de défense
-            "combustion différée": 0,  # Passive d'attaque
-        }
-        
-        return cooldowns.get(self.comp, 0)  # Par défaut : 0 tour de cooldown (utilisable chaque tour)
+        return co.cooldowns.get(self.comp, 0)  # Par défaut : 0 tour de cooldown (utilisable chaque tour)
     def get_competence(self): return self.comp
     def get_portee(self): return self.portee
     def get_pv_max(self): return self.pv_max
 
     # ---------- Logique ----------
     def reset_actions(self):
-        self.attaque_restantes = self.attaque_max
+        self.attaque_restantes = max(self.attaque_max, self.attaque_restantes)
         self.pm = self.mv
         
         # Appliquer l'effet venin incapacitant si l'unité a été empoisonnée
@@ -326,9 +299,6 @@ class Unite:
         if self.cooldown_actuel > 0:
             self.cooldown_actuel -= 1
         
-        # Reset du flag pour le nouveau tour
-        self.competence_utilisee_ce_tour = False
-        
         # Compétences passives
         if self.comp == "nécromancie":
             co.nécromancie(self, toutes_unites, plateau, q_range, r_range)
@@ -407,14 +377,12 @@ class Unite:
         
         if (self.a_competence_active() and 
             (not attaque_necessaire or self.attaque_restantes > 0) and 
-            self.cooldown_actuel <= 0 and 
-            not self.competence_utilisee_ce_tour):
+            self.cooldown_actuel <= 0):
             
             success = co.utiliser_competence_active(self, self.comp, cible, toutes_unites)
             if success:
                 # Activer le cooldown et marquer comme utilisée ce tour
                 self.cooldown_actuel = self.cooldown_max
-                self.competence_utilisee_ce_tour = True
                 
                 # Seules certaines compétences ne consomment pas d'attaque
                 if self.comp not in competences_sans_attaque:
@@ -442,11 +410,6 @@ class Squelette(Unite):
 class Spectre(Unite):
     def __init__(self, equipe, pos):
         super().__init__(equipe, pos, nom="Spectre", pv=5, dmg=3, mv=1, tier=1, comp="fantomatique", faction="Morts-Vivants")
-
-class Zombie_BASE(Unite):
-    """ Pour crée les zombies zombifiés """
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Zombie", pv=10, dmg=2, mv=2, tier=2, faction="Morts-Vivants")
 
 class Zombie(Unite):
     def __init__(self, equipe, pos):

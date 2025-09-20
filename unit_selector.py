@@ -5,8 +5,7 @@ import unites
 import sauvegarde
 from competences import COMPETENCES
 from faction_colors import get_faction_color
-
-UNIT_MAX = 24
+from const import MAX_UNITE, D_CP
 
 class UnitSelector:
     def __init__(self, screen, mode, **kwargs):
@@ -43,9 +42,9 @@ class UnitSelector:
         if self.mode == "hexarene":
             return {
                 "titre": "HexArène - Sélection des unités",
-                "max_units": 14,
+                "max_units": MAX_UNITE,
                 "use_cp": True,
-                "cp_disponible": self.data.get("cp", 5),
+                "cp_disponible": self.data.get("cp", D_CP),
                 "faction_unique": True,
                 "unites_disponibles": self._get_owned_units(),
                 "background": (250, 245, 230)
@@ -65,9 +64,9 @@ class UnitSelector:
             joueur = kwargs.get("joueur", 1)
             return {
                 "titre": f"Joueur {joueur} - Sélection des unités",
-                "max_units": 10,
+                "max_units": MAX_UNITE,
                 "use_cp": True,
-                "cp_disponible": self.data.get("cp", 5),
+                "cp_disponible": self.data.get("cp", D_CP),
                 "faction_unique": False,  # Toutes factions autorisées
                 "unites_disponibles": self._get_owned_units(),
                 "background": (240, 240, 250)
@@ -76,9 +75,9 @@ class UnitSelector:
         elif self.mode == "mixte":
             return {
                 "titre": "Mode Mixte - Sélection des unités",
-                "max_units": 12,
+                "max_units": MAX_UNITE,
                 "use_cp": True,
-                "cp_disponible": self.data.get("cp", 5),
+                "cp_disponible": self.data.get("cp", D_CP),
                 "faction_unique": False,
                 "unites_disponibles": self._get_owned_units(),
                 "background": (250, 250, 240)
@@ -87,9 +86,9 @@ class UnitSelector:
         elif self.mode == "builder_enemy":
             return {
                 "titre": "Level Builder - Sélection des Ennemis",
-                "max_units": UNIT_MAX,  # Limite de UNIT_MAX unités
+                "max_units": MAX_UNITE,  # Limite de UNIT_MAX unités
                 "use_cp": False,   # Pas de contrainte CP
-                "cp_disponible": 999,
+                "cp_disponible": "infini",
                 "faction_unique": False,  # Toutes factions autorisées
                 "unites_disponibles": self._get_all_units(),  # Toutes les unités
                 "background": (250, 230, 230)  # Rouge clair pour les ennemis
@@ -98,9 +97,9 @@ class UnitSelector:
         elif self.mode == "campagne_libre":
             return {
                 "titre": "Campagne - Sélection Libre",
-                "max_units": kwargs.get("max_units", 14),
+                "max_units": kwargs.get("max_units", MAX_UNITE),
                 "use_cp": True,
-                "cp_disponible": kwargs.get("cp_max", 5),
+                "cp_disponible": kwargs.get("cp_max", D_CP),
                 "faction_unique": False,
                 "faction_imposee": kwargs.get("faction_imposee", ""),
                 "unites_disponibles": self._get_units_for_faction_imposee(kwargs.get("faction_imposee", "")),
@@ -110,9 +109,9 @@ class UnitSelector:
         elif self.mode == "campagne_faction":
             return {
                 "titre": "Campagne - Faction Unique",
-                "max_units": kwargs.get("max_units", 14),
+                "max_units": kwargs.get("max_units", MAX_UNITE),
                 "use_cp": True,
-                "cp_disponible": kwargs.get("cp_max", 5),
+                "cp_disponible": kwargs.get("cp_max", D_CP),
                 "faction_unique": True,
                 "faction_imposee": kwargs.get("faction_imposee", ""),
                 "unites_disponibles": self._get_units_for_faction_imposee(kwargs.get("faction_imposee", "")),

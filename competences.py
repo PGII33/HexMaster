@@ -1,20 +1,31 @@
 import random
 
+DO_PRINT = False
+
+comp_portee = {
+    "bénédiction": 3,
+    "commandement": 2,
+    "cristalisation": 1,
+    "pluie de flèches": 3,
+    "monture libéré": 1,
+    "soin": 3,
+    "tir précis": 1,  # Portée normale +1
+}
+
 def sangsue(self, degats_infliges):
     """Le vampire récupère autant de PV que de dégâts réellement infligés (peut dépasser PV max)."""
+    if DO_PRINT : print("Sangsue :", degats_infliges, "PV récupérés")
     self.pv += degats_infliges
 
 def zombification(self, cible):
     """Transforme l'unite morte en zombie sous le contrôle du joueur de l'attaquant"""
-    from unites import Zombie_BASE
+    if DO_PRINT : print("Zombification effectuée sur :", cible.get_name())
     if not cible.vivant and cible.nom != "Zombie":        
-        # Transformer la cible en Zombie_BASE
-        cible.__class__ = Zombie_BASE
+        cible.__class__ = self.__class__
         cible.__init__(self.equipe, cible.pos)
         cible.pm = 0
         cible.attaque_restantes = 0
-        cible.comp = "zombification"
-        cible.attaque_restantes = 0
+    
 
 def tas_d_os(self):
     """Transforme l'unité morte en tas d'os."""
@@ -164,29 +175,6 @@ def bénédiction(self, cible):
             cible.ba_benediction = 2
             cible.bouclier += 1
         return True
-    return False
-
-def cristalisation(self, cible_pos, toutes_unites):
-    """Crée un Cristal sur une case adjacente à 1 de portée."""
-    from unites import Cristal
-    directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
-    q, r = self.pos
-    
-    # Vérifier si la cible est adjacente
-    for dq, dr in directions:
-        if (q+dq, r+dr) == cible_pos:
-            # Vérifier que la case est vide
-            case_libre = True
-            for unite in toutes_unites:
-                if unite.pos == cible_pos and unite.vivant:
-                    case_libre = False
-                    break
-            
-            if case_libre:
-                cristal = Cristal(self.equipe, cible_pos)
-                toutes_unites.append(cristal)
-                return True
-    
     return False
 
 def lumière_vengeresse(self, cible):
@@ -515,6 +503,29 @@ def vague_apaisante(self, toutes_unites):
                         unite.pv = unite.pv_max
                     break
 
+def cristalisation(self, cible_pos, toutes_unites):
+    """Crée un Cristal sur une case adjacente à 1 de portée."""
+    from unites import Cristal
+    directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
+    q, r = self.pos
+    
+    # Vérifier si la cible est adjacente
+    for dq, dr in directions:
+        if (q+dq, r+dr) == cible_pos:
+            # Vérifier que la case est vide
+            case_libre = True
+            for unite in toutes_unites:
+                if unite.pos == cible_pos and unite.vivant:
+                    case_libre = False
+                    break
+            
+            if case_libre:
+                cristal = Cristal(self.equipe, cible_pos)
+                toutes_unites.append(cristal)
+                return True
+    
+    return False
+
 def renaissance(self, toutes_unites):
     """80% de chance de revenir à la vie avec tous ses PV."""
     import random
@@ -657,8 +668,8 @@ def tir_precis(attaquant, cible, toutes_unites):
     distance = max(abs(q1 - q2), abs(r1 - r2), abs((q1 + r1) - (q2 + r2)))
     
     # Vérifier la portée étendue (portée normale + 1)
-    portee_etendue = attaquant.portee + 1
-    
+    portee_etendue = attaquant.portee + comp_portee.get(attaquant.comp, 0)
+    print(portee_etendue)
     if distance > portee_etendue:
         print(f"{cible.nom} est trop loin pour le tir précis (distance {distance}, portée max {portee_etendue})")
         return False
@@ -762,4 +773,29 @@ COMPETENCES = {
     "tir précis": "Attaque à portée +1 avec dégâts x1.5. Utilisable tous les 2 tours.",
     "venin incapacitant": "L'unité touchée ne peut pas se déplacer au tour suivant.",
     "sédition venimeuse": "L'unité attaquée est forcée d'attaquer un allié adjacent si possible.",
+}
+
+# Définition des cooldowns par compétence (en tours d'attente)
+cooldowns = {
+    # Compétences actives - 1 = utilisable chaque tour, 2 = un tour d'attente, etc.
+    "soin": 1,  # Utilisable chaque tour
+    "bénédiction": 1,  # Un tour d'attente entre utilisations
+    "tir précis": 2,  # Un tours d'attente entre utilisations (utilisable 1 tour sur 2)
+    "pluie de flèches": 2,  # Un tours d'attente entre utilisations (utilisable 1 tour sur 2)
+    # Compétences qui ne doivent pas avoir de cooldown (passives ou spéciales)
+    "sangsue": 0,
+    "zombification": 0,
+    "lumière vengeresse": 0,
+    "explosion sacrée": 0,  # Usage unique (mort)
+    "bouclier de la foi": 0,  # Passive au début du tour
+    "aura sacrée": 0,  # Passive au début du tour
+    "nécromancie": 0,  # Passive au début du tour
+    "invocation": 0,  # Passive au début du tour
+    "tas d'os": 0,  # Passive à la mort
+    "fantomatique": 0,  # Passive de déplacement
+    "enracinement": 0,  # Passive de fin de tour
+    "vague apaisante": 0,  # Passive au début du tour
+    "renaissance": 0,  # Passive à la mort
+    "armure de pierre": 0,  # Passive de défense
+    "combustion différée": 0,  # Passive d'attaque
 }

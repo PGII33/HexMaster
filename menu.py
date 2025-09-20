@@ -2,7 +2,6 @@ import pygame
 import sys
 import os
 import ia
-import unites
 from jeu import Jeu
 from utils import Button, resource_path
 from boutique import Boutique
@@ -11,9 +10,8 @@ from hexarene import HexArène
 from campagne import Campagne, get_niveau_data
 from unit_selector import UnitSelector
 from ia_selector import IASelector
-
-BLANC = (255, 255, 255)
-BLEU = (50, 150, 250)
+from sauvegarde import sauvegarder, creer_sauvegarde_defaut
+from const import D_DISPLAY_MODE, D_AIDES, BLEU, BLANC
 
 class HexaMaster:
     def __init__(self):
@@ -29,10 +27,20 @@ class HexaMaster:
         self.windowed_height = int(self.screen_height * 0.8)
         
         # Démarrer en plein écran
-        # Modes d'affichage possibles: "windowed", "fullscreen"
-        self.display_mode = "fullscreen"
-        self.is_fullscreen = True  # Pour le VIDEORESIZE event
-        self.screen = pygame.display.set_mode((self.screen_width, self.screen_height), pygame.FULLSCREEN)
+        self.display_mode = D_DISPLAY_MODE
+        self.is_fullscreen = True if self.display_mode == "fullscreen" else False  # Pour le VIDEORESIZE event
+
+        if self.is_fullscreen:
+            self.screen = pygame.display.set_mode(
+                (self.screen_width, self.screen_height),
+                pygame.FULLSCREEN
+            )
+        else:
+            self.screen = pygame.display.set_mode(
+                (self.windowed_width, self.windowed_height),
+                pygame.RESIZABLE
+            )
+
         pygame.display.set_caption("HexaMaster")
         self.clock = pygame.time.Clock()
 
@@ -45,10 +53,10 @@ class HexaMaster:
 
         self.creer_boutons()
 
-    def toggle_fullscreen(self):
-        """Bascule entre le mode plein écran et le mode fenêtré"""
-        self.is_fullscreen = not self.is_fullscreen
-        if self.is_fullscreen:
+    def set_display_mode(self, mode):
+        """Change le mode d'affichage"""
+        self.display_mode = mode
+        if mode == "fullscreen":
             self.screen = pygame.display.set_mode((self.screen_width, self.screen_height), pygame.FULLSCREEN)
         else:
             self.screen = pygame.display.set_mode((self.windowed_width, self.windowed_height), pygame.RESIZABLE)
@@ -56,6 +64,25 @@ class HexaMaster:
         if self.jeu:
             self.jeu.screen = self.screen
             self.jeu.recalculer_layout()
+
+    def toggle_display_mode(self):
+        if self.display_mode == "windowed":
+            self.set_display_mode("fullscreen")
+        else:
+            self.set_display_mode("windowed")
+
+    def toggle_aide_pv(self):
+        D_AIDES["PV"] = not D_AIDES["PV"]
+        self.creer_boutons()
+
+    def toggle_aide_dmg(self):
+        D_AIDES["DMG"] = not D_AIDES["DMG"]
+        self.creer_boutons()
+
+    def toggle_aide_bouclier(self):
+        D_AIDES["BOUCLIER"] = not D_AIDES["BOUCLIER"]
+        self.creer_boutons()
+
 
     def creer_boutons(self):
         w, h = self.screen.get_size()
@@ -79,16 +106,25 @@ class HexaMaster:
 
         # Menu des options d'affichage
         self.boutons_options_display = [
-            Button((center_x-200, h//2-100, 400, 70), "Plein écran", lambda: self.set_display_mode("fullscreen"), self.font_med, BLEU),
-            Button((center_x-200, h//2, 400, 70), "Fenêtré", lambda: self.set_display_mode("windowed"), self.font_med, BLEU),
-            Button((center_x-200, h//2+100, 400, 70), "Retour", self.retour_options, self.font_med, BLEU),
+            Button((center_x-200, h//2-150, 400, 70),
+                   f"Ecran : {self.display_mode}",
+                   self.toggle_display_mode, self.font_med, BLEU),
+            Button((center_x-200, h//2-50, 400, 70),
+                   f"Aide PV : {'ON' if D_AIDES["PV"] else 'OFF'}",
+                   self.toggle_aide_pv, self.font_med, BLEU),
+            Button((center_x-200, h//2+50, 400, 70),
+                   f"Aide DMG : {'ON' if D_AIDES["DMG"] else 'OFF'}",
+                   self.toggle_aide_dmg, self.font_med, BLEU),
+            Button((center_x-200, h//2+150, 400, 70),
+                   f"Aide Bouclier : {'ON' if D_AIDES["BOUCLIER"] else 'OFF'}",
+                   self.toggle_aide_bouclier, self.font_med, BLEU),
+            Button((center_x-200, h//2+250, 400, 70),
+                   "Retour", self.retour_options, self.font_med, BLEU),
         ]
 
         # Menu des options de sauvegarde
-        import sauvegarde
         self.boutons_options_save = [
-            Button((center_x-200, h//2-100, 400, 70), "Debug Sauvegarde", self.debug_sauvegarde, self.font_med, BLEU),
-            Button((center_x-200, h//2, 400, 70), "Réinitialiser Sauvegarde", lambda: sauvegarde.sauvegarder(sauvegarde.creer_sauvegarde_defaut()), self.font_med, BLEU),
+            Button((center_x-200, h//2, 400, 70), "Réinitialiser Sauvegarde", lambda: sauvegarder(creer_sauvegarde_defaut()), self.font_med, BLEU),
             Button((center_x-200, h//2+100, 400, 70), "Retour", self.retour_options, self.font_med, BLEU),
         ]
 
@@ -127,16 +163,6 @@ class HexaMaster:
         self.boutons_retour_placeholder = [
             Button((20, h-70, 150, 50), "Retour", self.back_to_menu, self.font_med)
         ]
-
-        # Menu Options
-        self.boutons_options = [
-            Button((center_x-200, h//2-120, 400, 80), "Debug Sauvegarde", self.debug_sauvegarde, self.font_med),
-            Button((center_x-200, h//2-20, 400, 80), "Réinitialiser Sauvegarde", self.reset_sauvegarde, self.font_med),
-            Button((20, h-70, 150, 50), "Retour", self.back_to_menu, self.font_med)
-        ]
-
-        # Variables pour le debug
-        self.debug_info = ""
 
     # ------ Navigation entre menus ------
     def back_to_menu(self):
@@ -202,65 +228,6 @@ class HexaMaster:
         if self.jeu:
             self.jeu.screen = self.screen
             self.jeu.recalculer_layout()
-
-    def debug_sauvegarde(self):
-        """Affiche les informations de debug sur la sauvegarde"""
-        import sauvegarde
-        
-        info_lines = []
-        info_lines.append("=== DEBUG SAUVEGARDE ===")
-        
-        # Chemin de sauvegarde
-        chemin = sauvegarde.obtenir_chemin_sauvegarde()
-        info_lines.append(f"Chemin: {chemin}")
-        
-        # Mode EXE
-        import sys
-        info_lines.append(f"Mode EXE: {getattr(sys, 'frozen', False)}")
-        
-        # Existence du fichier
-        import os
-        if os.path.exists(chemin):
-            size = os.path.getsize(chemin)
-            info_lines.append(f"Fichier existe: {size} octets")
-        else:
-            info_lines.append("Fichier n'existe pas")
-        
-        # Données actuelles
-        try:
-            data = sauvegarde.charger()
-            info_lines.append(f"PA: {data.get('pa', 'N/A')}")
-            info_lines.append(f"CP: {data.get('cp', 'N/A')}")
-            unites = data.get('unites', [])
-            info_lines.append(f"Unités: {len(unites)} débloquées")
-            info_lines.append("Lecture fichier: OK")
-            
-        except Exception as e:
-            info_lines.append(f"Erreur: {e}")
-        
-        self.debug_info = "\\n".join(info_lines)
-        print(self.debug_info)  # Aussi dans la console
-
-    def reset_sauvegarde(self):
-        """Réinitialise la sauvegarde"""
-        import sauvegarde
-        
-        data_default = {
-            "pa": 0,
-            "unites": ["Goule"],
-            "cp": 5,
-            "campagne_progression": {
-                "Religieux": {"niveaux_completes": [], "disponible": True}
-            }
-        }
-        
-        try:
-            sauvegarde.sauvegarder(data_default)
-            self.debug_info = "Sauvegarde réinitialisée avec succès!"
-            print(self.debug_info)
-        except Exception as e:
-            self.debug_info = f"Erreur lors de la réinitialisation: {e}"
-            print(self.debug_info)
 
     def open_unite_builder(self):
         """Affiche l'écran du constructeur d'unités (en construction)"""
@@ -565,16 +532,9 @@ class HexaMaster:
                 pygame.display.flip()  # Ajout du flip() ici
             elif self.etat == "options_display":
                 self.screen.fill(BLANC)
-                title = self.font_big.render("Options d'Affichage", True, (30, 30, 60))
+                title = self.font_big.render("Options d'Affichage", True, (30,30,60))
                 self.screen.blit(title, (self.screen.get_width()//2 - title.get_width()//2, 50))
-                # Afficher le mode actuel en vert
-                for b in self.boutons_options_display:
-                    if (b.text == "Plein écran" and self.display_mode == "fullscreen") or \
-                       (b.text == "Fenêtré" and self.display_mode == "windowed"):
-                        b.base_color = BLEU
-                    else:
-                        b.base_color = (200, 200, 200)
-                    b.draw(self.screen)
+                for b in self.boutons_options_display: b.draw(self.screen)
                 pygame.display.flip()  # Ajout du flip() ici
             elif self.etat == "options_save":
                 self.screen.fill(BLANC)
@@ -667,12 +627,8 @@ class HexaMaster:
 
     def afficher_placeholder(self):
         self.screen.fill(BLANC)
-        if self.etat == "unite_builder_construction":
-            title = self.font_big.render("Unite Builder", True, BLEU)
-            subtitle = self.font_med.render("Écran en construction", True, BLEU)
-        else:
-            title = self.font_big.render("En construction...", True, BLEU)
-            subtitle = None
+        title = self.font_big.render("En construction...", True, BLEU)
+        subtitle = None
             
         self.screen.blit(title, (self.screen.get_width()//2 - title.get_width()//2, 250))
         if subtitle:
@@ -691,12 +647,3 @@ class HexaMaster:
         # Boutons
         for b in self.boutons_options:
             b.draw(self.screen)
-        
-        # Afficher les informations de debug si disponibles
-        if hasattr(self, 'debug_info') and self.debug_info:
-            y_offset = 200
-            for line in self.debug_info.split('\\n'):
-                if line.strip():
-                    text = self.font_small.render(line, True, BLEU)
-                    self.screen.blit(text, (50, y_offset))
-                    y_offset += 25
