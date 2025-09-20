@@ -80,15 +80,16 @@ def jimmys_everywhere(self, toutes_unites):
                     # Soigner l'unité adjacente
                     jimmyfication(self, unite)
 
-CLASSES_UNITES = [
-    # Morts-Vivants
-    Goule, Squelette, Spectre, Vampire, Zombie, Liche, Archliche, Jimmy1, Jimmy2, Jimmy3,
-    # Religieux
-    Missionnaire, Clerc, Fanatique, Esprit_Saint, Paladin, Ange, ArchAnge,
-    # Élémentaires
-    Esprit, Driade, Gnome, Golem, Ondine, Ifrit, Phénix,
-    # Royaume
-    Guerrier, Archer, Cavalier, Bouffon, Garde_Royal, Roi, Marionettiste,
-    # Chimères
-    Harpie, Centaure, Griffon, Lamia, Loup_Garou, Manticore, Basilic
-]
+JIMMYS_UNITE = [Jimmy1, Jimmy2, Jimmy3, Jimmy4]
+
+JIMMYS_COMPETENCE ={
+"boneful TADOS": "À la mort, se transforme en TADOS de 1 PV invoquant des squelettes.",
+"angry TADOS": "À la mort, se transforme en TADOS de 1 PV et 1 DMG.",
+"Jimmy's TADOS": "À la mort, se transforme en TADOS de 1 PV qui transforme les squelettes en Jimmy.",
+"Jimmy's tas d'os": "Transforme les squelettes alliés allentour en Jimmy.",
+"Jimmiest": "Transforme un Jimmy en Jimmy spécial."
+}
+
+JIMMYS_cooldowns = {
+    "Jimmiest": 0
+}

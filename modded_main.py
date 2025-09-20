@@ -1,5 +1,7 @@
 import competences
+import jimmys_ext
 import unites
+from competences import peut_cibler_allie
 
 jimmys = True
 try:
@@ -15,12 +17,15 @@ if jimmys:
     Origutiliser_competence_active = competences.utiliser_competence_active
     Origest_competence_active = competences.est_competence_active
     Origutiliser_competence = unites.Unite.utiliser_competence
+    Origpeut_cibler_allie = competences.peut_cibler_allie
+    Origget_cooldown_competence = unites.Unite.get_cooldown_competence
 
     # 2. On définit les nouveautés
     # dans jimmys_ext
 
     # 3. On étend la liste et on remplace les méthodes par des méthodes étendus
-    unites.CLASSES_UNITES.extend([Jimmy1, Jimmy2, Jimmy3, Jimmy4, Jimmy])
+    CLASSES_UNITE_ETENDU = jimmys_ext.JIMMYS_UNITE + unites.CLASSES_UNITES
+    competences.COMPETENCES.update(JIMMYS_COMPETENCE)
 
     def mourir_etendu(self, toutes_unites=None):
         # appel de l’original
@@ -60,10 +65,24 @@ if jimmys:
             return success
         return etat
 
+    def peut_cibler_allie_etendu(nom_competence):
+        return peut_cibler_allie(nom_competence) or nom_competence in ["Jimmiest"]
+
+    def get_cooldown_competence_etendu(self):
+        if self.comp == "Jimmiest":
+            return 0
+        return Origget_cooldown_competence(self)
+
+
     # 4 .on reinjecte
+    unites.CLASSES_UNITES = CLASSES_UNITE_ETENDU
     unites.Unite.mourir = mourir_etendu
     unites.Unite.debut_tour = debut_tour_etendu
     competences.est_competence_active = est_competence_active_etendu
+    competences.utiliser_competence_active = utiliser_competence_active_etendu
+    competences.utiliser_competence = utiliser_competence_etendu
+    competences.peut_cibler_allie = peut_cibler_allie_etendu
+    unites.Unite.get_cooldown_competence = get_cooldown_competence_etendu
 
 # 5. On lance le vrai point d’entrée
 from main import *
