@@ -27,7 +27,7 @@ def get_unites_a_portee(pos, unites, portee):
     return [u for u in unites if u.vivant and est_a_portee_pos(pos, u.pos, portee)]
 
 def evaluer_utilite_competence(unite, competence, cible, tous_unites):
-    """Évalue l'utilité d'utiliser une compétence sur une cible (score 0-100)."""
+    """Évalue l'utilité d'utiliser une compétence sur une cible (score entier positif)."""
     if not cible or not cible.vivant:
         return 0
     
@@ -147,10 +147,6 @@ def peut_utiliser_competence_active(unite, competence, tous_unites):
     
     # Vérifier le cooldown
     if hasattr(unite, 'cooldown_actuel') and unite.cooldown_actuel > 0:
-        return False
-    
-    # Vérifier si déjà utilisée ce tour
-    if hasattr(unite, 'competence_utilisee_ce_tour') and unite.competence_utilisee_ce_tour:
         return False
     
     # Compétences qui ne nécessitent pas d'attaque restante

@@ -220,17 +220,8 @@ def dessiner(jeu):
             # Ajouter l'information de cooldown si la compétence est active
             if hasattr(u, 'a_competence_active') and u.a_competence_active():
                 cooldown_restant = getattr(u, 'cooldown_actuel', 0)
-                competence_utilisee = getattr(u, 'competence_utilisee_ce_tour', False)
-                
-                if competence_utilisee:
-                    # Toujours afficher "utilisé, dispo dans X tours" quand utilisée
-                    if cooldown_restant > 0:
-                        tours_text = "tour" if cooldown_restant == 1 else "tours"
-                        lignes.append(f"Utilisée, dispo dans {cooldown_restant} {tours_text}")
-                    else:
-                        # Cooldown 0 = disponible au prochain tour
-                        lignes.append(f"Utilisée, dispo dans 1 tour")
-                elif cooldown_restant > 0:
+
+                if cooldown_restant > 0:
                     tours_text = "tour" if cooldown_restant == 1 else "tours"
                     lignes.append(f"Cooldown: {cooldown_restant} {tours_text}")
                 else:
@@ -254,11 +245,9 @@ def dessiner(jeu):
             
             # Vérifier le cooldown et l'utilisation de la compétence
             cooldown_restant = getattr(u, 'cooldown_actuel', 0)
-            competence_utilisee = getattr(u, 'competence_utilisee_ce_tour', False)
-            competence_utilisable = (cooldown_restant == 0 and not competence_utilisee)
             
             # Couleur du bouton selon la disponibilité
-            if competence_utilisable:
+            if cooldown_restant == 0:
                 btn_color = (100, 200, 100)  # Vert si utilisable
                 text_color = NOIR
                 btn_text = f"Utiliser {u.get_competence()}"
@@ -267,18 +256,13 @@ def dessiner(jeu):
                 btn_color = (150, 150, 150)  # Gris si en cooldown ou déjà utilisée
                 text_color = (100, 100, 100)
                 
-                if competence_utilisee:
-                    # Toujours afficher "utilisé, dispo dans X tours" quand utilisée
-                    if cooldown_restant > 0:
-                        tours_text = "tour" if cooldown_restant == 1 else "tours"
-                        btn_text = f"{u.get_competence()} (utilisée, dispo dans {cooldown_restant} {tours_text})"
-                    else:
-                        # Cooldown 0 = disponible au prochain tour
-                        btn_text = f"{u.get_competence()} (utilisée, dispo dans 1 tour)"
-                else:
-                    # Pas utilisée mais en cooldown
+                # Toujours afficher "utilisé, dispo dans X tours" quand utilisée
+                if cooldown_restant > 0:
                     tours_text = "tour" if cooldown_restant == 1 else "tours"
-                    btn_text = f"{u.get_competence()} (cooldown: {cooldown_restant} {tours_text})"
+                    btn_text = f"{u.get_competence()} (utilisée, dispo dans {cooldown_restant} {tours_text})"
+                else:
+                    # Cooldown 0 = disponible au prochain tour
+                    btn_text = f"{u.get_competence()} (utilisée, dispo dans 1 tour)"
             
             pygame.draw.rect(jeu.screen, btn_color, btn_rect, border_radius=5)
             pygame.draw.rect(jeu.screen, NOIR, btn_rect, width=2, border_radius=5)
@@ -289,12 +273,12 @@ def dessiner(jeu):
             jeu.screen.blit(btn_text_surface, (text_x, text_y))
             
             # Stocker le rectangle pour la détection de clic seulement si utilisable
-            if competence_utilisable:
+            if cooldown_restant == 0:
                 jeu.competence_btn_rect = btn_rect
-                #print(f"🟢 BOUTON CLIQUABLE DEFINI: {btn_rect}")
+                if DO_PRINT : print(f"🟢 BOUTON CLIQUABLE DEFINI: {btn_rect}")
             else:
                 jeu.competence_btn_rect = None
-                #print(f"🔴 BOUTON NON CLIQUABLE: {u.get_competence()}")
+                if DO_PRINT : print(f"🔴 BOUTON NON CLIQUABLE: {u.get_competence()}")
         else:
             jeu.competence_btn_rect = None
 

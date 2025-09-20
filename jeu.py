@@ -1,9 +1,6 @@
 import pygame
-import sys
-import math
 import ia
 import unites
-import animations
 from layout import recalculer_layout, axial_to_pixel, hex_to_pixel
 from affichage import dessiner
 from input_mod import handle_click
@@ -20,7 +17,7 @@ def _get_unit_class_by_name(name: str):
 BTN_H_RATIO = 0.06
 
 class Jeu:
-    def __init__(self, ia_strategy=ia.cible_faible, screen=None,
+    def __init__(self, ia_strategy=ia.ia_tactique_avancee, screen=None,
                  initial_player_units=None, initial_enemy_units=None, 
                  enable_placement=False, versus_mode=False, niveau_config=None, 
                  mode_hexarene=False, hexarene_mode_type=None, faction_hexarene=None,
@@ -472,7 +469,3 @@ class Jeu:
                 return f"{statut} - {self.chapitre_nom} {self.niveau_nom}"
             else:
                 return f"{statut} - Campagne"
-        self.selection = None
-        self.deplacement_possibles = {}
-
-    # ...reste du code inchangé...
