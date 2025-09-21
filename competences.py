@@ -84,6 +84,7 @@ def nécromancie(self, toutes_unites, plateau, q_range=None, r_range=None):
         r_range = range(-1, 7)
     
     directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
+    random.shuffle(directions) # Pour varier les positions d'invocation
     q, r = self.pos
     for dq, dr in directions:
         new_pos = (q+dq, r+dr)
@@ -109,6 +110,7 @@ def invocation(self, toutes_unites, plateau, q_range=None, r_range=None):
         r_range = range(-1, 7)
     
     directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
+    random.shuffle(directions) # Pour varier les positions d'invocation
     q, r = self.pos
     candidates = [Goule, Squelette, Spectre, Zombie, Vampire]
     random.shuffle(candidates)
