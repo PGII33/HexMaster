@@ -192,36 +192,45 @@ Les unités du jeu sont séparés en différentes "factions" il s'agit de groupe
 ### 
 
 ### Idées factions
-Kaiju
-Dinosaures
+Bonus : Faction obtenable après avoir terminé le jeu, contient des unités sans cohérence nécessaire.
+Kaiju ??
+Dinosaures ??
+
+### Idée Ajouts
+
+#### Bâtiments
+Tour : Augemente de 1 la portée des unités adjacentes
+Mur : Bloque le passage 
+Cache : Réduit de 1 (min 1) la portée atteignant les unités adjacentes à la cache
+
 
 
 ### Idées unitée
 
-Paysan
-Tour 
-
-Salamandre 
-
-Géants 
-Sphinx 
-Cyclopes
-
-| Basilic  | 4    |Regard Mortel|
-| Dragon   | 4    |             |
-
-
-| Vincent OP | 4    | Lancé de Claquette |
-| Micky   OP | 4    | Réincarnation      |
-| Clément OP | 4    | M. ADN             |
-| Mathis     | 4    |                    |
+| Unité          | Tier | Compétences    | Faction|
+|------------|------|--------------------|--------|
+| Paysan     | 1    | ?                  | Humain |
+| Salamandre | 4    | ?              |Elementaires| 
+| Basilic    |   4  |Regard Mortel         | ?    |
+| Dragon     | 4    | ?                    | ?    |
+| Goblin     | ? | ? | ? |
+| Elfes     | ? | ? | ? |
+| Elfes noir     | ? | ? | ? |  
+| Orc     | ? | ? | ? |
+| Géants     | ?    | ?                    |    ? |
+| Cyclopes   | ?    |                  ?   |    ? |
+| Dracula    | 4    |      ?        |Morts-Vivants|
+| Vincent    | 4    | Lancé de Claquette   | Bonus|
+| Micky      | 4    | Réincarnation        | Bonus|
+| Clément    | 4    | M. ADN               | Bonus|
+| Mathis     | ?    | Vague de guérison                 |     ?|
 
 ### Idées Compétences
-    Regard Mortel : ???
-    Lancé de Claquette : Tout les 3 tours, peut lancer une claquette n'importe où sur la carte infligeant des dégats.
+    Lancé de Claquette : Tout les Z tours, peut lancer une claquette à portée X infligeant Y dégats.
     M. ADN : Invoque une unité "Dinosaures" sur une case adjacente (chaque tour, tier + 1, max à 4 (tier des boss)).
     Réincarnation : Quand meurt, se réincarne dans le corps d'une unite allié de plus bas rang disponible (max rang 3).
+    Vague de guérison : Retire tout les debuff et soigne de X (portée à determiner)
 
 ## Mentions
 
-Je remercie Mathis, Vincent et Clément pour m'avoir aidé au niveau inspiration.
+Je remercie **Mathis**, **Vincent** et **Clément** pour m'avoir aidé au niveau inspiration.
