@@ -4,7 +4,7 @@ from layout import hex_to_pixel
 from animations import dessiner_unite_animee
 from const import BLANC, NOIR, GRIS, VERT, ROUGE, VERT_VIE, BLEU_BOUCLIER, ROUGE_DMG_TOTAL, JAUNE_CIBLE
 from const import D_AIDES
-
+import competences as co
 
 DO_PRINT = False
 
@@ -234,8 +234,7 @@ def dessiner(jeu):
 
         # Bouton pour compétence active si disponible (et pas en mode sélection)
         # Compétences qui ne nécessitent pas d'attaque restante
-        competences_sans_attaque = ["soin", "pluie de flèches", "commandement"]
-        attaque_necessaire = getattr(u, 'comp', '') not in competences_sans_attaque
+        attaque_necessaire = getattr(u, 'comp', '') not in co.comp_attaque
         if (u.possede_competence_active() and 
             (not attaque_necessaire or u.attaque_restantes > 0) and
             u.equipe == jeu.tour and not (hasattr(jeu, 'mode_selection_competence') and jeu.mode_selection_competence)):

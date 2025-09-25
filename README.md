@@ -149,7 +149,7 @@ Les unités du jeu sont séparés en différentes "factions" il s'agit de groupe
 
 > Lumière vengeresse (Passif) : L'unité regagne 1 attaque quand elle tue une unité de la faction Mort-Vivant.
 
-> Manipulation (Passif) : Toutes les unités ennemies avec 4 PV ou moins rejoignent votre équipe tant qu'elles ont 4 PV ou moins.
+> Manipulation (Passif) : Toutes les unités ennemies avec 4 PV ou moins rejoignent votre équipe tant qu'elles ont 3 PV ou moins.
 
 > Monture libéré (Actif) : L'unité se transforme en Guerrier sur une case adjacente libre et crée un Cheval allié sur sa position d'origine.
 

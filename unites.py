@@ -537,7 +537,7 @@ class Harpie(Unite):
 
 class Centaure(Unite):
     def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Centaure", pv=9, dmg=3, mv=2, tier=1, faction="Chimères", comp="tir précis", portee=2)
+        super().__init__(equipe, pos, nom="Centaure", pv=6, dmg=2, mv=2, tier=1, faction="Chimères", comp="tir précis", portee=2)
 
 class Griffon(Unite):
     def __init__(self, equipe, pos):

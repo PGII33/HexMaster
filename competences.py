@@ -332,13 +332,13 @@ def divertissement(self, toutes_unites):
         print(f"{self.nom} divertit {len(unites_diverties)} unité(s) adjacente(s)!")
 
 def manipulation(self, toutes_unites):
-    """Toutes les unités avec 4PV ou moins passent dans votre camp tant qu'elles ont ≤4 PV."""
+    """Toutes les unités avec 3PV ou moins passent dans votre camp tant qu'elles ont ≤4 PV."""
     unites_manipulees = []
     
     for unite in toutes_unites:
         if (unite.equipe != self.equipe and 
             unite.vivant and 
-            unite.pv <= 4 and
+            unite.pv <= 3 and
             not hasattr(unite, 'manipulee_par')):  # Éviter la double manipulation
             
             # Marquer l'unité comme manipulée
@@ -690,49 +690,6 @@ def tir_precis(attaquant, cible, toutes_unites):
     
     return True
 
-# Fonction utilitaire pour déterminer si une compétence est active
-def est_competence_active(nom_competence):
-    """Retourne True si la compétence nécessite une cible."""
-    competences_actives = ["soin", "bénédiction", "cristalisation", "pluie de flèches", "monture libéré", "commandement", "tir précis"]
-    return nom_competence in competences_actives
-
-def peut_cibler_allie(nom_competence):
-    """Retourne True si la compétence peut cibler des alliés."""
-    competences_alliés = ["soin", "bénédiction", "commandement"]
-    return nom_competence in competences_alliés
-
-def peut_cibler_ennemi(nom_competence):
-    """Retourne True si la compétence peut cibler des ennemis."""
-    competences_ennemis = ["tir précis"]
-    return nom_competence in competences_ennemis
-
-def peut_cibler_case_vide(nom_competence):
-    """Retourne True si la compétence peut cibler des cases vides."""
-    competences_cases = ["cristalisation", "pluie de flèches", "monture libéré"]
-    return nom_competence in competences_cases
-
-def utiliser_competence_active(unite, nom_competence, cible, toutes_unites=None):
-    """Utilise une compétence active sur une cible."""
-    if nom_competence == "soin":
-        return soin(unite, cible)
-    elif nom_competence == "bénédiction":
-        return bénédiction(unite, cible)
-    elif nom_competence == "cristalisation":
-        return cristalisation(unite, cible, toutes_unites)
-    elif nom_competence == "pluie de flèches":
-        # Gérer le cas où cible est déjà une position (tuple) ou un objet avec .pos
-        if isinstance(cible, tuple):
-            return pluie_de_fleches(unite, cible, toutes_unites)
-        else:
-            return pluie_de_fleches(unite, cible.pos if cible else None, toutes_unites)
-    elif nom_competence == "monture libéré":
-        return monture_libere(unite, cible, toutes_unites)
-    elif nom_competence == "commandement":
-        return commandement(unite, cible, toutes_unites)
-    elif nom_competence == "tir précis":
-        return tir_precis(unite, cible, toutes_unites)
-    return False
-
 
 # Dictionnaire des compétences (nom -> description)
 COMPETENCES = {
@@ -783,20 +740,62 @@ cooldowns = {
     "bénédiction": 1,  # Un tour d'attente entre utilisations
     "tir précis": 2,  # Un tours d'attente entre utilisations (utilisable 1 tour sur 2)
     "pluie de flèches": 2,  # Un tours d'attente entre utilisations (utilisable 1 tour sur 2)
-    # Compétences qui ne doivent pas avoir de cooldown (passives ou spéciales)
-    "sangsue": 0,
-    "zombification": 0,
-    "lumière vengeresse": 0,
-    "explosion sacrée": 0,  # Usage unique (mort)
-    "bouclier de la foi": 0,  # Passive au début du tour
-    "aura sacrée": 0,  # Passive au début du tour
-    "nécromancie": 0,  # Passive au début du tour
-    "invocation": 0,  # Passive au début du tour
-    "tas d'os": 0,  # Passive à la mort
-    "fantomatique": 0,  # Passive de déplacement
-    "enracinement": 0,  # Passive de fin de tour
-    "vague apaisante": 0,  # Passive au début du tour
-    "renaissance": 0,  # Passive à la mort
-    "armure de pierre": 0,  # Passive de défense
-    "combustion différée": 0,  # Passive d'attaque
+    "Commandement": 1,
 }
+
+# Comp actives
+competences_actives = ["soin", "bénédiction", "cristalisation", "pluie de flèches", "monture libéré", "commandement", "tir précis"]
+
+# Comp qui nécessitent une attaque
+comp_attaque = ["tir précis", "pluie de flèches"]
+
+# Comp qui nécessitent une cible
+comp_nec_cible = ["soin", "bénédiction", "cristalisation", "pluie de flèches",  "monture libéré", "commandement", "tir précis"]
+
+# Comp qui nécessitent une cible ennemie
+com_cib_ennemi = ["tir précis"]
+
+# Comp qui nécessitent une cible alliée
+comp_cib_allie = ["soin", "bénédiction", "commandement"]
+
+# Comp qui fonctionne sur du vide
+comp_cib_vide = ["cristalisation", "pluie de flèches", "monture libéré"]
+
+# Fonction utilitaire pour déterminer si une compétence est active
+def est_competence_active(nom_competence):
+    """Retourne True si la compétence nécessite une cible."""
+    return nom_competence in competences_actives
+
+def peut_cibler_allie(nom_competence):
+    """Retourne True si la compétence peut cibler des alliés."""
+    return nom_competence in comp_cib_allie
+
+def peut_cibler_ennemi(nom_competence):
+    """Retourne True si la compétence peut cibler des ennemis."""
+    return nom_competence in com_cib_ennemi
+
+def peut_cibler_case_vide(nom_competence):
+    """Retourne True si la compétence peut cibler des cases vides."""
+    return nom_competence in comp_cib_vide
+
+def utiliser_competence_active(unite, nom_competence, cible, toutes_unites=None):
+    """Utilise une compétence active sur une cible."""
+    if nom_competence == "soin":
+        return soin(unite, cible)
+    elif nom_competence == "bénédiction":
+        return bénédiction(unite, cible)
+    elif nom_competence == "cristalisation":
+        return cristalisation(unite, cible, toutes_unites)
+    elif nom_competence == "pluie de flèches":
+        # Gérer le cas où cible est déjà une position (tuple) ou un objet avec .pos
+        if isinstance(cible, tuple):
+            return pluie_de_fleches(unite, cible, toutes_unites)
+        else:
+            return pluie_de_fleches(unite, cible.pos if cible else None, toutes_unites)
+    elif nom_competence == "monture libéré":
+        return monture_libere(unite, cible, toutes_unites)
+    elif nom_competence == "commandement":
+        return commandement(unite, cible, toutes_unites)
+    elif nom_competence == "tir précis":
+        return tir_precis(unite, cible, toutes_unites)
+    return False
