@@ -530,7 +530,6 @@ def cristalisation(self, cible_pos, toutes_unites):
 
 def renaissance(self, toutes_unites):
     """80% de chance de revenir à la vie avec tous ses PV."""
-    import random
     
     # La renaissance se déclenche quand l'unité est sur le point de mourir (PV <= 0)
     if self.vivant and self.pv <= 0 and random.random() < 0.8:  # 80% de chance
