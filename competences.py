@@ -226,7 +226,7 @@ def pluie_de_fleches(self, cible_pos, toutes_unites):
     # Attaquer TOUTES les unités dans les cases affectées (y compris les alliés)
     unites_touchees = []
     for unite in toutes_unites:
-        if unite.pos in cases_affectees and unite != self and unite.vivant:  # Touche tout sauf l'archer lui-même
+        if unite.pos in cases_affectees and unite.vivant:  # Touche tout sauf l'archer lui-même
             # Appliquer la protection si applicable
             degats_infliges = protection(unite, self.dmg, toutes_unites)
             unites_touchees.append(unite)
@@ -287,14 +287,15 @@ def commandement(unite, cible, toutes_unites):
         if cible.equipe != unite.equipe or not cible.vivant:
             return False
         
+        if hasattr(cible, 'ba_commandement'):
+            return False  # Ne peut pas bénéficier de commandement plusieurs fois
+
         # Vérifier la portée (2 cases)
-        if hex_distance(unite.pos, cible.pos) > 2:
+        if hex_distance(unite.pos, cible.pos) > comp_portee["commandement"]:
             return False
         
         # Appliquer les boosts
         cible.ba_commandement = unite.get_attaque_totale()
-
-        # Donner +1 attaque supplémentaire
         cible.attaque_restantes += 1
 
         print(f"{unite.nom} commande {cible.nom} ! (+{unite.get_attaque_totale()} attaque, +1 attaque supplémentaire)")
@@ -548,8 +549,8 @@ def armure_de_pierre(degats_recus):
 
 def combustion_differee(attaquant, cible):
     """Marque la cible pour mourir dans 3 tours."""
-    if not hasattr(cible, 'combustion_tours_restants'):
-        cible.combustion_tours_restants = 3
+    if not hasattr(cible, 'combustion_differee'):
+        cible.combustion_differee = 3
         cible.combustion_attaquant = attaquant.equipe
         print(f"🔥 {cible.nom} est marqué par la combustion différée! Mort dans 3 tours.")
     
@@ -682,7 +683,7 @@ def tir_precis(attaquant, cible, toutes_unites):
     print(f"{attaquant.nom} utilise TIR PRÉCIS ! Dégâts augmentés à {degats_precis} !")
     
     # Appliquer les dégâts avec protection
-    degats_infliges = attaquant.appliquer_degats_avec_protection(cible, degats_precis, toutes_unites)
+    attaquant.appliquer_degats_avec_protection(cible, degats_precis, toutes_unites)
     
     # Gestion de la mort
     if cible.pv <= 0:

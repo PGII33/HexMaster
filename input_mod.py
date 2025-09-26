@@ -224,7 +224,6 @@ def _get_valid_targets(jeu, comp_name, unite_source):
             _add_cases_in_range(jeu, unite_source, valid_targets, 3)
         elif comp_name == "monture libéré":
             # Cases vides adjacentes pour monture libéré
-            print("hey here")
             _add_adjacent_empty_cases(jeu, unite_source, valid_targets)
     
 
