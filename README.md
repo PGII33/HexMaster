@@ -145,7 +145,7 @@ Les unités du jeu sont séparés en différentes "factions" il s'agit de groupe
 
 > Fantomatique (Passif) : Permet de passer au travers des unités (ne coûte pas de PM).
 
-> Invocation (Passif) : Invoque aléatoirement une unité Morts-Vivants (tier 1-2) sur une case adjacente libre chaque tour.
+> Invocation (Passif) : Invoque aléatoirement deux unité Morts-Vivants (tier 1-2) sur une case adjacente libre chaque tour.
 
 > Lumière vengeresse (Passif) : L'unité regagne 1 attaque quand elle tue une unité de la faction Mort-Vivant.
 

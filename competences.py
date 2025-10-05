@@ -695,43 +695,36 @@ def tir_precis(attaquant, cible, toutes_unites):
 # Dictionnaire des compétences (nom -> description)
 COMPETENCES = {
     # Morts-Vivants
-    "sangsue": "Récupère des PV égaux aux dégâts infligés (peut dépasser le maximum).",
-    "zombification": "Transforme l'unité ennemie tuée en zombie allié.",
-    "tas d'os": "À la mort, se transforme en Tas d'Os de 1 PV.",
-    "fantomatique": "Traverse les unités gratuitement (0 PM pour traverser, 1 PM par case vide).",
-    "nécromancie": "Invoque un Squelette sur une case adjacente libre chaque tour.",
-    "invocation": "Invoque aléatoirement une unité Morts-Vivants (tier 1-2) sur une case adjacente libre chaque tour.",
-    
-    # Religieux
-    "soin": "Soigne un allié de 5 PV (maximum PV max de la cible).",
-    "explosion sacrée": "Se sacrifie pour infliger ses PV actuels en dégâts à la cible attaquée uniquement.",
-    "bouclier de la foi": "Donne 1 point de bouclier à tous les alliés adjacents chaque tour.",
-    "bénédiction": "Augmente définitivement l'attaque de +2 et donne 1 bouclier à un allié.",
-    "lumière vengeresse": "Regagne 1 attaque et peut continuer d'agir quand il tue un Mort-Vivant.",
-    "aura sacrée": "Augmente définitivement l'attaque de +3 pour tous les alliés adjacents tant qu'il vit.",
-    
-    # Élémentaires
-    "enracinement": "Régénère 2 PV en fin de tour si l'unité n'a pas bougé.",
-    "vague apaisante": "Soigne tous les alliés adjacents de 2 PV chaque tour.",
-    "renaissance": "80% de chance de revenir à la vie avec tous ses PV quand elle meurt.",
+    "aura sacrée": "Augmente définitivement les DMG de +3 pour tous les alliés adjacents tant que l'unité est en vie. (Non stackable)",
     "armure de pierre": "Réduit tous les dégâts reçus de 2 points (minimum 0).",
+    "bénédiction": "Augmente définitivement l'attaque de +2 et donne 1 bouclier à un allié. (Non stackable, portée : 3).",
+    "bouclier de la foi": "Donne 1 point de bouclier à tous les alliés adjacents. (Chaque tour)",
     "combustion différée": "L'unité touchée meurt automatiquement au bout de 3 tours ennemis.",
-    
-    # Royaume - Compétences actives
-    "pluie de flèches": "Attaque de zone (portée 3) : inflige des dégâts à la cible et toutes les cases adjacentes, y compris aux alliés. Utilisable tous les 2 tours.",
-    "monture libéré": "Se transforme en Guerrier à une case adjacente libre et crée un Cheval allié à sa position d'origine.",
-    "commandement": "Donne +3 attaque temporaire et +1 attaque supplémentaire à un allié (portée 2). N'utilise pas d'attaque.",
-    "divertissement": "Si il reste des attaques en fin de tour, toutes les unités adjacentes perdent 1 attaque au tour suivant.",
-    "protection": "Subit les dégâts à la place des alliés adjacents (le protecteur le plus résistant prend tous les dégâts).",
-    "manipulation": "Toutes les unités ennemies avec ≤4 PV rejoignent temporairement votre camp tant qu'elles ont ≤4 PV.",
-    
-    # Chimères - Compétences actives/passives
-    "regard mortel": "Tue instantanément les unités ennemies de tier ≤2 touchées.",
-    "rage": "Gagne définitivement +1 attaque après chaque attaque effectuée.",
-    "vol": "Ignore complètement la première attaque subie.",
-    "tir précis": "Attaque à portée +1 avec dégâts x1.5. Utilisable tous les 2 tours.",
-    "venin incapacitant": "L'unité touchée ne peut pas se déplacer au tour suivant.",
+    "commandement": "Donne +3 DMG temporaire et +1 attaque supplémentaire temporaire à un allié. (Non stackable, Portée : 2)",
+    "cristalisation": "Crée un cristal de 10PV sur une case adjacente sélectionnée.",
+    "divertissement": "S'il reste au moins une attaque en fin de tour à l'unité, toutes les unités adjacentes perdent une attaque au tour suivant.",
+    "enracinement": "Régénère 2 PV en fin de tour si l'unité n'a pas bougé.",
+    "explosion sacrée": "Se sacrifie pour infliger ses PV actuels en dégâts à la cible attaquée.",
+    "fantomatique": "Permet de passer au travers des unités (ne coûte pas de PM).",
+    "invocation": "Invoque aléatoirement deux unité Morts-Vivants (tier 1-2) sur une case adjacente libre chaque tour.",
+    "lumière vengeresse": "L'unité regagne 1 attaque quand elle tue une unité de la faction Mort-Vivant.",
+    "manipulation": "Toutes les unités ennemies avec 4 PV ou moins rejoignent votre équipe tant qu'elles ont 3 PV ou moins.",
+    "monture libéré": "L'unité se transforme en Guerrier sur une case adjacente libre et crée un Cheval allié sur sa position d'origine.",
+    "nécromancie": "Invoque un Squelette sur une case adjacente libre chaque tour.",
+    "rage": "L'unité gagne +1 DMG après chaque attaque effectuée. (Stackable)",
+    "regard mortel": "Tue instantanément les unités ennemies de tier 2 ou moins touchées.",
+    "renaissance": "L'unité a 80% de chance de revenir à la vie avec tous ses PV quand elle meurt.",
+    "pluie de flèches": "L'unité inflige des dégâts à la cible et toutes les unités adjacentes. (Portée : 3, Rechargement : 1 tour)",
+    "protection": "Les unités subissent les dégâts à la place des alliés adjacents les dégats s'équilibrent pour que chaque protecteur aient le même nombre de poits de vie.",
+    "sangsue": "L'unité gagné des PV égaux aux dégâts infligés (peut dépasser le maximum).",
     "sédition venimeuse": "L'unité attaquée est forcée d'attaquer un allié adjacent si possible.",
+    "soin": "Soigne un allié de 5 PV. (Portée : 2)",
+    "tas d'os": "À la mort de l'unité, se transforme en Tas d'Os.",
+    "tir précis": "L'unité attaque à portée +1 avec dmg x1.5. (Rechargement : 1 tour)",
+    "vague apaisante": "Soigne tous les alliés adjacents de 2 PV chaque tour.",
+    "venin incapacitant": "L'unité touchée ne peut pas se déplacer au tour suivant.",
+    "vol": "Ignore complètement la première attaque subie.",
+    "zombification": "Transforme l'unité ennemie tuée en zombie allié (de).",
 }
 
 # Définition des cooldowns par compétence (en tours d'attente)
