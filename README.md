@@ -202,7 +202,7 @@ Dinosaures ??
 Tour : Augemente de 1 la portée des unités adjacentes
 Mur : Bloque le passage 
 Cache : Réduit de 1 (min 1) la portée atteignant les unités adjacentes à la cache
-
+Fleuve sacré
 
 
 ### Idées unitée
