@@ -6,7 +6,7 @@ from const import BLANC, NOIR, GRIS, VERT, ROUGE, VERT_VIE, BLEU_BOUCLIER, ROUGE
 from const import D_AIDES
 import competences as co
 
-DO_PRINT = False
+DO_PRINT = True
 
 def dessiner(jeu):
     # Debug mode sélection
@@ -234,8 +234,8 @@ def dessiner(jeu):
 
         # Bouton pour compétence active si disponible (et pas en mode sélection)
         # Compétences qui ne nécessitent pas d'attaque restante
-        attaque_necessaire = getattr(u, 'comp', '') not in co.comp_attaque
-        if (u.possede_competence_active() and 
+        attaque_necessaire = getattr(u, 'comp', '') in co.comp_attaque
+        if (u.possede_competence_active() and
             (not attaque_necessaire or u.attaque_restantes > 0) and
             u.equipe == jeu.tour and not (hasattr(jeu, 'mode_selection_competence') and jeu.mode_selection_competence)):
             
@@ -250,7 +250,7 @@ def dessiner(jeu):
                 btn_color = (100, 200, 100)  # Vert si utilisable
                 text_color = NOIR
                 btn_text = f"Utiliser {u.get_competence()}"
-                #print(f"🟢 BOUTON COMPETENCE AFFICHE: {u.get_competence()} pour {u.nom}")
+                if DO_PRINT: print(f"🟢 BOUTON COMPETENCE AFFICHE: {u.get_competence()} pour {u.nom}")
             else:
                 btn_color = (150, 150, 150)  # Gris si en cooldown ou déjà utilisée
                 text_color = (100, 100, 100)
