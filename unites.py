@@ -51,8 +51,8 @@ class Unite:
         # Système de cooldown pour les compétences actives
         self.cooldown_actuel = 0  # Tours restants avant de pouvoir réutiliser la compétence
         self.cooldown_max = self.get_cooldown_competence()  # Cooldown maximum de la compétence
-        
-        self.vivant = True
+
+        self.set_vivant(True)
         self.anim = None
 
     # ---------- Getters ----------
@@ -68,6 +68,7 @@ class Unite:
     def get_prix(self): return "Bloqué" if self.prix < 0 else self.prix
     def get_name(self): return self.nom
     def get_faction(self): return self.faction
+    def is_vivant(self): return self.vivant
 
     def get_cooldown_competence(self):
         """Retourne le cooldown maximum pour la compétence de cette unité."""
@@ -77,6 +78,23 @@ class Unite:
     def get_competence(self): return self.comp
     def get_portee(self): return self.portee
     def get_pv_max(self): return self.pv_max
+
+
+    def get_attaque_totale(self):
+        """Calcule l'attaque totale incluant les boosts temporaires."""
+        attaque_base = self.dmg
+        
+        # Ajouter les boosts attaque (ba)
+        ba_benediction = getattr(self, 'ba_benediction', 0)
+        ba_commandement = getattr(self, 'ba_commandement', 0)
+        ba_aura_sacree = getattr(self, 'ba_aura_sacree', 0)
+        ba_rage = getattr(self, 'ba_rage', 0)
+
+        return attaque_base + ba_benediction + ba_commandement + ba_aura_sacree + ba_rage
+
+
+    def set_vivant(self, etat):
+        self.vivant = etat
 
     # ---------- Logique ----------
     def reset_actions(self):
@@ -103,18 +121,6 @@ class Unite:
         directions = [(1,0), (-1,0), (0,1), (0,-1), (1,-1), (-1,1)]
         return any((q1+dx, r1+dy) == (q2, r2) for dx, dy in directions)
 
-    def get_attaque_totale(self):
-        """Calcule l'attaque totale incluant les boosts temporaires."""
-        attaque_base = self.dmg
-        
-        # Ajouter les boosts attaque (ba)
-        ba_benediction = getattr(self, 'ba_benediction', 0)
-        ba_commandement = getattr(self, 'ba_commandement', 0)
-        ba_aura_sacree = getattr(self, 'ba_aura_sacree', 0)
-        ba_rage = getattr(self, 'ba_rage', 0)
-
-        return attaque_base + ba_benediction + ba_commandement + ba_aura_sacree + ba_rage
-
     def cases_accessibles(self, toutes_unites, q_range=None, r_range=None):
         if self.pm <= 0:
             return {}
@@ -131,7 +137,7 @@ class Unite:
         accessibles = {}
         file = deque([(self.pos, 0)])
         directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
-        occupees = {u.pos for u in toutes_unites if u.vivant and u != self}
+        occupees = {u.pos for u in toutes_unites if u.is_vivant() and u != self}
 
         while file:
             (q, r), cout = file.popleft()
@@ -202,7 +208,7 @@ class Unite:
         if toutes_unites is None:
             toutes_unites = []
         
-        if self.attaque_restantes > 0 and self.est_a_portee(autre) and autre.vivant:
+        if self.attaque_restantes > 0 and self.est_a_portee(autre) and autre.is_vivant():
             self.attaque_restantes -= 1
 
             # Animation
@@ -231,7 +237,7 @@ class Unite:
                     co.sangsue(self, degats_infliges)
                 
                 # Combustion différée : marquer la cible
-                if self.comp == "combustion différée" and autre.vivant:
+                if self.comp == "combustion différée" and autre.is_vivant():
                     co.combustion_differee(self, autre)
             
             # Vérification de mort commune pour tous les types d'attaque
@@ -253,17 +259,17 @@ class Unite:
                 co.rage(self)
             
             # Venin incapacitant : empêche la cible de se déplacer au prochain tour
-            if self.comp == "venin incapacitant" and autre.vivant:
+            if self.comp == "venin incapacitant" and autre.is_vivant():
                 co.venin_incapacitant(self, autre)
             
             # Sédition venimeuse : la cible attaque un ennemi adjacent
-            if self.comp == "sédition venimeuse" and autre.vivant:
+            if self.comp == "sédition venimeuse" and autre.is_vivant():
                 co.sedition_venimeuse(self, autre, toutes_unites)
 
     def mourir(self, toutes_unites=None):
         """Gère la mort de l'unité et les compétences déclenchées.
         Retourne True si l'unité était vivante et est maintenant morte."""
-        if self.vivant:
+        if self.is_vivant():
             # Si l'unité est sélectionnée dans le jeu, la désélectionner
             for jeu in [u for u in toutes_unites if hasattr(u, 'selection')]:
                 if jeu.selection == self:
@@ -275,7 +281,7 @@ class Unite:
                 if co.renaissance(self, toutes_unites):
                     return False  # L'unité a été ressuscitée, elle n'est pas morte
             
-            self.vivant = False
+            self.set_vivant(False)
             
             # Appeler le callback de kill si défini (pour le mode hexarene)
             global _kill_callback
