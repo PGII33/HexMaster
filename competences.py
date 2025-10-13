@@ -727,6 +727,40 @@ COMPETENCES = {
     "zombification": "Transforme l'unité ennemie tuée en zombie allié (de).",
 }
 
+# liste des noms des compétences dans le jeu par rapport à dans le code
+nom_competences = {
+    "aura sacrée": "aura_sacrée",
+    "armure de pierre": "armure_de_pierre",
+    "bénédiction": "bénédiction",
+    "bouclier de la foi": "bouclier_de_la_foi",
+    "combustion différée": "combustion_differee",
+    "commandement": "commandement",
+    "cristalisation": "cristalisation",
+    "divertissement": "divertissement",
+    "enracinement": "enracinement",
+    "explosion sacrée": "explosion_sacree",
+    "fantomatique": "fantomatique",
+    "invocation": "invocation",
+    "lumière vengeresse": "lumiere_vengeresse",
+    "manipulation": "manipulation",
+    "monture libéré": "monture_libere",
+    "nécromancie": "necromancie",
+    "rage": "rage",
+    "regard mortel": "regard_mortel",
+    "renaissance": "renaissance",
+    "pluie de flèches": "pluie_de_fleches",
+    "protection": "protection",
+    "sangsue": "sangsue",
+    "sédition venimeuse": "sedition_venimeuse",
+    "soin": "soin",
+    "tas d'os": "tas_d_os",
+    "tir précis": "tir_precis",
+    "vague apaisante": "vague_apaisante",
+    "venin incapacitant": "venin_incapacitant",
+    "vol": "vol",
+    "zombification": "zombification"
+}
+
 # Définition des cooldowns par compétence (en tours d'attente)
 cooldowns = {
     # Compétences actives - 1 = utilisable chaque tour, 2 = un tour d'attente, etc.
@@ -735,6 +769,13 @@ cooldowns = {
     "tir précis": 2,  # Un tours d'attente entre utilisations (utilisable 1 tour sur 2)
     "pluie de flèches": 2,  # Un tours d'attente entre utilisations (utilisable 1 tour sur 2)
     "Commandement": 1,
+}
+
+buffs = {
+    "ba_aura_sacrée": 3,  # +3 DMG permanent
+    "ba_bénédiction": 2,  # +2 DMG permanent
+    "ba_commandement": 0,  # Variable, dépend de l'attaquant
+    "ba_rage": 1,  # +1 DMG par stack
 }
 
 # Comp actives
@@ -755,7 +796,26 @@ comp_cib_allie = ["soin", "bénédiction", "commandement"]
 # Comp qui fonctionne sur du vide
 comp_cib_vide = ["cristalisation", "pluie de flèches", "monture libéré"]
 
-# Fonction utilitaire pour déterminer si une compétence est active
+def is_competence(nom_competence):
+    """Retourne True si le nom correspond à une compétence."""
+    return nom_competence in nom_competences
+
+def get_cooldown(nom_competence):
+    """Retourne le cooldown de la compétence (0 si passive ou inconnue)."""
+    if not is_competence(nom_competence):
+        raise ValueError(f"Compétence inconnue : {nom_competence}")
+    cooldown = cooldowns.get(nom_competence, 0)
+    if cooldown == -1:
+        raise ValueError(f"Compétence inconnue : {nom_competence}")
+    return cooldown
+
+def get_buff(nom_buff):
+    """Retourne l'existence d'un buff. Retourne -1 si inconnu."""
+    buff = buffs.get(nom_buff, -1)
+    if buff == -1:
+        raise ValueError(f"Buff inconnu : {nom_buff}")
+    return buff
+
 def est_competence_active(nom_competence):
     """Retourne True si la compétence nécessite une cible."""
     return nom_competence in competences_actives

@@ -14,6 +14,17 @@ from competences import (
     comp_cib_vide, com_cib_ennemi
 )
 
+# Constantes et paramètres
+MIN_SCORE = 0 # Score minimum pour une action valide
+
+SC_DMG = 20  # Score de base pour un point d'attaque
+SC_PV = 20           # Score par point de vie
+SC_PM = 8           # Score par point de mouvement
+SC_BOU = 15  # Valeur fixe du bouclier
+SC_PORT = 4  # Score par point de portée
+SC_ATT = 20  # Score de base pour une attaque (nombre d'attaques)
+SC_SOIN = 25  # Score par point de vie soigné
+
 # ===============================
 # STRUCTURES DE DONNÉES
 # ===============================
@@ -89,32 +100,6 @@ def get_positions_adjacentes(position: Tuple[int, int]) -> List[Tuple[int, int]]
     ]
     return [(q + dq, r + dr) for dq, dr in directions]
 
-def evaluer_force_unite(unite) -> float:
-    """Évalue la force combattante d'une unité basée sur ses statistiques"""
-    force = 0.0
-    
-    # Facteurs offensifs
-    force += unite.dmg * 10  # Dégâts sont très importants
-    if hasattr(unite, 'portee'):
-        force += unite.portee * 8  # Portée donne un avantage tactique
-    if hasattr(unite, 'attaque_restantes'):
-        force += unite.attaque_restantes * 12  # Capacité d'attaque restante
-    
-    # Facteurs défensifs
-    force += unite.pv * 3  # Points de vie actuels
-    if hasattr(unite, 'bouclier'):
-        force += unite.bouclier * 5  # Bouclier vaut plus que les PV
-    
-    # Facteurs de mobilité
-    if hasattr(unite, 'pm'):
-        force += unite.pm * 2  # Mobilité a un impact modéré
-    
-    # NOUVEAU: Facteurs liés aux compétences
-    score_competences = sc_comp(unite)
-    force += score_competences * 0.5  # 50% du score de compétences ajouté à la force (réduit pour équilibrage)
-    
-    return force
-
 def calculer_bonus_force_relative(unite, ennemi_adjacent) -> float:
     """Calcule le bonus/malus basé sur la force relative entre notre unité et un ennemi adjacent"""
     force_unite = evaluer_force_unite(unite)
@@ -150,7 +135,7 @@ def calculer_bonus_force_relative(unite, ennemi_adjacent) -> float:
 def unite_peut_utiliser_competence(unite, nom_competence) -> bool:
     """Vérifie si une unité peut utiliser sa compétence active"""
     # Vérifier que l'unité a cette compétence
-    if not hasattr(unite, 'comp') or unite.comp != nom_competence:
+    if not unite.has_competence():
         return False
     
     # Vérifier que c'est une compétence active
@@ -159,7 +144,7 @@ def unite_peut_utiliser_competence(unite, nom_competence) -> bool:
     
     # Vérifier si la compétence nécessite une attaque disponible
     if nom_competence in comp_attaque:
-        if not hasattr(unite, 'attaque_restantes') or unite.attaque_restantes <= 0:
+        if unite.get_attaque_restantes() <= 0:
             return False
     
     # Vérifier le cooldown si applicable
@@ -180,12 +165,12 @@ def peut_cibler_pour_competence(unite_cible, nom_competence) -> bool:
     # Vérifications spécifiques par compétence pour les buffs non-stackables
     if nom_competence == "bénédiction":
         # Ne peut pas bénir une unité qui a déjà la bénédiction
-        if hasattr(unite_cible, 'buff_benediction'):
+        if unite_cible.get_buff('ba_bénédiction'):
             return False
     
     elif nom_competence == "commandement":
         # Ne peut pas commander une unité qui a déjà le commandement
-        if hasattr(unite_cible, 'ba_commandement'):
+        if unite_cible.get_buff('ba_commandement'):
             return False
     
     elif nom_competence == "soin":
@@ -241,16 +226,16 @@ def obtenir_cibles_competence(unite, nom_competence, toutes_unites) -> List[Unio
 
 def evaluer_competence_soin(unite, cible_allie) -> float:
     """Évalue l'intérêt d'utiliser la compétence soin sur un allié"""
-    if not hasattr(cible_allie, 'equipe') or cible_allie.equipe != unite.equipe:
+    if cible_allie.get_equipe() != unite.get_equipe():
         return 0.0
     
     # Plus l'allié est blessé, plus le soin a de la valeur
-    pv_manquants = cible_allie.pv_max - cible_allie.pv
+    pv_manquants = cible_allie.get_pv_max() - cible_allie.get_pv()
     if pv_manquants <= 0:
         return 0.0  # Allié déjà pleine santé
     
     # Base : valeur proportionnelle aux PV manquants
-    score = min(5, pv_manquants) * 10000  # Max 50 points pour 5+ PV manquants
+    score = min(3, pv_manquants) * SC_SOIN
     
     # Bonus si l'allié est important (stats élevées)
     force_allie = evaluer_force_unite(cible_allie)
@@ -264,11 +249,11 @@ def evaluer_competence_soin(unite, cible_allie) -> float:
 
 def evaluer_competence_benediction(unite, cible_allie) -> float:
     """Évalue l'intérêt d'utiliser la compétence bénédiction sur un allié"""
-    if not hasattr(cible_allie, 'equipe') or cible_allie.equipe != unite.equipe:
+    if cible_allie.get_equipe() != unite.get_equipe():
         return 0.0
     
     # Éviter de bénir plusieurs fois la même unité
-    if hasattr(cible_allie, 'buff_benediction'):
+    if cible_allie.get_buff('ba_bénédiction'):
         return 0.0
     
     # Plus l'allié est fort, plus la bénédiction a de la valeur
@@ -429,36 +414,29 @@ def sc_stat(unite) -> float:
     """Score basé sur les statistiques actuelles de l'unité"""
     score = 0.0
     
-    # Score basé sur les pv actuels
-    score += unite.pv * 3  # 3 points par PV
+    # Facteurs offensifs
+    score += unite.get_attaque_totale() * SC_DMG  # score pour les dégâts
+    score += unite.get_portee() * SC_PORT  # score pour la portée
+    score += max(unite.get_attaque_restantes(), unite.get_attaque_max()) * SC_ATT  # score pour les attaques
+
+    # Facteurs défensifs
+    score += unite.get_pv() * SC_PV  # score pour les PV
+    score += unite.get_bouclier() * SC_BOU  # score pour le bouclier
+
+    # Facteurs de mobilité
+    score += unite.get_pm() * SC_PM  # score pour les PM
     
-    # Score basé sur les attaques disponibles
-    if hasattr(unite, 'attaque_restantes'):
-        score += unite.attaque_restantes * 15  # 15 points par attaque dispo
-    
-    # Score basé sur les points de mouvement
-    if hasattr(unite, 'pm'):
-        score += unite.pm * 8  # 8 points par PM
-    
-    # Score basé sur les dégâts
-    score += unite.dmg * 5  # 5 points par point de dégât
-    
-    # Score basé sur le bouclier
-    if hasattr(unite, 'bouclier'):
-        score += unite.bouclier * 2  # 2 points par point de bouclier
-    
-    # Score basé sur la portée
-    if hasattr(unite, 'portee'):
-        score += unite.portee * 4  # 4 points par point de portée
+    # Facteurs de compétences
+    score_competences = sc_comp(unite)
+    score += score_competences
     
     return score
 
 def sc_comp(unite) -> float:
-    """Score basé sur les compétences de l'unité (désactivé pour l'instant)"""
+    """Score basé sur les compétences de l'unité """
     # Pour l'instant, retourne 0 car on ne gère pas les compétences
-    if hasattr(unite, 'competences'):
-        if unite.competences == "explosion sacrée":
-            return unite.get_pv() * 15  # Puissant en fonction des pv actuels
+    if unite.get_competence_name() == "explosion sacrée":
+            return unite.get_pv() * SC_DMG  # Puissant en fonction des pv actuels
     return 0.0
 
 def sc_position_competence(unite, position: Tuple[int, int], toutes_unites) -> float:

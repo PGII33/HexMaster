@@ -68,13 +68,16 @@ class Unite:
     def get_prix(self): return "Bloqué" if self.prix < 0 else self.prix
     def get_name(self): return self.nom
     def get_faction(self): return self.faction
+    def get_equipe(self): return self.equipe
+    def get_competence_name(self): return self.comp
     def is_vivant(self): return self.vivant
+    def has_competence(self): return bool(self.comp)
 
     def get_cooldown_competence(self):
         """Retourne le cooldown maximum pour la compétence de cette unité."""
         if not self.comp:
             return 0
-        return co.cooldowns.get(self.comp, 0)  # Par défaut : 0 tour de cooldown (utilisable chaque tour)
+        return co.get_cooldown(self.comp)
     def get_competence(self): return self.comp
     def get_portee(self): return self.portee
     def get_pv_max(self): return self.pv_max
@@ -92,6 +95,9 @@ class Unite:
 
         return attaque_base + ba_benediction + ba_commandement + ba_aura_sacree + ba_rage
 
+    def get_buff(self, nom_buff):
+        """Retourne 1 si le buff est appliqué à l'unité, 0 sinon. Lève une erreur si le buff est inconnu."""
+        return co.get_buff(nom_buff)
 
     def set_vivant(self, etat):
         self.vivant = etat
