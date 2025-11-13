@@ -1,3 +1,4 @@
+""" Compétences des unités."""
 import random
 
 DO_PRINT = False
@@ -33,7 +34,7 @@ def zombification(self, cible):
 
 def tas_d_os(self):
     """Transforme l'unité morte en tas d'os."""
-    from unites import Tas_D_Os
+    from unites_liste import Tas_D_Os
     # Transformation en tas d'os : c'est une nouvelle unité vivante
     self.__class__ = Tas_D_Os
     self.__init__(self.equipe, self.pos)
@@ -81,7 +82,7 @@ def cases_fantomatiques(unite, toutes_unites, q_range=None, r_range=None):
 
 def nécromancie(self, toutes_unites, plateau, q_range=None, r_range=None):
     """Invoque un Squelette sur une case adjacente vide à chaque tour."""
-    from unites import Squelette
+    from unites_liste import Squelette
 
     # Limites par défaut si non spécifiées
     if q_range is None:
@@ -107,8 +108,7 @@ def nécromancie(self, toutes_unites, plateau, q_range=None, r_range=None):
 
 def invocation(self, toutes_unites, plateau, q_range=None, r_range=None):
     """Invoque deux unité Morts-Vivants de tier 1 ou 2 sur une case adjacente vide à chaque tour."""
-    from unites import Goule, Squelette, Spectre, Zombie, Vampire
-    import random
+    from unites_liste import Goule, Squelette, Spectre, Zombie, Vampire
 
     # Limites par défaut si non spécifiées
     if q_range is None:
@@ -121,7 +121,7 @@ def invocation(self, toutes_unites, plateau, q_range=None, r_range=None):
     q, r = self.pos
     candidates = [Goule, Squelette, Spectre, Zombie, Vampire]
     random.shuffle(candidates)
-    for i in range(2):
+    for _ in range(2):
         for dq, dr in directions:
             new_pos = (q+dq, r+dr)
             new_q, new_r = new_pos
@@ -257,7 +257,7 @@ def pluie_de_fleches(self, cible_pos, toutes_unites):
 
 def monture_libere(self, case_pos, toutes_unites):
     """Transforme le cavalier en guerrier et place un cheval sur sa position actuelle."""
-    from unites import Guerrier, Cheval
+    from unites_liste import Guerrier, Cheval
 
     # Vérifier que la case est adjacente
     directions = [(-1, 0), (1, 0), (0, 1), (0, -1), (1, -1), (-1, 1)]
@@ -543,7 +543,7 @@ def vague_apaisante(self, toutes_unites):
 
 def cristalisation(self, cible_pos, toutes_unites):
     """Crée un Cristal sur une case adjacente à 1 de portée."""
-    from unites import Cristal
+    from unites_liste import Cristal
     directions = [(-1, 0), (1, 0), (0, 1), (0, -1), (1, -1), (-1, 1)]
     q, r = self.pos
 
