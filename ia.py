@@ -16,6 +16,7 @@ from competences import (
 )
 
 # Constantes et paramètres
+MODE_PRINT = True  # Activer/désactiver les impressions de debug
 MIN_SCORE = 0  # Score minimum pour une action valide
 
 SC_DMG = 20  # Score de base pour un point d'attaque
@@ -167,7 +168,7 @@ def obtenir_cibles_competence(unite, nom_competence, toutes_unites) -> List[Unio
     # Cibles alliées
     if nom_competence in comp_cib_allie:
         allies = [u for u in toutes_unites if u.vivant and u.equipe ==
-                  unite.equipe and u != unite]
+                  unite.equipe]
         for allie in allies:
             if (hex_distance(unite.pos, allie.pos) <= portee_comp and
                     peut_cibler_pour_competence(allie, nom_competence)):
@@ -879,7 +880,8 @@ def tour_ia(toutes_unites: List['Unite']) -> bool:
         meilleure_action, meilleur_score = max(
             actions_scorees, key=lambda x: x[1])
 
-        print(f"IA: {meilleure_action} (score: {meilleur_score:.1f})")
+        if MODE_PRINT:
+            print(f"IA: {meilleure_action} (score: {meilleur_score:.1f})")
 
         # Exécuter l'action choisie
         if isinstance(meilleure_action, MovementAction):
@@ -908,7 +910,7 @@ def executer_mouvement(action: MovementAction):
 
     # Calculer le coût du mouvement
     cases_accessibles = unite.cases_accessibles(
-        [])  # Simplified pour l'exemple
+        [])
     cout = cases_accessibles.get(nouvelle_pos, 0)
 
     # Déplacer l'unité
@@ -972,7 +974,8 @@ def ia_tactique_avancee(unite, toutes_unites):
 
     meilleure_action, score = max(actions_positives, key=lambda x: x[1])
 
-    print(f"IA: {meilleure_action} (score: {score:.1f})")
+    if MODE_PRINT:
+        print(f"IA: {meilleure_action} (score: {score:.1f})")
 
     # Exécuter l'action
     if isinstance(meilleure_action, MovementAction):
