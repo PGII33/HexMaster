@@ -247,7 +247,7 @@ class Jeu:
                     e._ia_tentatives_tour += 1
                     
                     if self.ia_strategy:
-                        self.ia_strategy(e, joueurs_courants, self.unites)
+                        self.ia_strategy(e, self.unites)
                     
                     # Vérifier l'état après l'action IA
                     attaques_apres = e.attaque_restantes if hasattr(e, 'attaque_restantes') else 0

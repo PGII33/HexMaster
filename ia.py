@@ -6,13 +6,12 @@
 from typing import List, Tuple, Union  # Optional
 from dataclasses import dataclass
 from unites import Unite
-from utils_pos import hex_distance, est_adjacent, est_a_portee, get_unites_adjacentes, get_unites_a_portee, get_positions_adjacentes
+from utils_pos import hex_distance, est_adjacent, est_a_portee, get_positions_adjacentes
 
 # Imports directs du module competences
 from competences import (
-    est_competence_active, peut_cibler_allie, peut_cibler_ennemi,
-    peut_cibler_case_vide, utiliser_competence_active, comp_portee,
-    comp_attaque, cooldowns, competences_actives, comp_cib_allie,
+    est_competence_active, utiliser_competence_active, comp_portee,
+    comp_attaque, cooldowns, comp_cib_allie,
     comp_cib_vide, com_cib_ennemi
 )
 
@@ -293,7 +292,7 @@ def evaluer_competence_tir_precis(unite, cible_ennemi, toutes_unites) -> float:
     portee_normale = getattr(unite, 'portee', 1)
     portee_etendue = portee_normale + comp_portee.get('tir précis', 1)
 
-    if distance > portee_normale:
+    if distance > portee_etendue:
         bonus_degats += 20  # Bonus pour atteindre une cible éloignée
 
     return score_attaque_base + bonus_degats
@@ -593,11 +592,11 @@ def sc_case_base(unite, position: Tuple[int, int], toutes_unites) -> float:
         score += bonus_force
 
     # Malus réduit pour les ennemis à portée mais pas adjacents (comportement existant)
-    ennemis_menaçants = [u for u in ennemis
+    ennemis_menacants = [u for u in ennemis
                          if est_a_portee(u.pos, position, getattr(u, 'portee', 1))
                          and not est_adjacent(position, u.pos)]  # Éviter double comptage
     # Malus de 1 point par ennemi menaçant non-adjacent
-    score -= len(ennemis_menaçants) * 1
+    score -= len(ennemis_menacants) * 1
 
     # 3. Contrôle territorial (bonus pour positions centrales)
     # Bonus pour être au centre du plateau (positions entre 2-4 en q et r)
@@ -953,7 +952,7 @@ def executer_competence_active(action: ActiveSkillAction, toutes_unites: List['U
 # ===============================
 
 
-def ia_tactique_avancee(unite, ennemis, toutes_unites):
+def ia_tactique_avancee(unite, toutes_unites):
     """
     Cette fonction sera appelée pour chaque unité individuellement par le système existant
     """
