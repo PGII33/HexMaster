@@ -1,21 +1,28 @@
+""" Module des unités du jeu HexaMaster """
+#pylint: disable=line-too-long
 from collections import deque
 import animations
 import competences as co
+from utils_pos import est_a_portee
 
 # Callback global pour gérer les kills (sera défini par le jeu si besoin)
 _kill_callback = None
+
 
 def set_kill_callback(callback):
     """Définit le callback à appeler quand une unité est tuée."""
     global _kill_callback
     _kill_callback = callback
 
+
 def clear_kill_callback():
     """Supprime le callback de kill."""
     global _kill_callback
     _kill_callback = None
 
+
 class Unite:
+    """ Class to define a unite """
     def __init__(self, equipe, pos, pv, dmg, mv, tier, nom, faction, prix=None, comp=None, portee=1, pv_max=None, attaque_max=1):
         self.equipe = equipe
         self.pos = pos
@@ -47,46 +54,94 @@ class Unite:
                 self.prix = tier * 5  # Fallback pour autres tiers
         # comp doit être le nom de la compétence (string) ou None/""
         self.comp = comp or ""
-        
+
         # Système de cooldown pour les compétences actives
         self.cooldown_actuel = 0  # Tours restants avant de pouvoir réutiliser la compétence
-        self.cooldown_max = self.get_cooldown_competence()  # Cooldown maximum de la compétence
+        # Cooldown maximum de la compétence
+        self.cooldown_max = self.get_cooldown_competence()
 
         self.set_vivant(True)
         self.anim = None
 
     # ---------- Getters ----------
-    def get_nom(self): return self.nom
-    def get_pv(self): return self.pv
-    def get_dmg(self): return self.dmg
-    def get_mv(self): return self.mv
-    def get_pm(self): return self.pm
-    def get_bouclier(self): return self.bouclier
-    def get_attaque_max(self): return self.attaque_max
-    def get_attaque_restantes(self): return self.attaque_restantes
-    def get_tier(self): return self.tier
-    def get_prix(self): return "Bloqué" if self.prix < 0 else self.prix
-    def get_name(self): return self.nom
-    def get_faction(self): return self.faction
-    def get_equipe(self): return self.equipe
-    def get_competence_name(self): return self.comp
-    def is_vivant(self): return self.vivant
-    def has_competence(self): return bool(self.comp)
+    def get_nom(self):
+        """ get attribute nom """
+        return self.nom
+
+    def get_pv(self):
+        """ get attribute pv """
+        return self.pv
+
+    def get_dmg(self):
+        """ get attribute dmg """
+        return self.dmg
+
+    def get_mv(self):
+        """ get attribute mv """
+        return self.mv
+
+    def get_pm(self):
+        """ get attribute pm """
+        return self.pm
+
+    def get_bouclier(self):
+        """ get attribute bouclier """
+        return self.bouclier
+
+    def get_attaque_max(self):
+        """ get attribute attaque_max, it is the maximum number of attacks per turn """
+        return self.attaque_max
+
+    def get_attaque_restantes(self):
+        """ get attribute attaque_restantes, it is the number of attacks left this turn """
+        return self.attaque_restantes
+
+    def get_tier(self):
+        """ get attribute tier """
+        return self.tier
+
+    def get_prix(self):
+        """ get attribute prix or "Bloqué" if prix < 0 """
+        return "Bloqué" if self.prix < 0 else self.prix
+
+    def get_faction(self):
+        """ get attribute faction """
+        return self.faction
+
+    def get_equipe(self):
+        """ get attribute equipe """
+        return self.equipe
+
+    def is_vivant(self):
+        """ get attribute vivant """
+        return self.vivant
+
+    def has_competence(self):
+        """ get True if the unit has a competence, False otherwise """
+        return bool(self.comp)
 
     def get_cooldown_competence(self):
-        """Retourne le cooldown maximum pour la compétence de cette unité."""
+        """ get the cooldown max of the competence """
         if not self.comp:
             return 0
         return co.get_cooldown(self.comp)
-    def get_competence(self): return self.comp
-    def get_portee(self): return self.portee
-    def get_pv_max(self): return self.pv_max
 
+    def get_competence(self):
+        """ get attribute comp """
+        return self.comp
+
+    def get_portee(self):
+        """ get attribute portee """
+        return self.portee
+
+    def get_pv_max(self):
+        """ get attribute pv_max """
+        return self.pv_max
 
     def get_attaque_totale(self):
         """Calcule l'attaque totale incluant les boosts temporaires."""
         attaque_base = self.dmg
-        
+
         # Ajouter les boosts attaque (ba)
         ba_benediction = getattr(self, 'ba_benediction', 0)
         ba_commandement = getattr(self, 'ba_commandement', 0)
@@ -96,38 +151,33 @@ class Unite:
         return attaque_base + ba_benediction + ba_commandement + ba_aura_sacree + ba_rage
 
     def get_buff(self, nom_buff):
-        """Retourne 1 si le buff est appliqué à l'unité, 0 sinon. Lève une erreur si le buff est inconnu."""
+        """ Retourne 1 si le buff est appliqué à l'unité, 0 sinon. Lève une erreur si le buff est inconnu."""
         return co.get_buff(nom_buff)
 
     def set_vivant(self, etat):
+        """ set attribute vivant to etat """
         self.vivant = etat
 
     # ---------- Logique ----------
     def reset_actions(self):
+        """Réinitialise les PM et attaques restantes au début du tour."""
         self.attaque_restantes = max(self.attaque_max, self.attaque_restantes)
         self.pm = self.mv
-        
+
         # Appliquer l'effet venin incapacitant si l'unité a été empoisonnée
-        if hasattr(self, 'venin_incapacite') and self.venin_incapacite:
-            self.pm = 0  # L'unité ne peut pas se déplacer
-            self.venin_incapacite = False  # L'effet ne dure qu'un tour
-            print(f"🐍 {self.nom} est incapacité par le venin ! Aucun mouvement possible ce tour.")
-        
+        if hasattr(self, 'venin_incapacite'):
+            self.pm = 0  # L'unité ne peut plus se déplacer
+            # TODO:
+            print(
+                f"🐍 {self.nom} est incapacité par le venin ! Aucun mouvement possible ce tour.")
+
         # Appliquer l'effet divertissement si l'unité a été divertie
-        if hasattr(self, 'diverti') and self.diverti:
+        if hasattr(self, 'diverti'):
             self.attaque_restantes = max(0, self.attaque_restantes - 1)
             print(f"{self.nom} est diverti et perd 1 attaque!")
-            # Nettoyer le marquage
-            self.diverti = False
-
-    # ---------- Déplacements ----------
-    def est_adjacente(self, autre):
-        q1, r1 = self.pos
-        q2, r2 = autre.pos
-        directions = [(1,0), (-1,0), (0,1), (0,-1), (1,-1), (-1,1)]
-        return any((q1+dx, r1+dy) == (q2, r2) for dx, dy in directions)
 
     def cases_accessibles(self, toutes_unites, q_range=None, r_range=None):
+        """ Retourne un dictionnaire des cases accessibles avec leur coût en PM."""
         if self.pm <= 0:
             return {}
 
@@ -142,8 +192,9 @@ class Unite:
 
         accessibles = {}
         file = deque([(self.pos, 0)])
-        directions = [(-1,0), (1,0), (0,1), (0,-1), (1,-1), (-1,1)]
-        occupees = {u.pos for u in toutes_unites if u.is_vivant() and u != self}
+        directions = [(-1, 0), (1, 0), (0, 1), (0, -1), (1, -1), (-1, 1)]
+        occupees = {u.pos for u in toutes_unites if u.is_vivant()
+                    and u != self}
 
         while file:
             (q, r), cout = file.popleft()
@@ -152,11 +203,11 @@ class Unite:
             for dq, dr in directions:
                 new_pos = (q+dq, r+dr)
                 new_q, new_r = new_pos
-                
+
                 # VÉRIFIER QUE LA NOUVELLE POSITION EST DANS LA GRILLE
                 if new_q not in q_range or new_r not in r_range:
                     continue
-                    
+
                 new_cout = cout + 1
                 if new_pos in occupees:
                     continue
@@ -167,32 +218,25 @@ class Unite:
                     file.append((new_pos, new_cout))
         return accessibles
 
-    def est_a_portee(self, autre):
-        """Vrai si l'unité 'autre' est à portée d'attaque."""
-        q1, r1 = self.pos
-        q2, r2 = autre.pos
-        distance = max(abs(q1 - q2), abs(r1 - r2), abs((q1 + r1) - (q2 + r2)))
-        return distance <= self.portee
-
     # ---------- Combat ----------
     def subir_degats(self, degats):
-        """Subit des dégâts en tenant compte du vol, bouclier et de l'armure de pierre."""        
-        degats_originaux = degats
-        
+        """Subit des dégâts en tenant compte du vol, bouclier et de l'armure de pierre."""
+
         # Appliquer vol si l'unité a cette compétence (avant tout le reste)
         if self.comp == "vol":
             degats = co.vol(self, degats)
-        
+
         # Appliquer l'armure de pierre si l'unité a cette compétence
         if self.comp == "armure de pierre":
             degats = co.armure_de_pierre(degats)
-        
+
         # Le bouclier absorbe d'abord les dégâts (après armure de pierre)
         if self.bouclier > 0:
             if degats <= self.bouclier:
                 # Le bouclier absorbe tous les dégâts
                 self.bouclier -= degats
-                return degats  # Retourner les dégâts réellement subis (après armure)
+                # Retourner les dégâts réellement subis (après armure)
+                return degats
             else:
                 # Le bouclier absorbe une partie, le reste va aux PV
                 degats_aux_pv = degats - self.bouclier
@@ -203,71 +247,67 @@ class Unite:
             # Les dégâts vont directement aux PV
             self.pv -= degats
         return degats  # Retourner les dégâts réellement subis (après armure)
-    
-    def appliquer_degats_avec_protection(self, cible, degats, toutes_unites): #TODO
+
+    def appliquer_degats_avec_protection(self, cible, degats, toutes_unites):  # TODO
         """Applique les dégâts en tenant compte de la protection."""
         # La fonction protection gère maintenant tout le processus
         return co.protection(cible, degats, toutes_unites)
-    
+
     def attaquer(self, autre, toutes_unites=None):
         """Applique l'animation et les dégâts séparément."""
         if toutes_unites is None:
             toutes_unites = []
-        
-        if self.attaque_restantes > 0 and self.est_a_portee(autre) and autre.is_vivant():
+
+        if self.attaque_restantes > 0 and est_a_portee(self.pos, autre.pos, self.get_portee()) and autre.is_vivant():
             self.attaque_restantes -= 1
 
             # Animation
             self.anim = animations.Animation("attack", 250, self, cible=autre)
-            
+
             # Gestion spéciale pour explosion sacrée
             if self.comp == "explosion sacrée":
                 # Le Fanatique inflige ses PV en dégâts et se sacrifie après l'animation
-                co.explosion_sacrée(self, toutes_unites, autre) 
+                co.explosion_sacrée(self, toutes_unites, autre)
             else:
-                # Compétence regard mortel : tue instantanément les unités tier ≤ 2
-                if self.comp == "regard mortel":
-                    
-                    if co.regard_mortel(self, autre) == 0:
-                        degats_infliges = autre.pv_max  # one shot si regard mortel actif
-                else:
-                    # Attaque normale - calculer les dégâts avec boosts
-                    degats_totaux = self.get_attaque_totale()
-                    self.ba_commandement = 0 # Réinitialiser après utilisation
-                    
-                    # Appliquer la protection si applicable
-                    degats_infliges = self.appliquer_degats_avec_protection(autre, degats_totaux, toutes_unites)
-                
+                # Attaque normale - calculer les dégâts avec boosts
+                degats_totaux = self.get_attaque_totale()
+                if hasattr(self, 'ba_commandement'):
+                    self.ba_commandement = 0  # Réinitialiser après utilisation
+
+                # Appliquer la protection si applicable
+                degats_infliges = self.appliquer_degats_avec_protection(
+                    autre, degats_totaux, toutes_unites)
+
                 # Compétence sangsue après l'attaque (avec les vrais dégâts)
                 if self.comp == "sangsue":
                     co.sangsue(self, degats_infliges)
-                
+
                 # Combustion différée : marquer la cible
                 if self.comp == "combustion différée" and autre.is_vivant():
                     co.combustion_differee(self, autre)
-            
+
             # Vérification de mort commune pour tous les types d'attaque
             cible_tuée = False
-            faction_originale = autre.faction  # Sauvegarder avant transformation
             if autre.pv <= 0:
-                result = autre.mourir(toutes_unites)  # Passer la liste complète des unités
+                # Passer la liste complète des unités
+                result = autre.mourir(toutes_unites)
                 cible_tuée = result  # True si l'unité était vivante et est maintenant morte
-            
+
             # Compétences après l'attaque (quand on sait si la cible est tuée)
             if self.comp == "lumière vengeresse" and cible_tuée:
                 co.lumière_vengeresse(self, autre)
-            
+
             if self.comp == "zombification" and cible_tuée:
                 co.zombification(self, autre)
-            
+
             # Rage : augmente l'attaque après chaque attaque
             if self.comp == "rage":
                 co.rage(self)
-            
+
             # Venin incapacitant : empêche la cible de se déplacer au prochain tour
             if self.comp == "venin incapacitant" and autre.is_vivant():
                 co.venin_incapacitant(self, autre)
-            
+
             # Sédition venimeuse : la cible attaque un ennemi adjacent
             if self.comp == "sédition venimeuse" and autre.is_vivant():
                 co.sedition_venimeuse(self, autre, toutes_unites)
@@ -281,36 +321,36 @@ class Unite:
                 if jeu.selection == self:
                     jeu.selection = None
                     jeu.deplacement_possibles = {}
-                    
+
             # Compétence de renaissance : tentative de résurrection avant la mort
             if self.comp == "renaissance":
                 if co.renaissance(self, toutes_unites):
                     return False  # L'unité a été ressuscitée, elle n'est pas morte
-            
+
             self.set_vivant(False)
-            
+
             # Appeler le callback de kill si défini (pour le mode hexarene)
             global _kill_callback
             if _kill_callback:
                 _kill_callback(self)
-            
+
             # Compétences déclenchées à la mort (sauf explosion sacrée qui est gérée dans attaquer)
             if self.comp == "tas d'os":
                 co.tas_d_os(self)
             # Si c'est un marionettiste qui meurt, libérer toutes ses unités manipulées
             elif self.comp == "manipulation":
                 co.liberer_toutes_unites_manipulees_par(self, toutes_unites)
-            
+
             return True  # Unité effectivement tuée
         return False  # Unité déjà morte
 
     def debut_tour(self, toutes_unites, plateau, q_range=None, r_range=None):
         """À appeler au début du tour de l'unité pour déclencher les compétences passives."""
-        
+
         # Réduction du cooldown des compétences actives
         if self.cooldown_actuel > 0:
             self.cooldown_actuel -= 1
-        
+
         # Compétences passives
         if self.comp == "nécromancie":
             co.nécromancie(self, toutes_unites, plateau, q_range, r_range)
@@ -324,7 +364,7 @@ class Unite:
             co.vague_apaisante(self, toutes_unites)
         # La manipulation se déclenche en fin de tour, pas au début
         # Ajoute ici d'autres compétences passives si besoin
-    
+
     def fin_tour(self, toutes_unites):
         """À appeler en fin de tour de l'unité pour déclencher les compétences de fin de tour."""
         # Compétence d'enracinement : régénère si l'unité n'a pas bougé
@@ -336,13 +376,13 @@ class Unite:
         # Compétence de manipulation : contrôle les unités avec ≤4 PV
         elif self.comp == "manipulation":
             co.manipulation(self, toutes_unites)
-    
+
     def fin_tour_ennemi(self, toutes_unites):
         """À appeler en fin de tour ennemi pour gérer la combustion différée."""
         # Gérer la combustion différée (compte à rebours en fin de tour ennemi)
         if hasattr(self, 'combustion_tours_restants'):
             co.gerer_combustion_differee(self, toutes_unites)
-    
+
     def a_competence_active(self):
         """Retourne True si l'unité a une compétence active utilisable (pas en cooldown)."""
         if not self.comp:
@@ -350,13 +390,13 @@ class Unite:
         if not co.est_competence_active(self.comp):
             return False
         return self.cooldown_actuel <= 0  # Utilisable seulement si pas en cooldown
-    
+
     def possede_competence_active(self):
         """Retourne True si l'unité possède une compétence active (indépendamment du cooldown)."""
         if not self.comp:
             return False
         return co.est_competence_active(self.comp)
-    
+
     def get_cooldown_info(self):
         """Retourne des informations sur le cooldown de la compétence."""
         if not self.comp or not co.est_competence_active(self.comp):
@@ -366,220 +406,37 @@ class Unite:
             "max": self.cooldown_max,
             "disponible": self.cooldown_actuel <= 0
         }
-    
+
     def get_competence_status(self):
         """Retourne le statut de la compétence pour l'affichage."""
         if not self.comp:
             return "Aucune compétence"
-        
+
         if not co.est_competence_active(self.comp):
             return f"{self.comp} (passive)"
-        
+
         if self.cooldown_actuel <= 0:
             return f"{self.comp} (prêt)"
         else:
             return f"{self.comp} ({self.cooldown_actuel} tours)"
-    
+
     def utiliser_competence(self, cible=None, toutes_unites=None):
         """Utilise la compétence active de l'unité."""
         # Vérifier les conditions d'utilisation
         attaque_necessaire = co.comp_attaque
-        
-        if (self.a_competence_active() and 
-            (not attaque_necessaire or self.attaque_restantes > 0) and 
-            self.cooldown_actuel <= 0):
-            
-            success = co.utiliser_competence_active(self, self.comp, cible, toutes_unites)
+
+        if (self.a_competence_active() and
+            (not attaque_necessaire or self.attaque_restantes > 0) and
+                self.cooldown_actuel <= 0):
+
+            success = co.utiliser_competence_active(
+                self, self.comp, cible, toutes_unites)
             if success:
                 # Activer le cooldown et marquer comme utilisée ce tour
                 self.cooldown_actuel = self.cooldown_max
-                
+
                 # Seules certaines compétences ne consomment pas d'attaque
                 if self.comp in co.comp_attaque:
                     self.attaque_restantes -= 1
             return success
         return False
-
-
-# ---------- Sous-classes d'unités ----------
-
-# Morts-Vivants
-
-class Tas_D_Os(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Tas d'Os", pv=1, dmg=0, mv=0, tier=0, faction="Morts-Vivants", attaque_max=0)
-
-class Goule(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Goule", pv=16, dmg=2, mv=1, tier=1, faction="Morts-Vivants")
-
-class Squelette(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Squelette", pv=3, dmg=5, mv=2, tier=1, comp="tas d'os", faction="Morts-Vivants")
-
-class Spectre(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Spectre", pv=5, dmg=3, mv=1, tier=1, comp="fantomatique", faction="Morts-Vivants")
-
-class Zombie(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Zombie", pv=10, dmg=2, mv=2, tier=2, comp="zombification", faction="Morts-Vivants")
-
-class Vampire(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Vampire", pv=8, dmg=3, mv=2, tier=2, comp="sangsue", faction="Morts-Vivants")
-
-class Liche(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Liche", pv=9, dmg=1, mv=2, tier=3, comp="nécromancie", faction="Morts-Vivants", portee=2)
-
-class Archliche(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Archliche", pv=18, dmg=1, mv=2, tier=4, comp="invocation", faction="Morts-Vivants", portee=3)
-
-
-# Religieux
-
-class Missionnaire(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Missionnaire", pv=12, dmg=2, mv=3, tier=1, faction="Religieux")
-
-class Clerc(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Clerc", pv=5, dmg=0, mv=1, tier=1, faction="Religieux", comp="soin", attaque_max=0)
-
-class Fanatique(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Fanatique", pv=10, dmg=0, mv=3, tier=1, faction="Religieux", comp="explosion sacrée")
-
-class Esprit_Saint(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Esprit Saint", pv=7, dmg=1, mv=2, tier=2, faction="Religieux", comp="bouclier de la foi")
-
-class Paladin(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Paladin", pv=13, dmg=3, mv=2, tier=2, faction="Religieux", comp="bénédiction")
-
-class Ange(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Ange", pv=12, dmg=6, mv=2, tier=3, faction="Religieux", comp="lumière vengeresse", portee=2)
-
-class ArchAnge(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="ArchAnge", pv=20, dmg=13, mv=3, tier=4, faction="Religieux", comp="aura sacrée", portee=2)
-
-
-# Élémentaires
-
-class Cristal(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Cristal", pv=10, dmg=0, mv=0, tier=0, faction="Élémentaires", attaque_max=0)
-
-class Esprit(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Esprit", pv=6, dmg=3, mv=3, tier=1, faction="Élémentaires")
-
-class Driade(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Driade", pv=10, dmg=2, mv=1, tier=1, faction="Élémentaires", comp="enracinement")
-
-class Gnome(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Gnome", pv=5, dmg=2, mv=2, tier=1, faction="Élémentaires", comp="cristalisation")
-
-class Golem(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Golem", pv=12, dmg=4, mv=1, tier=2, faction="Élémentaires", comp="armure de pierre")
-
-class Ondine(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Ondine", pv=7, dmg=2, mv=2, tier=2, faction="Élémentaires", comp="vague apaisante")
-
-class Ifrit(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Ifrit", pv=25, dmg=3, mv=2, tier=3, faction="Élémentaires", comp="combustion différée")
-
-class Phénix(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Phénix", pv=15, dmg=6, mv=3, tier=4, faction="Élémentaires", comp="renaissance")
-
-
-# Royaume
-
-class Cheval(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Cheval", pv=1, dmg=0, mv=3, tier=0, faction="Royaume", attaque_max=0)
-
-class Guerrier(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Guerrier", pv=10, dmg=4, mv=2, tier=1, faction="Royaume")
-
-class Archer(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Archer", pv=6, dmg=2, mv=1, tier=1, faction="Royaume", comp="pluie de flèches", portee=2)
-
-class Cavalier(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Cavalier", pv=8, dmg=3, mv=3, tier=1, faction="Royaume", comp="monture libéré")
-
-class Bouffon(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Bouffon", pv=9, dmg=1, mv=2, tier=2, faction="Royaume", comp="divertissement")
-
-class Garde_Royal(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Garde royal", pv=15, dmg=3, mv=1, tier=2, faction="Royaume", comp="protection")
-
-class Roi(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Roi", pv=12, dmg=4, mv=2, tier=3, faction="Royaume", comp="commandement")
-
-class Marionettiste(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Marionettiste", pv=14, dmg=3, mv=2, tier=4, faction="Royaume", comp="manipulation")
-
-
-# Chimères
-
-class Harpie(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Harpie", pv=7, dmg=3, mv=3, tier=1, faction="Chimères")
-
-class Centaure(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Centaure", pv=6, dmg=2, mv=2, tier=1, faction="Chimères", comp="tir précis", portee=2)
-
-class Griffon(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Griffon", pv=8, dmg=4, mv=3, tier=1, faction="Chimères", comp="vol")
-
-class Lamia(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Lamia", pv=11, dmg=3, mv=2, tier=2, faction="Chimères", comp="sédition venimeuse")
-
-class Loup_Garou(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Loup-Garou", pv=12, dmg=4, mv=2, tier=2, faction="Chimères", comp="rage")
-
-class Manticore(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Manticore", pv=13, dmg=5, mv=2, tier=3, faction="Chimères", comp="venin incapacitant")
-
-class Basilic(Unite):
-    def __init__(self, equipe, pos):
-        super().__init__(equipe, pos, nom="Basilic", pv=16, dmg=7, mv=2, tier=4, faction="Chimères", comp="regard mortel")
-
-
-# Liste des classes utilisables
-CLASSES_UNITES = [
-    # Morts-Vivants
-    Goule, Squelette, Spectre, Vampire, Zombie, Liche, Archliche,
-    # Religieux
-    Missionnaire, Clerc, Fanatique, Esprit_Saint, Paladin, Ange, ArchAnge,
-    # Élémentaires
-    Esprit, Driade, Gnome, Golem, Ondine, Ifrit, Phénix,
-    # Royaume
-    Guerrier, Archer, Cavalier, Bouffon, Garde_Royal, Roi, Marionettiste,
-    # Chimères
-    Harpie, Centaure, Griffon, Lamia, Loup_Garou, Manticore, Basilic
-]

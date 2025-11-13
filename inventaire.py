@@ -2,7 +2,7 @@ import pygame
 import sys
 from utils import Button
 import sauvegarde
-from unites import CLASSES_UNITES
+from unites_liste import CLASSES_UNITES
 from competences import COMPETENCES
 from faction_colors import get_faction_color
 

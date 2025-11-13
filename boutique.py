@@ -1,8 +1,11 @@
-import pygame
+""" Module de la boutique """
+#pylint: disable=no-name-in-module
+#pylint: disable=no-member
 import sys
+from unites_liste import CLASSES_UNITES
+import pygame
 from utils import Button
 import sauvegarde
-from unites import CLASSES_UNITES
 from competences import COMPETENCES
 from faction_colors import get_faction_color
 
@@ -67,7 +70,6 @@ class Boutique:
 
     def creer_boutons(self):
         self.boutons = []
-        screen_w, screen_h, *_ = self._grid_specs()
         self.boutons.append(Button((20, screen_h - 70, 160, 44), "Retour", self.retour_menu, self.font))
 
     def acheter_unite(self, classe, prix, nom):
