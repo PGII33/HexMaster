@@ -5,6 +5,7 @@ from layout import hex_to_pixel
 import competences as co
 from utils import point_dans_polygone
 from ia import hex_distance
+from utils_pos import est_a_portee
 
 DO_PRINT = True  # Activer les prints de debug
 
@@ -102,7 +103,7 @@ def handle_click(jeu, mx, my):
                     and jeu.selection.attaque_restantes > 0
                     and jeu.selection.equipe == jeu.tour
                     and _are_enemies(jeu.selection.equipe, u.equipe, getattr(jeu, 'versus_mode', False))
-                    and jeu.selection.est_a_portee(u)
+                    and est_a_portee(jeu.selection.pos, u.pos, jeu.selection.get_portee())
                 ):
                     # Attaquer l'unité adverse
                     jeu.selection.attaquer(u, jeu.unites)

@@ -353,7 +353,7 @@ class Unite:
 
         # Compétences passives
         if self.comp == "nécromancie":
-            co.nécromancie(self, toutes_unites, plateau, q_range, r_range)
+            co.necromancie(self, toutes_unites, plateau, q_range, r_range)
         elif self.comp == "invocation":
             co.invocation(self, toutes_unites, plateau, q_range, r_range)
         elif self.comp == "bouclier de la foi":

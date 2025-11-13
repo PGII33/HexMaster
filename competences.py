@@ -1,6 +1,8 @@
 """ Compétences des unités."""
+#pylint: disable=line-too-long
+#pylint: disable=import-outside-toplevel
+#pylint: disable=unnecessary-dunder-call
 import random
-
 DO_PRINT = False
 
 comp_portee = {
@@ -80,7 +82,7 @@ def cases_fantomatiques(unite, toutes_unites, q_range=None, r_range=None):
     return accessibles
 
 
-def nécromancie(self, toutes_unites, plateau, q_range=None, r_range=None):
+def necromancie(self, toutes_unites, plateau, q_range=None, r_range=None):
     """Invoque un Squelette sur une case adjacente vide à chaque tour."""
     from unites_liste import Squelette
 
@@ -298,7 +300,6 @@ def monture_libere(self, case_pos, toutes_unites):
 def commandement(unite, cible, toutes_unites):
     """Augmente l'attaque d'un allié de l'attaque actuelle du roi, et +1 attaque supplémentaire."""
     from ia import hex_distance
-
     # Vérifier si c'est un allié
     if not isinstance(cible, (tuple, list)):
         # Si c'est une unité directement
