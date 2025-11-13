@@ -1,12 +1,16 @@
-import pygame
+""" Module gérant l'inventaire du joueur """
+# pylint: disable=no-name-in-module
+# pylint: disable=no-member
 import sys
-from utils import Button
-import sauvegarde
 from unites_liste import CLASSES_UNITES
+import pygame
+from utils import Button, wrap_text, draw_bandeau, get_grid_specs, handle_scroll_events
+import sauvegarde
 from competences import COMPETENCES
 from faction_colors import get_faction_color
 
 class Inventaire:
+    """ Classe de l'inventaire du joueur """
     def __init__(self, screen):
         self.screen = screen
         self.font = pygame.font.SysFont(None, 28)
@@ -15,8 +19,10 @@ class Inventaire:
         self.boutons = []
         self.scroll_y = 0
         self.scroll_speed = 40
+        self.running = False
 
     def wrap_text(self, text, max_width):
+        """ Retourne une liste de lignes de texte enveloppées selon la largeur maximale """
         if not text:
             return [""]
         words = text.split()
@@ -34,7 +40,6 @@ class Inventaire:
         return lines or [""]
 
     def _get_card_height(self, card_w, cls):
-        from utils import wrap_text
         tmp = cls("joueur", (0,0))
         comp = tmp.get_competence()
         comp_desc = "" if not comp else COMPETENCES.get(comp, "")
@@ -66,15 +71,16 @@ class Inventaire:
         return screen_w, screen_h, margin, cols, card_w, start_y
 
     def creer_boutons(self):
+        """ Crée les boutons de l'inventaire """
         self.boutons = []
-        screen_w, screen_h, *_ = self._grid_specs()
-        self.boutons.append(Button((20, screen_h - 70, 160, 44), "Retour", self.retour_menu, self.font))
+        self.boutons.append(Button((20, 160, 44), "Retour", self.retour_menu, self.font))
 
     def retour_menu(self):
+        """ Retourne au menu principal """
         self.running = False
 
     def afficher(self):
-        from utils import draw_bandeau
+        """ Affiche l'inventaire du joueur """
         self.creer_boutons()
         self.running = True
         self.scroll_y = 0
@@ -87,7 +93,6 @@ class Inventaire:
 
         bandeau_h = 70  # Hauteur du bandeau
 
-        from utils import get_grid_specs
         while self.running:
             self.screen.fill((250, 245, 230))
             screen_w, screen_h, margin, cols, card_w, start_y, card_h = get_grid_specs(
@@ -133,7 +138,6 @@ class Inventaire:
                     f"Tier: {tmp.get_tier()}",
                     f"Compétence: {comp_nom}",
                 ]
-                from utils import wrap_text
                 desc_lines = wrap_text(comp_desc, self.font, card_w - 20)
 
                 rect = pygame.Rect(x, y, card_w, card_h)
@@ -182,7 +186,6 @@ class Inventaire:
             )
 
             events = pygame.event.get()
-            from utils import handle_scroll_events
             for event in events:
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -197,6 +200,6 @@ class Inventaire:
                     for b in self.boutons:
                         b.handle_event(event)
             # Gestion du scroll
-            self.scroll_y = handle_scroll_events(events, self.scroll_y, self.scroll_speed, max_scroll, bandeau_h)
+            self.scroll_y = handle_scroll_events(events, self.scroll_y, self.scroll_speed, max_scroll)
 
             pygame.display.flip()
