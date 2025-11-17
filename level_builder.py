@@ -457,7 +457,7 @@ class LevelBuilder:
     def modifier_max_units(self, delta):
         """Modifie le nombre max d'unités pour le joueur"""
         new_value = self.niveau_config.max_unites + delta
-        self.niveau_config.max_unites = max(1, min(UNIT_MAX, new_value))
+        self.niveau_config.max_unites = max(1, new_value)
     
     def modifier_cp_joueur(self, delta):
         """Modifie les CP disponibles pour le joueur"""
@@ -934,7 +934,6 @@ class LevelBuilder:
     
     def _creer_inventaire_test(self):
         """Crée un inventaire de test avec toutes les unités disponibles"""
-        from unites import CLASSES_UNITES
         
         inventaire_test = []
         for classe_unite in CLASSES_UNITES:

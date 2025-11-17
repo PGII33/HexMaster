@@ -212,7 +212,7 @@ def charger_niveau(chemin_fichier: str) -> Optional[NiveauConfig]:
 def obtenir_factions_disponibles() -> List[str]:
     """Retourne la liste des factions disponibles"""
     factions = set()
-    for cls in unites.CLASSES_UNITES:
+    for cls in CLASSES_UNITES:
         # Créer une instance temporaire pour obtenir la faction
         instance = cls("temp", (0, 0))
         factions.add(instance.faction)
