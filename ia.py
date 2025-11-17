@@ -637,7 +637,7 @@ def sc_attaque(unite, cible, toutes_unites) -> float:
     score = 0.0
 
     # 1. Facilité de kill (priorité aux ennemis faibles)
-    pv_ratio = cible.__pv / cible.get_pv_max() if cible.get_pv_max() > 0 else 0
+    pv_ratio = cible.get_pv() / cible.get_pv_max() if cible.get_pv_max() > 0 else 0
     # 0-50 points (plus de points si faible) - AUGMENTÉ
     score += (1 - pv_ratio) * 50
 
