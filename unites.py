@@ -1,8 +1,9 @@
 """ Module des unités du jeu HexaMaster """
-#pylint: disable=line-too-long
+# pylint: disable=line-too-long
 from collections import deque
 import animations
 import competences as co
+from const import PRIX_TIER, PRIX_BLOQUE
 from utils_pos import est_a_portee
 
 # Callback global pour gérer les kills (sera défini par le jeu si besoin)
@@ -23,125 +24,120 @@ def clear_kill_callback():
 
 class Unite:
     """ Class to define a unite """
+
     def __init__(self, equipe, pos, pv, dmg, mv, tier, nom, faction, prix=None, comp=None, portee=1, pv_max=None, attaque_max=1):
-        self.equipe = equipe
-        self.pos = pos
-        self.pv = pv
-        self.pv_max = pv_max if pv_max is not None else pv
-        self.dmg = dmg
-        self.mv = mv
-        self.pm = self.mv
-        self.tier = tier
-        self.nom = nom
-        self.faction = faction
-        self.portee = portee
-        self.attaque_max = attaque_max
-        self.attaque_restantes = attaque_max
-        self.bouclier = 0
-        # prix selon le nouveau système : Tier 1=20, Tier 2=80, Tier 3=200, Tier 4=non achetable
+        self._equipe = equipe
+        self._pos = pos
+        self._pv = pv
+        self._pv_max = pv_max if pv_max is not None else pv
+        self._dmg = dmg
+        self._mv = mv
+        self._pm = self._mv
+        self._tier = tier
+        self._nom = nom
+        self._faction = faction
+        self._portee = portee
+        self._attaque_max = attaque_max
+        self._attaque_restantes = attaque_max
+        self._bouclier = 0
         if prix is not None:
-            self.prix = prix
+            self._prix = prix
         else:
-            if tier == 1:
-                self.prix = 20
-            elif tier == 2:
-                self.prix = 80
-            elif tier == 3:
-                self.prix = 200
-            elif tier == 4:
-                self.prix = -1  # Non achetable (bloqué)
-            else:
-                self.prix = tier * 5  # Fallback pour autres tiers
-        # comp doit être le nom de la compétence (string) ou None/""
-        self.comp = comp or ""
+            self._prix = PRIX_TIER[tier]
+        self._comp = comp or ""
 
         # Système de cooldown pour les compétences actives
-        self.cooldown_actuel = 0  # Tours restants avant de pouvoir réutiliser la compétence
+        self._cooldown_actuel = 0  # Tours restants avant de pouvoir réutiliser la compétence
         # Cooldown maximum de la compétence
-        self.cooldown_max = self.get_cooldown_competence()
-
+        self._cooldown_max = self.get_cooldown_competence()
+        self._vivant = True
         self.set_vivant(True)
-        self.anim = None
+        self._anim = None
 
     # ---------- Getters ----------
     def get_nom(self):
         """ get attribute nom """
-        return self.nom
+        return self._nom
 
     def get_pv(self):
         """ get attribute pv """
-        return self.pv
+        return self._pv
 
     def get_dmg(self):
         """ get attribute dmg """
-        return self.dmg
+        return self._dmg
 
     def get_mv(self):
         """ get attribute mv """
-        return self.mv
+        return self._mv
 
     def get_pm(self):
         """ get attribute pm """
-        return self.pm
+        return self._pm
 
     def get_bouclier(self):
         """ get attribute bouclier """
-        return self.bouclier
+        return self._bouclier
 
     def get_attaque_max(self):
         """ get attribute attaque_max, it is the maximum number of attacks per turn """
-        return self.attaque_max
+        return self._attaque_max
 
     def get_attaque_restantes(self):
         """ get attribute attaque_restantes, it is the number of attacks left this turn """
-        return self.attaque_restantes
+        return self._attaque_restantes
 
     def get_tier(self):
         """ get attribute tier """
-        return self.tier
+        return self._tier
 
     def get_prix(self):
         """ get attribute prix or "Bloqué" if prix < 0 """
-        return "Bloqué" if self.prix < 0 else self.prix
+        return PRIX_BLOQUE if self._prix < 0 else self._prix
 
     def get_faction(self):
         """ get attribute faction """
-        return self.faction
+        return self._faction
 
     def get_equipe(self):
         """ get attribute equipe """
-        return self.equipe
+        return self._equipe
 
     def is_vivant(self):
         """ get attribute vivant """
-        return self.vivant
+        return self._vivant
 
     def has_competence(self):
         """ get True if the unit has a competence, False otherwise """
-        return bool(self.comp)
+        return bool(self._comp)
 
     def get_cooldown_competence(self):
         """ get the cooldown max of the competence """
-        if not self.comp:
+        if not self._comp:
             return 0
-        return co.get_cooldown(self.comp)
+        return co.get_cooldown(self._comp)
+
+    def get_cooldown_actuel(self):
+        """ get the current cooldown of the competence """
+        return self._cooldown_actuel
 
     def get_competence(self):
         """ get attribute comp """
-        return self.comp
+        return self._comp
 
     def get_portee(self):
         """ get attribute portee """
-        return self.portee
+        return self._portee
 
     def get_pv_max(self):
         """ get attribute pv_max """
-        return self.pv_max
+        return self._pv_max
 
     def get_attaque_totale(self):
         """Calcule l'attaque totale incluant les boosts temporaires."""
-        attaque_base = self.dmg
+        attaque_base = self._dmg
 
+        # TODO: GESTION DES TAGS
         # Ajouter les boosts attaque (ba)
         ba_benediction = getattr(self, 'ba_benediction', 0)
         ba_commandement = getattr(self, 'ba_commandement', 0)
@@ -154,31 +150,62 @@ class Unite:
         """ Retourne 1 si le buff est appliqué à l'unité, 0 sinon. Lève une erreur si le buff est inconnu."""
         return co.get_buff(nom_buff)
 
+    def get_pos(self):
+        """ get attribute pos """
+        return self._pos
+
     def set_vivant(self, etat):
         """ set attribute vivant to etat """
-        self.vivant = etat
+        self._vivant = etat
+
+    def set_attaque_restantes(self, nb):
+        """ set attribute attaque_restantes to nb """
+        self._attaque_restantes = nb
+
+    def set_pm(self, nb):
+        """ set attribute pm to nb """
+        self._pm = nb
+
+    def set_bouclier(self, nb):
+        """ set attribute bouclier to nb """
+        self._bouclier = nb
+
+    def set_pv(self, nb):
+        """ set attribute pv to nb """
+        self._pv = max(0, min(nb, self._pv_max))
+
+    def set_anim(self, anim):
+        """ set attribute anim to anim """
+        self._anim = anim
+
+    def set_cooldown_actuel(self, nb):
+        """ set attribute cooldown_actuel to nb """
+        self._cooldown_actuel = nb
 
     # ---------- Logique ----------
     def reset_actions(self):
         """Réinitialise les PM et attaques restantes au début du tour."""
-        self.attaque_restantes = max(self.attaque_max, self.attaque_restantes)
-        self.pm = self.mv
+        self.set_attaque_restantes(
+            max(self.get_attaque_max(), self.get_attaque_restantes()))
+        self.set_pm(self.get_mv())
 
         # Appliquer l'effet venin incapacitant si l'unité a été empoisonnée
+        # TODO: GESTION DES TAGS
         if hasattr(self, 'venin_incapacite'):
-            self.pm = 0  # L'unité ne peut plus se déplacer
-            # TODO:
+            self.set_pm(0)  # L'unité ne peut plus se déplacer
             print(
                 f"🐍 {self.nom} est incapacité par le venin ! Aucun mouvement possible ce tour.")
 
         # Appliquer l'effet divertissement si l'unité a été divertie
+        # TODO: GESTION DES TAGS
         if hasattr(self, 'diverti'):
-            self.attaque_restantes = max(0, self.attaque_restantes - 1)
+            self.set_attaque_restantes(max(0, self.get_attaque_restantes() - 1)
+                                       )
             print(f"{self.nom} est diverti et perd 1 attaque!")
 
     def cases_accessibles(self, toutes_unites, q_range=None, r_range=None):
         """ Retourne un dictionnaire des cases accessibles avec leur coût en PM."""
-        if self.pm <= 0:
+        if self.get_pm() <= 0:
             return {}
 
         # Limites par défaut si non spécifiées
@@ -187,18 +214,18 @@ class Unite:
         if r_range is None:
             r_range = range(-1, 7)
 
-        if self.comp == "fantomatique":
+        if self.get_competence() == "fantomatique":
             return co.cases_fantomatiques(self, toutes_unites, q_range, r_range)
 
         accessibles = {}
-        file = deque([(self.pos, 0)])
+        file = deque([(self.get_pos(), 0)])
         directions = [(-1, 0), (1, 0), (0, 1), (0, -1), (1, -1), (-1, 1)]
         occupees = {u.pos for u in toutes_unites if u.is_vivant()
                     and u != self}
 
         while file:
             (q, r), cout = file.popleft()
-            if cout >= self.pm:
+            if cout >= self.get_pm():
                 continue
             for dq, dr in directions:
                 new_pos = (q+dq, r+dr)
@@ -211,7 +238,7 @@ class Unite:
                 new_cout = cout + 1
                 if new_pos in occupees:
                     continue
-                if new_pos == self.pos:
+                if new_pos == self.get_pos():
                     continue
                 if new_pos not in accessibles or new_cout < accessibles[new_pos]:
                     accessibles[new_pos] = new_cout
@@ -223,29 +250,29 @@ class Unite:
         """Subit des dégâts en tenant compte du vol, bouclier et de l'armure de pierre."""
 
         # Appliquer vol si l'unité a cette compétence (avant tout le reste)
-        if self.comp == "vol":
+        if self.get_competence() == "vol":
             degats = co.vol(self, degats)
 
         # Appliquer l'armure de pierre si l'unité a cette compétence
-        if self.comp == "armure de pierre":
+        if self.get_competence() == "armure de pierre":
             degats = co.armure_de_pierre(degats)
 
         # Le bouclier absorbe d'abord les dégâts (après armure de pierre)
-        if self.bouclier > 0:
-            if degats <= self.bouclier:
+        if self.get_bouclier() > 0:
+            if degats <= self.get_bouclier():
                 # Le bouclier absorbe tous les dégâts
-                self.bouclier -= degats
+                self.set_bouclier(self.get_bouclier() - degats)
                 # Retourner les dégâts réellement subis (après armure)
                 return degats
             else:
                 # Le bouclier absorbe une partie, le reste va aux PV
-                degats_aux_pv = degats - self.bouclier
-                self.bouclier = 0
+                degats_aux_pv = degats - self.get_bouclier()
+                self.set_bouclier(0)
                 # Les dégâts restants vont aux PV
-                self.pv -= degats_aux_pv
+                self.set_pv(self.get_pv() - degats_aux_pv)
         else:
             # Les dégâts vont directement aux PV
-            self.pv -= degats
+            self.set_pv(self.get_pv() - degats)
         return degats  # Retourner les dégâts réellement subis (après armure)
 
     def appliquer_degats_avec_protection(self, cible, degats, toutes_unites):  # TODO
@@ -258,14 +285,14 @@ class Unite:
         if toutes_unites is None:
             toutes_unites = []
 
-        if self.attaque_restantes > 0 and est_a_portee(self.pos, autre.pos, self.get_portee()) and autre.is_vivant():
-            self.attaque_restantes -= 1
+        if self.get_attaque_restantes() > 0 and est_a_portee(self.get_pos(), autre.get_pos(), self.get_portee()) and autre.is_vivant():
+            self.set_attaque_restantes(self.get_attaque_restantes() - 1)
 
             # Animation
-            self.anim = animations.Animation("attack", 250, self, cible=autre)
+            self.set_anim(animations.Animation("attack", 250, self, cible=autre))
 
             # Gestion spéciale pour explosion sacrée
-            if self.comp == "explosion sacrée":
+            if self.get_competence() == "explosion sacrée":
                 # Le Fanatique inflige ses PV en dégâts et se sacrifie après l'animation
                 co.explosion_sacrée(self, toutes_unites, autre)
             else:
@@ -279,11 +306,11 @@ class Unite:
                     autre, degats_totaux, toutes_unites)
 
                 # Compétence sangsue après l'attaque (avec les vrais dégâts)
-                if self.comp == "sangsue":
+                if self.get_competence() == "sangsue":
                     co.sangsue(self, degats_infliges)
 
                 # Combustion différée : marquer la cible
-                if self.comp == "combustion différée" and autre.is_vivant():
+                if self.get_competence() == "combustion différée" and autre.is_vivant():
                     co.combustion_differee(self, autre)
 
             # Vérification de mort commune pour tous les types d'attaque
@@ -294,22 +321,22 @@ class Unite:
                 cible_tuée = result  # True si l'unité était vivante et est maintenant morte
 
             # Compétences après l'attaque (quand on sait si la cible est tuée)
-            if self.comp == "lumière vengeresse" and cible_tuée:
+            if self.get_competence() == "lumière vengeresse" and cible_tuée:
                 co.lumière_vengeresse(self, autre)
 
-            if self.comp == "zombification" and cible_tuée:
+            if self.get_competence() == "zombification" and cible_tuée:
                 co.zombification(self, autre)
 
             # Rage : augmente l'attaque après chaque attaque
-            if self.comp == "rage":
+            if self.get_competence() == "rage":
                 co.rage(self)
 
             # Venin incapacitant : empêche la cible de se déplacer au prochain tour
-            if self.comp == "venin incapacitant" and autre.is_vivant():
+            if self.get_competence() == "venin incapacitant" and autre.is_vivant():
                 co.venin_incapacitant(self, autre)
 
             # Sédition venimeuse : la cible attaque un ennemi adjacent
-            if self.comp == "sédition venimeuse" and autre.is_vivant():
+            if self.get_competence() == "sédition venimeuse" and autre.is_vivant():
                 co.sedition_venimeuse(self, autre, toutes_unites)
 
     def mourir(self, toutes_unites=None):
@@ -323,7 +350,7 @@ class Unite:
                     jeu.deplacement_possibles = {}
 
             # Compétence de renaissance : tentative de résurrection avant la mort
-            if self.comp == "renaissance":
+            if self.get_competence() == "renaissance":
                 if co.renaissance(self, toutes_unites):
                     return False  # L'unité a été ressuscitée, elle n'est pas morte
 
@@ -335,10 +362,10 @@ class Unite:
                 _kill_callback(self)
 
             # Compétences déclenchées à la mort (sauf explosion sacrée qui est gérée dans attaquer)
-            if self.comp == "tas d'os":
+            if self.get_competence() == "tas d'os":
                 co.tas_d_os(self)
             # Si c'est un marionettiste qui meurt, libérer toutes ses unités manipulées
-            elif self.comp == "manipulation":
+            elif self.get_competence() == "manipulation":
                 co.liberer_toutes_unites_manipulees_par(self, toutes_unites)
 
             return True  # Unité effectivement tuée
@@ -348,33 +375,31 @@ class Unite:
         """À appeler au début du tour de l'unité pour déclencher les compétences passives."""
 
         # Réduction du cooldown des compétences actives
-        if self.cooldown_actuel > 0:
-            self.cooldown_actuel -= 1
+        if self.get_cooldown_actuel() > 0:
+            self.set_cooldown_actuel(self.get_cooldown_actuel() - 1)
 
         # Compétences passives
-        if self.comp == "nécromancie":
+        if self.get_competence() == "nécromancie":
             co.necromancie(self, toutes_unites, plateau, q_range, r_range)
-        elif self.comp == "invocation":
+        elif self.get_competence() == "invocation":
             co.invocation(self, toutes_unites, plateau, q_range, r_range)
-        elif self.comp == "bouclier de la foi":
+        elif self.get_competence() == "bouclier de la foi":
             co.bouclier_de_la_foi(self, toutes_unites)
-        elif self.comp == "aura sacrée":
+        elif self.get_competence() == "aura sacrée":
             co.aura_sacrée(self, toutes_unites)
-        elif self.comp == "vague apaisante":
+        elif self.get_competence() == "vague apaisante":
             co.vague_apaisante(self, toutes_unites)
-        # La manipulation se déclenche en fin de tour, pas au début
-        # Ajoute ici d'autres compétences passives si besoin
 
     def fin_tour(self, toutes_unites):
         """À appeler en fin de tour de l'unité pour déclencher les compétences de fin de tour."""
         # Compétence d'enracinement : régénère si l'unité n'a pas bougé
-        if self.comp == "enracinement":
+        if self.get_competence() == "enracinement":
             co.enracinement(self)
         # Compétence de divertissement : réduit les attaques des ennemis adjacents
-        elif self.comp == "divertissement":
+        elif self.get_competence() == "divertissement":
             co.divertissement(self, toutes_unites)
         # Compétence de manipulation : contrôle les unités avec ≤4 PV
-        elif self.comp == "manipulation":
+        elif self.get_competence() == "manipulation":
             co.manipulation(self, toutes_unites)
 
     def fin_tour_ennemi(self, toutes_unites):
@@ -385,40 +410,40 @@ class Unite:
 
     def a_competence_active(self):
         """Retourne True si l'unité a une compétence active utilisable (pas en cooldown)."""
-        if not self.comp:
+        if not self.get_competence():
             return False
-        if not co.est_competence_active(self.comp):
+        if not co.est_competence_active(self.get_competence()):
             return False
-        return self.cooldown_actuel <= 0  # Utilisable seulement si pas en cooldown
+        return self.get_cooldown_actuel() <= 0  # Utilisable seulement si pas en cooldown
 
     def possede_competence_active(self):
         """Retourne True si l'unité possède une compétence active (indépendamment du cooldown)."""
-        if not self.comp:
+        if not self.get_competence():
             return False
-        return co.est_competence_active(self.comp)
+        return co.est_competence_active(self.get_competence())
 
     def get_cooldown_info(self):
         """Retourne des informations sur le cooldown de la compétence."""
-        if not self.comp or not co.est_competence_active(self.comp):
+        if not self.get_competence() or not co.est_competence_active(self.get_competence()):
             return None
         return {
-            "actuel": self.cooldown_actuel,
-            "max": self.cooldown_max,
-            "disponible": self.cooldown_actuel <= 0
+            "actuel": self.get_cooldown_actuel(),
+            "max": self.get_cooldown_competence(),
+            "disponible": self.get_cooldown_actuel() <= 0
         }
 
     def get_competence_status(self):
         """Retourne le statut de la compétence pour l'affichage."""
-        if not self.comp:
+        if not self.get_competence():
             return "Aucune compétence"
 
-        if not co.est_competence_active(self.comp):
-            return f"{self.comp} (passive)"
+        if not co.est_competence_active(self.get_competence()):
+            return f"{self.get_competence()} (passive)"
 
-        if self.cooldown_actuel <= 0:
-            return f"{self.comp} (prêt)"
+        if self.get_cooldown_actuel() <= 0:
+            return f"{self.get_competence()} (prêt)"
         else:
-            return f"{self.comp} ({self.cooldown_actuel} tours)"
+            return f"{self.get_competence()} ({self.get_cooldown_actuel()} tours)"
 
     def utiliser_competence(self, cible=None, toutes_unites=None):
         """Utilise la compétence active de l'unité."""
@@ -426,17 +451,17 @@ class Unite:
         attaque_necessaire = co.comp_attaque
 
         if (self.a_competence_active() and
-            (not attaque_necessaire or self.attaque_restantes > 0) and
-                self.cooldown_actuel <= 0):
+            (not attaque_necessaire or self.get_attaque_restantes() > 0) and
+                self.get_cooldown_actuel() <= 0):
 
             success = co.utiliser_competence_active(
-                self, self.comp, cible, toutes_unites)
+                self, self.get_competence(), cible, toutes_unites)
             if success:
                 # Activer le cooldown et marquer comme utilisée ce tour
-                self.cooldown_actuel = self.cooldown_max
+                self.set_cooldown_actuel(self.get_cooldown_competence())
 
                 # Seules certaines compétences ne consomment pas d'attaque
-                if self.comp in co.comp_attaque:
-                    self.attaque_restantes -= 1
+                if self.get_competence() in co.comp_attaque:
+                    self.set_attaque_restantes(self.get_attaque_restantes() - 1)
             return success
         return False

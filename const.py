@@ -11,6 +11,10 @@ MAX_TIER = 4 # Les boss sont tier 4
 MAX_CP = MAX_UNITE * MAX_TIER  # Coût de placement maximum
 MAX_PA = 1000000  # Points d'âmes maximum
 
+# Prix des unités par tier (index 0 non utilisé, -1 = non achetable)
+PRIX_TIER = [-1, 20, 80, 200, -1]
+PRIX_BLOQUE = "Bloqué"
+
 D_DISPLAY_MODE = "windowed" # Valeurs possibles : "windowed", "fullscreen"
 
 D_AIDES = {
