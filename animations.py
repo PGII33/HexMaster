@@ -1,4 +1,4 @@
-import math
+import pygame
 from layout import hex_to_pixel
 
 class Animation:
@@ -20,10 +20,10 @@ class Animation:
 
 def dessiner_unite_animee(jeu, unite, x, y, base_color):
     """Dessine une unité avec animation éventuelle"""
-    if unite.anim and unite.anim.type == "attack" and unite.anim.cible:
-        cible = unite.anim.cible
-        cx, cy = hex_to_pixel(jeu, cible.pos[0], cible.pos[1])
-        progress = unite.anim.progress()
+    if unite.get_anim() and unite.get_anim().type == "attack" and unite.get_anim().cible:
+        cible = unite.get_anim().cible
+        cx, cy = hex_to_pixel(jeu, cible.get_pos()[0], cible.get_pos()[1])
+        progress = unite.get_anim().progress()
         if progress < 0.5:
             # avancer vers la cible
             f = progress * 2 * 0.2
@@ -33,6 +33,5 @@ def dessiner_unite_animee(jeu, unite, x, y, base_color):
         x = x + (cx - x) * f
         y = y + (cy - y) * f
 
-    import pygame
     pygame.draw.circle(jeu.screen, base_color, (x,y), jeu.unit_radius)
     return x, y

@@ -154,6 +154,14 @@ class Unite:
         """ get attribute pos """
         return self._pos
 
+    def get_anim(self):
+        """ get attribute anim """
+        return self._anim
+    
+    def get_vivant(self):
+        """ get attribute vivant """
+        return self._vivant
+
     def set_vivant(self, etat):
         """ set attribute vivant to etat """
         self._vivant = etat
@@ -220,7 +228,7 @@ class Unite:
         accessibles = {}
         file = deque([(self.get_pos(), 0)])
         directions = [(-1, 0), (1, 0), (0, 1), (0, -1), (1, -1), (-1, 1)]
-        occupees = {u.pos for u in toutes_unites if u.is_vivant()
+        occupees = {u.get_pos() for u in toutes_unites if u.get_vivant()
                     and u != self}
 
         while file:

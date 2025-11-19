@@ -200,13 +200,13 @@ class UnitSelector:
         total = 0
         for cls in unit_list:
             tmp = cls("joueur", (0,0))
-            total += tmp.tier
+            total += tmp.get_tier()
         return total
     
     def _get_faction(self, cls):
         """Retourne la faction d'une classe d'unité"""
         tmp = cls("joueur", (0,0))
-        return tmp.faction
+        return tmp.get_faction()
     
     def _can_add_unit(self, cls):
         """Vérifie si on peut ajouter cette unité"""
@@ -219,7 +219,7 @@ class UnitSelector:
         # Vérifier le CP
         if config.get("use_cp", False):
             tmp = cls("joueur", (0,0))
-            cost = tmp.tier
+            cost = tmp.get_tier()
             current_cost = self._calculate_cp_cost(self.selected_units)
             if current_cost + cost > config["cp_disponible"]:
                 return False
@@ -330,11 +330,11 @@ class UnitSelector:
             
             base_lines = [
                 f"{tmp.get_nom()}",
-                f"{tmp.faction}",
+                f"{tmp.get_faction()}",
                 f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
-                f"Attaques: {tmp.attaque_max} | Portée: {tmp.portee}",
-                f"Tier: {tmp.get_tier()} (CP: {tmp.tier})",
-                f"Compétence: {'Aucune' if not comp else comp}",
+                f"Attaques: {tmp.get_attaque_max()} | Portée: {tmp.get_portee()}",
+                f"Tier: {tmp.get_tier()} (CP: {tmp.get_tier()})",
+                f"Compétence: {'Aucune' if not tmp.has_competence() else tmp.get_competence()}",
             ]
             desc_lines = self.wrap_text(comp_desc, card_w - 20)
             card_h = 20 + len(base_lines) * 30 + len(desc_lines) * 26 + 60
@@ -444,10 +444,10 @@ class UnitSelector:
             
             base_lines = [
                 f"{tmp.get_nom()}",
-                f"{tmp.faction}",
+                f"{tmp.get_faction()}",
                 f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
-                f"Attaques: {tmp.attaque_max} | Portée: {tmp.portee}",
-                f"Tier: {tmp.get_tier()} (CP: {tmp.tier})",
+                f"Attaques: {tmp.get_attaque_max()} | Portée: {tmp.get_portee()}",
+                f"Tier: {tmp.get_tier()} (CP: {tmp.get_tier()})",
                 f"Compétence: {comp_nom}",
             ]
             desc_lines = self.wrap_text(comp_desc, card_w - 20)
@@ -455,7 +455,7 @@ class UnitSelector:
             rect = pygame.Rect(x, y, card_w, card_h)
             
             # Couleur de fond selon la disponibilité et la faction
-            faction_color = get_faction_color(tmp.faction)
+            faction_color = get_faction_color(tmp.get_faction())
             if can_add or count_selected > 0:
                 bg_color = faction_color
             else:
@@ -553,7 +553,7 @@ class UnitSelector:
                             btn_text = "Max atteint"
                         elif self.config.get("use_cp", False):
                             tmp = cls("joueur", (0,0))
-                            cost = tmp.tier
+                            cost = tmp.get_tier()
                             current_cost = self._calculate_cp_cost(self.selected_units)
                             if current_cost + cost > self.config["cp_disponible"]:
                                 btn_text = "CP insuffisant"

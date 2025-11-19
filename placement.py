@@ -208,7 +208,7 @@ class PlacementPhase:
                 self.screen.blit(count_txt, (rect.right - 40, rect.y + 10))
                 
                 # Stats rapides
-                stats_txt = self.font.render(f"PV:{tmp.pv} DMG:{tmp.dmg}", True, (200, 200, 255) if is_selected else (60, 60, 60))
+                stats_txt = self.font.render(f"PV:{tmp.get_pv()} DMG:{tmp.get_dmg()}", True, (200, 200, 255) if is_selected else (60, 60, 60))
                 self.screen.blit(stats_txt, (rect.x + 10, rect.y + 35))
             
             card_index += 1

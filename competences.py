@@ -29,7 +29,7 @@ def zombification(self, cible):
         print("Zombification effectuée sur :", cible.get_name())
     if not cible.vivant and cible.nom != "Zombie":
         cible.__class__ = self.__class__
-        cible.__init__(self.equipe, cible.pos)
+        cible.__init__(self.get_equipe(), cible.get_pos())
         cible.pm = 0
         cible.attaque_restantes = 0
 
@@ -39,7 +39,7 @@ def tas_d_os(self):
     from unites_liste import Tas_D_Os
     # Transformation en tas d'os : c'est une nouvelle unité vivante
     self.__class__ = Tas_D_Os
-    self.__init__(self.equipe, self.pos)
+    self.__init__(self.get_equipe(), self.get_pos())
     # Le tas d'os est vivant avec 1 PV (défini dans Tas_D_Os.__init__)
 
 
@@ -54,10 +54,10 @@ def cases_fantomatiques(unite, toutes_unites, q_range=None, r_range=None):
         r_range = range(-1, 7)
 
     accessibles = {}
-    file = deque([(unite.pos, 0)])
+    file = deque([(unite.get_pos(), 0)])
     directions = [(-1, 0), (1, 0), (0, 1), (0, -1), (1, -1), (-1, 1)]
     vus = dict()  # (q, r): cout minimal
-    occupees = {u.pos for u in toutes_unites if u.vivant and u != unite}
+    occupees = {u.get_pos() for u in toutes_unites if u.vivant and u != unite}
     while file:
         (q, r), cout = file.popleft()
         if cout > unite.pm:
@@ -65,7 +65,7 @@ def cases_fantomatiques(unite, toutes_unites, q_range=None, r_range=None):
         if (q, r) in vus and cout >= vus[(q, r)]:
             continue
         vus[(q, r)] = cout
-        if (q, r) != unite.pos and (q, r) not in occupees:
+        if (q, r) != unite.get_pos() and (q, r) not in occupees:
             accessibles[(q, r)] = cout
         for dq, dr in directions:
             new_pos = (q+dq, r+dr)
@@ -94,7 +94,7 @@ def necromancie(self, toutes_unites, plateau, q_range=None, r_range=None):
 
     directions = [(-1, 0), (1, 0), (0, 1), (0, -1), (1, -1), (-1, 1)]
     random.shuffle(directions)  # Pour varier les positions d'invocation
-    q, r = self.pos
+    q, r = self.get_pos()
     for dq, dr in directions:
         new_pos = (q+dq, r+dr)
         new_q, new_r = new_pos
@@ -104,7 +104,7 @@ def necromancie(self, toutes_unites, plateau, q_range=None, r_range=None):
             continue
 
         if plateau.est_case_vide(new_pos, toutes_unites):
-            toutes_unites.append(Squelette(self.equipe, new_pos))
+            toutes_unites.append(Squelette(self.get_equipe(), new_pos))
             break
 
 
@@ -120,7 +120,7 @@ def invocation(self, toutes_unites, plateau, q_range=None, r_range=None):
 
     directions = [(-1, 0), (1, 0), (0, 1), (0, -1), (1, -1), (-1, 1)]
     random.shuffle(directions)  # Pour varier les positions d'invocation
-    q, r = self.pos
+    q, r = self.get_pos()
     candidates = [Goule, Squelette, Spectre, Zombie, Vampire]
     random.shuffle(candidates)
     for _ in range(2):
@@ -134,7 +134,7 @@ def invocation(self, toutes_unites, plateau, q_range=None, r_range=None):
 
             if plateau.est_case_vide(new_pos, toutes_unites):
                 UniteClass = random.choice(candidates)
-                toutes_unites.append(UniteClass(self.equipe, new_pos))
+                toutes_unites.append(UniteClass(self.get_equipe(), new_pos))
                 break
 
 # ========== COMPÉTENCES RELIGIEUX ==========
@@ -142,7 +142,7 @@ def invocation(self, toutes_unites, plateau, q_range=None, r_range=None):
 
 def soin(self, cible):
     """Soigne la cible de 5 points de vie."""
-    if cible.equipe == self.equipe and cible.vivant:
+    if cible.get_equipe() == self.get_equipe() and cible.vivant:
         cible.pv = min(cible.pv + 5, cible.pv_max)
         return True
     return False
@@ -153,7 +153,7 @@ def explosion_sacrée(self, toutes_unites, cible_attaquee=None):
     degats = self.pv  # Utilise ses PV actuels comme dégâts
 
     # Infliger des dégâts uniquement à la cible directe si c'est un ennemi
-    if cible_attaquee and cible_attaquee.equipe != self.equipe and cible_attaquee.vivant:
+    if cible_attaquee and cible_attaquee.get_equipe() != self.get_equipe() and cible_attaquee.vivant:
         # Appliquer la protection si applicable
         degats_infliges = protection(cible_attaquee, degats, toutes_unites)
 
@@ -169,26 +169,25 @@ def explosion_sacrée(self, toutes_unites, cible_attaquee=None):
 def bouclier_de_la_foi(self, toutes_unites):
     """Applique 1 bouclier sur les unités alliées adjacentes."""
     directions = [(-1, 0), (1, 0), (0, 1), (0, -1), (1, -1), (-1, 1)]
-    q, r = self.pos
+    q, r = self.get_pos()
 
     for unite in toutes_unites:
-        if unite.equipe == self.equipe and unite != self and unite.vivant:
-            unite_q, unite_r = unite.pos
+        if unite.get_equipe() == self.get_equipe() and unite != self and unite.get_vivant():
+            unite_q, unite_r = unite.get_pos()
             for dq, dr in directions:
                 if (q+dq, r+dr) == (unite_q, unite_r):
                     # Ajouter un bouclier temporaire
-                    unite.bouclier += 1
+                    unite.set_bouclier(unite.get_bouclier() + 1)
                     break
 
 
 def bénédiction(self, cible):
     """Augmente l'attaque de 2 et applique 1 bouclier à la cible."""
-    if cible.equipe == self.equipe and cible.vivant:
+    if cible.get_equipe() == self.get_equipe() and cible.vivant:
         # Ajouter un buff permanent
         if not hasattr(cible, 'buff_bénédiction'):
-            cible.buff_bénédiction = True
             cible.ba_benediction = 2
-            cible.bouclier += 1
+            cible.set_bouclier(cible.get_bouclier() + 1)
         return True
     return False
 
@@ -197,7 +196,7 @@ def lumière_vengeresse(self, cible):
     """Regagne son attaque lorsqu'il tue un Mort-Vivant."""
     if cible.get_faction() != "Morts-Vivants":
         return
-    self.attaque_restantes += 1
+    self.set_attaque_restantes(self.get_attaque_restantes() + 1)
     # Flag pour indiquer que cette unité devrait continuer à agir
     self._lumiere_vengeresse_activee = True
 
@@ -205,11 +204,11 @@ def lumière_vengeresse(self, cible):
 def aura_sacrée(self, toutes_unites):
     """Bonus de dégâts pour tout les alliés adjacents."""
     directions = [(-1, 0), (1, 0), (0, 1), (0, -1), (1, -1), (-1, 1)]
-    q, r = self.pos
+    q, r = self.get_pos()
 
     for unite in toutes_unites:
-        if unite.equipe == self.equipe and unite != self and unite.vivant:
-            unite_q, unite_r = unite.pos
+        if unite.get_equipe() == self.get_equipe() and unite != self and unite.vivant:
+            unite_q, unite_r = unite.get_pos()
             for dq, dr in directions:
                 if (q+dq, r+dr) == (unite_q, unite_r):
                     # Bonus permanent tant que l'ArchAnge est vivant
@@ -223,7 +222,7 @@ def aura_sacrée(self, toutes_unites):
 def pluie_de_fleches(self, cible_pos, toutes_unites):
     """Attaque AOE sur la case cible et toutes les cases adjacentes."""
     # Vérifier que la case cible est à portée (jusqu'à 3 cases)
-    q_self, r_self = self.pos
+    q_self, r_self = self.get_pos()
     q_cible, r_cible = cible_pos
     distance = max(abs(q_self - q_cible), abs(r_self - r_cible),
                    abs((q_self + r_self) - (q_cible + r_cible)))
@@ -243,7 +242,7 @@ def pluie_de_fleches(self, cible_pos, toutes_unites):
     # Attaquer TOUTES les unités dans les cases affectées (y compris les alliés)
     unites_touchees = []
     for unite in toutes_unites:
-        if unite.pos in cases_affectees and unite.vivant:  # Touche tout sauf l'archer lui-même
+        if unite.get_pos() in cases_affectees and unite.vivant:  # Touche tout sauf l'archer lui-même
             # Appliquer la protection si applicable
             degats_infliges = protection(unite, self.dmg, toutes_unites)
             unites_touchees.append(unite)
@@ -263,7 +262,7 @@ def monture_libere(self, case_pos, toutes_unites):
 
     # Vérifier que la case est adjacente
     directions = [(-1, 0), (1, 0), (0, 1), (0, -1), (1, -1), (-1, 1)]
-    q, r = self.pos
+    q, r = self.get_pos()
     case_adjacente = False
 
     for dq, dr in directions:
@@ -276,20 +275,20 @@ def monture_libere(self, case_pos, toutes_unites):
 
     # Vérifier que la case de destination est libre
     for unite in toutes_unites:
-        if unite.pos == case_pos and unite.vivant:
+        if unite.get_pos() == case_pos and unite.vivant:
             return False
 
     # Créer un cheval sur la position actuelle du cavalier
-    cheval = Cheval(self.equipe, self.pos)
+    cheval = Cheval(self.get_equipe(), self.get_pos())
     toutes_unites.append(cheval)
 
     # Transformer le cavalier en guerrier à la nouvelle position
-    self.pos = case_pos
+    self.set_pos(case_pos)
 
     # Changer les stats pour devenir un guerrier (garder les PV actuels)
     pv_actuels = self.pv
     self.__class__ = Guerrier
-    self.__init__(self.equipe, self.pos)
+    self.__init__(self.get_equipe(), self.get_pos())
     self.pv = pv_actuels  # Conserver les PV du cavalier
     self.pm = 0  # Plus de mouvement après la transformation
     self.attaque_restantes = self.attaque_max  # Peut attaquer après transformation
@@ -303,14 +302,14 @@ def commandement(unite, cible, toutes_unites):
     # Vérifier si c'est un allié
     if not isinstance(cible, (tuple, list)):
         # Si c'est une unité directement
-        if cible.equipe != unite.equipe or not cible.vivant:
+        if cible.get_equipe() != unite.get_equipe() or not cible.vivant:
             return False
 
         if hasattr(cible, 'ba_commandement'):
             return False  # Ne peut pas bénéficier de commandement plusieurs fois
 
         # Vérifier la portée (2 cases)
-        if hex_distance(unite.pos, cible.pos) > comp_portee["commandement"]:
+        if hex_distance(unite.get_pos(), cible.get_pos()) > comp_portee["commandement"]:
             return False
 
         # Appliquer les boosts
@@ -332,7 +331,7 @@ def divertissement(self, toutes_unites):
 
     # Trouver toutes les unités adjacentes (alliées et ennemies)
     directions = [(-1, 0), (1, 0), (0, 1), (0, -1), (1, -1), (-1, 1)]
-    q, r = self.pos
+    q, r = self.get_pos()
 
     unites_diverties = []
     for dq, dr in directions:
@@ -340,7 +339,7 @@ def divertissement(self, toutes_unites):
 
         # Chercher une unité à cette position (peu importe l'équipe)
         for unite in toutes_unites:
-            if (unite.pos == pos_adjacente and
+            if (unite.get_pos() == pos_adjacente and
                 unite.vivant and
                     unite != self):  # Exclure le bouffon lui-même
 
@@ -358,14 +357,14 @@ def manipulation(self, toutes_unites):
     unites_manipulees = []
 
     for unite in toutes_unites:
-        if (unite.equipe != self.equipe and
+        if (unite.get_equipe() != self.get_equipe() and
             unite.vivant and
             unite.pv <= 3 and
                 not hasattr(unite, 'manipulee_par')):  # Éviter la double manipulation
 
             # Marquer l'unité comme manipulée
-            unite.equipe_originale = unite.equipe
-            unite.equipe = self.equipe
+            unite.equipe_originale = unite.get_equipe()
+            unite.set_equipe(self.get_equipe())
             unite.manipulee_par = self  # Référence au marionettiste qui manipule
 
             # L'unité manipulée récupère ses actions
@@ -406,7 +405,7 @@ def verifier_conditions_manipulation(toutes_unites):
 def liberer_unite_manipulee(unite):
     """Libère une unité manipulée et nettoie ses attributs."""
     if hasattr(unite, 'equipe_originale'):
-        unite.equipe = unite.equipe_originale
+        unite.set_equipe(unite.equipe_originale)
         delattr(unite, 'equipe_originale')
     if hasattr(unite, 'manipulee_par'):
         delattr(unite, 'manipulee_par')
@@ -436,7 +435,7 @@ def protection(cible_originale, degats, toutes_unites):
     """
     # Trouver tous les protecteurs connectés (adjacents à la cible ou entre eux)
     directions = [(-1, 0), (1, 0), (0, 1), (0, -1), (1, -1), (-1, 1)]
-    q, r = cible_originale.pos
+    q, r = cible_originale.get_pos()
 
     # 1. Trouver tous les protecteurs connectés (BFS)
     protecteurs = set()
@@ -446,7 +445,7 @@ def protection(cible_originale, degats, toutes_unites):
     for dq, dr in directions:
         pos_adj = (q + dq, r + dr)
         for unite in toutes_unites:
-            if (unite.comp == "protection" and unite.pos == pos_adj and unite.vivant and unite.equipe == cible_originale.equipe):
+            if (unite.comp == "protection" and unite.get_pos() == pos_adj and unite.vivant and unite.get_equipe() == cible_originale.get_equipe()):
                 protecteurs.add(unite)
                 queue.append(unite)
                 visited.add(unite)
@@ -454,12 +453,12 @@ def protection(cible_originale, degats, toutes_unites):
     # Étendre à tous les protecteurs connectés (adjacents entre eux)
     while queue:
         current = queue.pop(0)
-        cq, cr = current.pos
+        cq, cr = current.get_pos()
         for dq, dr in directions:
             pos_adj = (cq + dq, cr + dr)
             for unite in toutes_unites:
-                if (unite.pos == pos_adj and unite.vivant
-                    and unite.equipe == cible_originale.equipe
+                if (unite.get_pos() == pos_adj and unite.vivant
+                    and unite.get_equipe() == cible_originale.get_equipe()
                     and unite.get_comp() == "protection"):
                     if unite not in visited:
                         protecteurs.add(unite)
@@ -527,11 +526,11 @@ def enracinement(self):
 def vague_apaisante(self, toutes_unites):
     """Soigne les unités alliées adjacentes de 2 PV (comme bouclier de la foi mais avec soin)."""
     directions = [(-1, 0), (1, 0), (0, 1), (0, -1), (1, -1), (-1, 1)]
-    q, r = self.pos
+    q, r = self.get_pos()
 
     for unite in toutes_unites:
-        if unite.equipe == self.equipe and unite != self and unite.vivant:
-            unite_q, unite_r = unite.pos
+        if unite.get_equipe() == self.get_equipe() and unite != self and unite.vivant:
+            unite_q, unite_r = unite.get_pos()
             for dq, dr in directions:
                 if (q+dq, r+dr) == (unite_q, unite_r):
                     # Soigner l'unité adjacente
@@ -546,7 +545,7 @@ def cristalisation(self, cible_pos, toutes_unites):
     """Crée un Cristal sur une case adjacente à 1 de portée."""
     from unites_liste import Cristal
     directions = [(-1, 0), (1, 0), (0, 1), (0, -1), (1, -1), (-1, 1)]
-    q, r = self.pos
+    q, r = self.get_pos()
 
     # Vérifier si la cible est adjacente
     for dq, dr in directions:
@@ -554,12 +553,12 @@ def cristalisation(self, cible_pos, toutes_unites):
             # Vérifier que la case est vide
             case_libre = True
             for unite in toutes_unites:
-                if unite.pos == cible_pos and unite.vivant:
+                if unite.get_pos() == cible_pos and unite.vivant:
                     case_libre = False
                     break
 
             if case_libre:
-                cristal = Cristal(self.equipe, cible_pos)
+                cristal = Cristal(self.get_equipe(), cible_pos)
                 toutes_unites.append(cristal)
                 return True
 
@@ -590,7 +589,7 @@ def combustion_differee(attaquant, cible):
     """Marque la cible pour mourir dans 3 tours."""
     if not hasattr(cible, 'combustion_differee'):
         cible.combustion_differee = 3
-        cible.combustion_attaquant = attaquant.equipe
+        cible.combustion_attaquant = attaquant.get_equipe()
         print(
             f"🔥 {cible.nom} est marqué par la combustion différée! Mort dans 3 tours.")
 
@@ -615,7 +614,7 @@ def gerer_combustion_differee(unite, toutes_unites):
 
 def regard_mortel(attaquant, cible):
     """Renvoie 0 si la cible est de tier 2 ou moins, sinon renvoie les dégâts normaux."""
-    if cible.tier <= 2 and cible.equipe != attaquant.equipe and cible.vivant:
+    if cible.tier <= 2 and cible.get_equipe() != attaquant.get_equipe() and cible.vivant:
         print(
             f"{attaquant.nom} utilise son regard mortel sur {cible.nom} (tier {cible.tier})!")
         print(f"{cible.nom} succombe au regard mortel!")
@@ -653,7 +652,7 @@ def vol(defenseur, degats):
 
 def venin_incapacitant(attaquant, cible):
     """Empêche la cible de se déplacer au prochain tour."""
-    if cible.vivant and cible.equipe != attaquant.equipe:
+    if cible.vivant and cible.get_equipe() != attaquant.get_equipe():
         # Marquer la cible comme empoisonnée (ne peut pas bouger au prochain tour)
         cible.venin_incapacite = True
         print(
@@ -664,12 +663,12 @@ def venin_incapacitant(attaquant, cible):
 
 def sedition_venimeuse(attaquant, cible, toutes_unites):
     """La créature attaquée attaque une autre créature ennemie adjacente s'il y en a une."""
-    if not cible.vivant or cible.equipe == attaquant.equipe:
+    if not cible.vivant or cible.get_equipe() == attaquant.get_equipe():
         return False
 
     # Trouver les créatures alliées adjacentes à la cible
     directions = [(-1, 0), (1, 0), (0, 1), (0, -1), (1, -1), (-1, 1)]
-    q, r = cible.pos
+    q, r = cible.get_pos()
 
     cibles_possibles = []
     for dq, dr in directions:
@@ -677,9 +676,9 @@ def sedition_venimeuse(attaquant, cible, toutes_unites):
 
         # Chercher une unité alliée de la cible à cette position
         for unite in toutes_unites:
-            if (unite.pos == pos_adjacente and
+            if (unite.get_pos() == pos_adjacente and
                 unite.vivant and
-                unite.equipe == cible.equipe and  # Allié de la cible
+                unite.get_equipe() == cible.get_equipe() and  # Allié de la cible
                     unite != cible):  # Pas la cible elle-même
 
                 cibles_possibles.append(unite)
@@ -712,12 +711,12 @@ def tir_precis(attaquant, cible, toutes_unites):
         return False
 
     # Vérifier que la cible est ennemie
-    if cible.equipe == attaquant.equipe:
+    if cible.get_equipe() == attaquant.get_equipe():
         return False
 
     # Calculer la distance
-    q1, r1 = attaquant.pos
-    q2, r2 = cible.pos
+    q1, r1 = attaquant.get_pos()
+    q2, r2 = cible.get_pos()
     distance = max(abs(q1 - q2), abs(r1 - r2), abs((q1 + r1) - (q2 + r2)))
 
     # Vérifier la portée étendue (portée normale + 1)
@@ -905,11 +904,11 @@ def utiliser_competence_active(unite, nom_competence, cible, toutes_unites=None)
     elif nom_competence == "cristalisation":
         return cristalisation(unite, cible, toutes_unites)
     elif nom_competence == "pluie de flèches":
-        # Gérer le cas où cible est déjà une position (tuple) ou un objet avec .pos
+        # Gérer le cas où cible est déjà une position (tuple) ou un objet avec .get_pos()
         if isinstance(cible, tuple):
             return pluie_de_fleches(unite, cible, toutes_unites)
         else:
-            return pluie_de_fleches(unite, cible.pos if cible else None, toutes_unites)
+            return pluie_de_fleches(unite, cible.get_pos() if cible else None, toutes_unites)
     elif nom_competence == "monture libéré":
         return monture_libere(unite, cible, toutes_unites)
     elif nom_competence == "commandement":

@@ -439,10 +439,10 @@ def sc_position_competence(unite, position: Tuple[int, int], toutes_unites) -> f
     """
     score = 0.0
 
-    if not unite.comp:
+    if not unite.get_competence():
         return score  # Pas de compétence active
 
-    nom_competence = unite.comp
+    nom_competence = unite.get_competence()
 
     if not est_competence_active(nom_competence):
         return score  # Pas une compétence active
@@ -455,11 +455,11 @@ def sc_position_competence(unite, position: Tuple[int, int], toutes_unites) -> f
     # Évaluer les cibles accessibles depuis cette position
     if nom_competence == "soin":
         # Pour le soin : privilégier les positions qui permettent de soigner des alliés blessés
-        allies = [u for u in toutes_unites if u.vivant and u.equipe ==
-                  unite.equipe]
+        allies = [u for u in toutes_unites if u.get_vivant() and u.get_equipe() ==
+                  unite.get_equipe()]
         for allie in allies:
-            if hex_distance(position, allie.pos) <= portee_comp:
-                pv_manquants = allie.pv_max - allie.pv
+            if hex_distance(position, allie.get_pos()) <= portee_comp:
+                pv_manquants = allie.get_pv_max() - allie.get_pv()
                 if pv_manquants > 0:
                     # Score basé sur les PV manquants et l'importance de l'allié
                     # 25 points par PV manquant (max 125)
@@ -572,22 +572,21 @@ def sc_case_base(unite, position: Tuple[int, int], toutes_unites) -> float:
     score = 0.0
 
     # Séparer alliés et ennemis
-    allies = [u for u in toutes_unites if u.vivant and u.equipe ==
-              unite.equipe and u != unite]
-    ennemis = [u for u in toutes_unites if u.vivant and u.equipe != unite.equipe]
+    allies = [u for u in toutes_unites if u.get_vivant() and u.get_equipe() ==
+              unite.get_equipe() and u != unite]
+    ennemis = [u for u in toutes_unites if u.get_vivant() and u.get_equipe() != unite.get_equipe()]
 
     # 1. Proximité des alliés (bonus modéré)
-    allies_adjacents = [u for u in allies if est_adjacent(position, u.pos)]
+    allies_adjacents = [u for u in allies if est_adjacent(position, u.get_pos())]
     score += len(allies_adjacents) * 5  # 5 points par allié adjacent
 
     # Bonus pour être près des alliés sans être collé (distance 2)
     allies_proches = [u for u in allies if 1 <
-                      hex_distance(position, u.pos) <= 2]
+                      hex_distance(position, u.get_pos()) <= 2]
     score += len(allies_proches) * 3  # 3 points par allié proche
 
     # 2. Analyse des ennemis adjacents basée sur la force relative
-    ennemis_adjacents = [u for u in ennemis if est_adjacent(position, u.pos)]
-
+    ennemis_adjacents = [u for u in ennemis if est_adjacent(position, u.get_pos())]
     # bonus/malus selon la force relative des ennemis adjacents
     for ennemi in ennemis_adjacents:
         bonus_force = calculer_bonus_force_relative(unite, ennemi)

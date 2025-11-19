@@ -136,14 +136,14 @@ def dessiner(jeu):
     # unités
     for u in jeu.unites:
         # Afficher seulement les unités vivantes
-        if not u.vivant:
+        if not u.get_vivant():
             continue
-        x, y = hex_to_pixel(jeu, u.pos[0], u.pos[1])
+        x, y = hex_to_pixel(jeu, u.get_pos()[0], u.get_pos()[1])
 
         # Couleurs selon l'équipe
-        if u.equipe == 'joueur':
+        if u.get_equipe() == 'joueur':
             color = VERT
-        elif u.equipe == 'joueur2':
+        elif u.get_equipe() == 'joueur2':
             color = (50, 50, 200)  # Bleu pour joueur 2
         else:
             color = ROUGE  # Rouge pour IA/ennemi

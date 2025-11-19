@@ -196,25 +196,24 @@ class Jeu:
     def update(self, dt_ms):
         # Mettre à jour les animations
         for u in self.unites:
-            if u.anim:
-                if u.anim.update(dt_ms):
-                    u.anim = None
+            if u.get_anim():
+                if u.get_anim().update(dt_ms):
+                    u.set_anim(None)
                     # Vérifier si c'est une explosion sacrée qui doit mourir après l'animation
                     if hasattr(u, 'explosion_sacree_pending') and u.explosion_sacree_pending:
                         u.explosion_sacree_pending = False
-                        u.vivant = False
-                        u.pv = 0
+                        u.set_vivant(False)
+                        u.set_pv(0)
 
         # Vérifier fin
-        joueurs = [u for u in self.unites if u.equipe == "joueur" and u.vivant]
-
+        joueurs = [u for u in self.unites if u.get_equipe() == "joueur" and u.get_vivant()]
         if self.versus_mode:
             # En mode versus, vérifier joueur2 au lieu d'ennemi
-            adversaires = [u for u in self.unites if u.equipe ==
-                           "joueur2" and u.vivant]
+            adversaires = [u for u in self.unites if u.get_equipe() ==
+                           "joueur2" and u.get_vivant()]
         else:
-            adversaires = [u for u in self.unites if u.equipe ==
-                           "ennemi" and u.vivant]
+            adversaires = [u for u in self.unites if u.get_equipe() ==
+                           "ennemi" and u.get_vivant()]
 
         if not joueurs or not adversaires:
             self.finished = True
@@ -236,7 +235,7 @@ class Jeu:
         if not self.versus_mode and self.tour == "ennemi":
             if not self.ia_busy:
                 adversaires_courants = [
-                    u for u in self.unites if u.equipe == "ennemi" and u.vivant]
+                    u for u in self.unites if u.get_equipe() == "ennemi" and u.get_vivant()]
                 self.ia_queue = adversaires_courants[:]
                 self.ia_index = 0
                 self.ia_busy = True
@@ -247,14 +246,14 @@ class Jeu:
                 if self.ia_timer_ms <= 0:
                     e = self.ia_queue[self.ia_index]
                     joueurs_courants = [
-                        u for u in self.unites if u.equipe == "joueur" and u.vivant]
+                        u for u in self.unites if u.get_equipe() == "joueur" and u.get_vivant()]
 
                     # Mémoriser l'état avant l'action IA
-                    attaques_avant = e.attaque_restantes if hasattr(
-                        e, 'attaque_restantes') else 0
-                    position_avant = e.pos
+                    attaques_avant = e.get_attaque_restantes() if hasattr(
+                        e, 'get_attaque_restantes') else 0
+                    position_avant = e.get_pos()
                     ennemis_vivants_avant = len(
-                        [u for u in self.unites if u.equipe != e.equipe and u.vivant])
+                        [u for u in self.unites if u.get_equipe() != e.get_equipe() and u.get_vivant()])
 
                     # Protection contre les boucles infinies : compteur de tentatives
                     if not hasattr(e, '_ia_tentatives_tour'):
@@ -338,7 +337,7 @@ class Jeu:
         """Passe au tour suivant et réinitialise les actions/compétences passives."""
         # Appeler fin_tour pour toutes les unités de l'équipe qui termine son tour
         for u in self.unites:
-            if u.equipe == self.tour and u.vivant and hasattr(u, 'fin_tour'):
+            if u.get_equipe() == self.tour and u.get_vivant():
                 u.fin_tour(self.unites)
 
         # Désélectionner l'unité en cours
