@@ -6,7 +6,6 @@ import json
 import os
 from typing import Dict, List, Tuple, Optional, Any
 from enum import Enum
-import unites
 from const import D_CP, MAX_UNITE
 from unites_liste import CLASSES_UNITES
 
@@ -154,8 +153,8 @@ class NiveauConfig:
             "faction_unique_requise", False)
         config.faction_imposee = data.get("faction_imposee", "")
 
-        config.cp_disponible = data.get("cp_disponible", 5)
-        config.max_unites = data.get("max_unites", 14)
+        config.cp_disponible = data.get("cp_disponible", D_CP)
+        config.max_unites = data.get("max_unites", MAX_UNITE)
 
         # Unités ennemies
         unites_ennemis_data = data.get("unites_ennemis", [])
@@ -173,7 +172,7 @@ class NiveauConfig:
         return config
 
 
-def _convert_unit_names_to_classes(unit_list: List[Tuple[str, Tuple[int, int]]]) -> List[Tuple[type, Tuple[int, int]]]:
+def _convert_unit_names_to_classes(unit_list: List[Tuple[str, Tuple[int, int]]]) -> List[Tuple[type, Tuple[int, int]]]:  # pylint: disable=line-too-long
     """Convertit les noms d'unités en classes d'unités"""
     converted = []
     for unit_name, pos in unit_list:
