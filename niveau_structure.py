@@ -214,5 +214,5 @@ def obtenir_factions_disponibles() -> List[str]:
     for cls in CLASSES_UNITES:
         # Créer une instance temporaire pour obtenir la faction
         instance = cls("temp", (0, 0))
-        factions.add(instance.faction)
+        factions.add(instance.get_faction())
     return sorted(list(factions))

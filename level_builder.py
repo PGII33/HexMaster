@@ -1,6 +1,7 @@
 """ level_builder.py - Interface de création et modification de niveaux"""
 import sys
 import os
+import re
 import shutil
 import pygame
 from niveau_structure import NiveauConfig, TypeRestriction
@@ -52,7 +53,7 @@ class LevelBuilder:
             "numero": "01",
             "nom": "",
             "description": "",
-            "chapitre": ""
+            "chapitre": "CUSTOM"
         }
         self.field_rects = {}
         self.factions_disponibles = obtenir_factions_disponibles()
@@ -350,52 +351,66 @@ class LevelBuilder:
             custom_path.mkdir(parents=True, exist_ok=True)
             return niveaux
 
-        # Parcourir les dossiers dans custom_levels (comme pour la campagne)
-        for niveau_folder in sorted(os.listdir(custom_path)):
-            niveau_folder_path = custom_path / niveau_folder
-            if not niveau_folder_path.is_dir():
-                continue
+        # Fonction récursive pour parcourir les dossiers
+        def parcourir_dossier(dossier_path, chapitre_parent="Niveaux Custom"):
+            for item in sorted(os.listdir(dossier_path)):
+                item_path = dossier_path / item
+                
+                # Si c'est un dossier
+                if item_path.is_dir():
+                    # Chercher niveau.json dans ce dossier
+                    niveau_file = item_path / "niveau.json"
+                    if niveau_file.exists():
+                        try:
+                            config = charger_niveau(niveau_file)
+                            if config:
+                                # Utiliser le chapitre de la config, sinon "CUSTOM", sinon le nom du dossier parent
+                                chapitre_config = getattr(config, 'chapitre', None)
+                                if chapitre_config and chapitre_config.strip():
+                                    chapitre = chapitre_config
+                                elif chapitre_parent != "Niveaux Custom":
+                                    chapitre = chapitre_parent
+                                else:
+                                    chapitre = "CUSTOM"
+                                niveaux.append({
+                                    "nom": config.nom or item,
+                                    "chapitre": chapitre,
+                                    "numero": getattr(config, 'numero', 0),
+                                    "chemin": niveau_file,
+                                    "config": config,
+                                    "type": "custom"
+                                })
+                        except Exception as e:
+                            print(f"Erreur lors du chargement du niveau custom {niveau_file}: {e}")
+                    else:
+                        # Pas de niveau.json, peut-être un sous-dossier de chapitre
+                        # Parcourir récursivement avec le nom du dossier comme chapitre
+                        parcourir_dossier(item_path, item)
+                
+                # Si c'est un fichier .json directement (compatibilité ancienne)
+                elif item.endswith(".json"):
+                    try:
+                        config = charger_niveau(item_path)
+                        if config:
+                            # Utiliser le chapitre de la config, sinon "CUSTOM"
+                            chapitre_config = getattr(config, 'chapitre', None)
+                            if chapitre_config and chapitre_config.strip():
+                                chapitre = chapitre_config
+                            else:
+                                chapitre = "CUSTOM"
+                            niveaux.append({
+                                "nom": config.nom or item[:-5],
+                                "chapitre": chapitre,
+                                "numero": getattr(config, 'numero', 0),
+                                "chemin": item_path,
+                                "config": config,
+                                "type": "custom"
+                            })
+                    except Exception as e:
+                        print(f"Erreur lors du chargement du niveau custom {item_path}: {e}")
 
-            # Chercher le fichier niveau.json dans le dossier
-            niveau_file = niveau_folder_path / "niveau.json"
-            if niveau_file.exists():
-                try:
-                    config = charger_niveau(niveau_file)
-                    if config:
-                        # Utiliser le nom du dossier si pas de nom dans la config
-                        nom_dossier = niveau_folder
-                        niveaux.append({
-                            "nom": config.nom or nom_dossier,
-                            "chapitre": "Niveaux Custom",
-                            "numero": getattr(config, 'numero', 0),
-                            "chemin": niveau_file,
-                            "config": config,
-                            "type": "custom"
-                        })
-                except Exception as e:
-                    print(
-                        f"Erreur lors du chargement du niveau custom {niveau_file}: {e}")
-
-        # Aussi chercher les fichiers .json directement (pour compatibilité)
-        for filename in sorted(os.listdir(custom_path)):
-            if filename.endswith(".json"):
-                niveau_file = os.path.join(custom_path, filename)
-                try:
-                    config = charger_niveau(niveau_file)
-                    if config:
-                        # Utiliser le nom du fichier si pas de nom dans la config
-                        nom_fichier = filename[:-5]  # Enlever .json
-                        niveaux.append({
-                            "nom": config.nom or nom_fichier,
-                            "chapitre": "Niveaux Custom",
-                            "numero": getattr(config, 'numero', 0),
-                            "chemin": niveau_file,
-                            "config": config,
-                            "type": "custom"
-                        })
-                except Exception as e:
-                    print(
-                        f"Erreur lors du chargement du niveau custom {niveau_file}: {e}")
+        # Lancer le parcours
+        parcourir_dossier(custom_path)
 
         return niveaux
 
@@ -527,7 +542,7 @@ class LevelBuilder:
                 unites_disponibles.append({
                     'classe': nom_classe,
                     'nom': instance_temp.nom,
-                    'faction': instance_temp.faction,
+                    'faction': instance_temp.get_faction(),
                     'tier': instance_temp.tier,
                     'prix': instance_temp.prix if hasattr(instance_temp, 'prix') else 0
                 })
@@ -561,7 +576,7 @@ class LevelBuilder:
                 unites_disponibles.append({
                     'classe': nom_classe,
                     'nom': instance_temp.nom,
-                    'faction': instance_temp.faction,
+                    'faction': instance_temp.get_faction(),
                     'tier': instance_temp.tier
                 })
 
@@ -688,7 +703,7 @@ class LevelBuilder:
             "numero": "01",
             "nom": "",
             "description": "",
-            "chapitre": ""
+            "chapitre": "CUSTOM"
         }
         # Réinitialiser le niveau sélectionné si on était en mode modification
         self.niveau_selectionne = None
@@ -807,15 +822,22 @@ class LevelBuilder:
                 print(f"- {erreur}")
             return
 
-        # Créer le chemin de sauvegarde
-        if self.niveau_config.chapitre:
-            chemin_dossier = f"Campagne/{self.niveau_config.chapitre.replace(' ', '_')}"
+        # TOUJOURS sauvegarder dans custom_levels (jamais dans Campagne)
+        chemin_base = D_CUSTOM_LEVELS_PATH
+        
+        # Si un chapitre est spécifié, créer un sous-dossier dans custom_levels
+        if self.niveau_config.chapitre and self.niveau_config.chapitre.strip():
+            # Nettoyer le nom du chapitre
+            chapitre_nettoye = self.niveau_config.chapitre.strip().replace(' ', '_')
+            chemin_dossier = os.path.join(chemin_base, chapitre_nettoye)
         else:
-            chemin_dossier = D_CUSTOM_LEVELS_PATH
+            # Pas de chapitre -> directement dans custom_levels
+            chemin_dossier = chemin_base
 
         if not os.path.exists(chemin_dossier):
             os.makedirs(chemin_dossier)
 
+        # Structure: dossier/numero_nom/niveau.json
         nom_fichier = f"{self.niveau_config.numero:02d}_{self.niveau_config.nom.replace(' ', '_')}"
         chemin_niveau = os.path.join(chemin_dossier, nom_fichier)
         os.makedirs(chemin_niveau, exist_ok=True)
@@ -824,7 +846,8 @@ class LevelBuilder:
 
         try:
             sauvegarder_niveau(self.niveau_config, chemin_fichier)
-            print(f"Niveau sauvegardé: {chemin_fichier}")
+            print(f"Niveau custom sauvegardé: {chemin_fichier}")
+            print(f"  → Vous pouvez le charger via 'Level Builder > Jouer Niveau'")
         except Exception as e:
             print(f"Erreur lors de la sauvegarde: {e}")
 
@@ -834,7 +857,7 @@ class LevelBuilder:
             "numero": "01",
             "nom": "",
             "description": "",
-            "chapitre": ""
+            "chapitre": "CUSTOM"
         }
         for key, default_value in defaults.items():
             if key not in self.text_data:
@@ -1084,8 +1107,6 @@ class LevelBuilder:
 
     def afficher_selection_niveau_custom(self):
         """Affiche l'interface de sélection de niveau custom à jouer"""
-        from const import D_CUSTOM_LEVELS_PATH
-        
         self.screen.fill((255, 255, 255))
         self.ui.draw_title("Jouer un Niveau Custom", 50)
 
@@ -1093,9 +1114,9 @@ class LevelBuilder:
 
         if not hasattr(self, 'niveaux_disponibles') or not self.niveaux_disponibles:
             self.ui.draw_text(
-                f"Aucun niveau custom trouvé dans le dossier {D_CUSTOM_LEVELS_PATH}/", 50, y, color=(255, 0, 0))
+                "Aucun niveau custom trouvé dans le dossier custom_levels/", 50, y, color=(255, 0, 0))
             self.ui.draw_text(
-                f"Créez d'abord des niveaux et sauvegardez-les dans {D_CUSTOM_LEVELS_PATH}/", 50, y + 30, color=(100, 100, 100))
+                "Créez d'abord des niveaux et sauvegardez-les dans custom_levels/", 50, y + 30, color=(100, 100, 100))
             self.ui.draw_buttons()
             return
 
@@ -1327,7 +1348,7 @@ class LevelBuilder:
             # Afficher plus d'unités
             for _, cls in enumerate(self.enemy_units_selected[:12]):
                 tmp = cls("ennemi", (0, 0))
-                unit_text = f"- {tmp.get_nom()} ({tmp.faction})"
+                unit_text = f"- {tmp.get_nom()} ({tmp.get_faction()})"
                 self.ui.draw_text(unit_text, col1_x + 20, y,
                                   font=self.ui.font_small)
                 y += 25
@@ -1390,7 +1411,7 @@ class LevelBuilder:
                         c for c in CLASSES_UNITES if c.__name__ == nom_classe)
                     instance_temp = classe(equipe=0, pos=(0, 0))
                     self.ui.draw_text(
-                        f"• {instance_temp.nom} ({instance_temp.faction})", 70, y, font=self.ui.font_small)
+                        f"• {instance_temp.nom} ({instance_temp.get_faction()})", 70, y, font=self.ui.font_small)
                     y += 25
                 except:
                     self.ui.draw_text(
