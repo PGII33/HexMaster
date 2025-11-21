@@ -788,6 +788,8 @@ class LevelBuilder:
 
     def sauvegarder_niveau(self):
         """Sauvegarde le niveau (nouveau ou modifié)"""
+        from const import D_CUSTOM_LEVELS_PATH
+        
         # Synchroniser les données de configuration avec les champs de texte
         self._synchroniser_config_avec_ui()
 
@@ -809,7 +811,7 @@ class LevelBuilder:
         if self.niveau_config.chapitre:
             chemin_dossier = f"Campagne/{self.niveau_config.chapitre.replace(' ', '_')}"
         else:
-            chemin_dossier = "custom_levels"
+            chemin_dossier = D_CUSTOM_LEVELS_PATH
 
         if not os.path.exists(chemin_dossier):
             os.makedirs(chemin_dossier)
@@ -1082,6 +1084,8 @@ class LevelBuilder:
 
     def afficher_selection_niveau_custom(self):
         """Affiche l'interface de sélection de niveau custom à jouer"""
+        from const import D_CUSTOM_LEVELS_PATH
+        
         self.screen.fill((255, 255, 255))
         self.ui.draw_title("Jouer un Niveau Custom", 50)
 
@@ -1089,9 +1093,9 @@ class LevelBuilder:
 
         if not hasattr(self, 'niveaux_disponibles') or not self.niveaux_disponibles:
             self.ui.draw_text(
-                "Aucun niveau custom trouvé dans le dossier custom_levels/", 50, y, color=(255, 0, 0))
+                f"Aucun niveau custom trouvé dans le dossier {D_CUSTOM_LEVELS_PATH}/", 50, y, color=(255, 0, 0))
             self.ui.draw_text(
-                "Créez d'abord des niveaux et sauvegardez-les dans custom_levels/", 50, y + 30, color=(100, 100, 100))
+                f"Créez d'abord des niveaux et sauvegardez-les dans {D_CUSTOM_LEVELS_PATH}/", 50, y + 30, color=(100, 100, 100))
             self.ui.draw_buttons()
             return
 

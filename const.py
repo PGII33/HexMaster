@@ -5,6 +5,9 @@ D_PA = 0  # Points d'âmes de départ
 D_CP = 5  # Coût de placement de départ
 D_UNITES = ["Goule"]  # Unités de départ (liste de noms de classes)
 
+# Chemins de fichiers
+D_CUSTOM_LEVELS_PATH = "custom_levels"  # Chemin du dossier des niveaux personnalisés
+
 # Valeurs par défaut
 MAX_UNITE = 24 # 8*3 # Nombre maximum d'unités plaçables sur la carte
 MAX_TIER = 4 # Les boss sont tier 4

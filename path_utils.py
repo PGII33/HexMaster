@@ -2,7 +2,6 @@
 Utilitaires pour la gestion des chemins de fichiers,
 compatible avec les versions EXE (PyInstaller) et développement.
 """
-import os
 import sys
 import shutil
 from pathlib import Path
@@ -33,6 +32,8 @@ def get_resource_path(relative_path):
 
 def ensure_user_directories():
     """S'assure que les répertoires utilisateur existent et copie les ressources par défaut"""
+    from const import D_CUSTOM_LEVELS_PATH
+    
     user_data_dir = get_user_data_dir()
     
     # Créer le répertoire principal des données utilisateur
@@ -41,7 +42,7 @@ def ensure_user_directories():
     # Répertoires à créer/copier
     directories_to_setup = [
         ("Campagne", True),  # (nom_dossier, copier_depuis_exe)
-        ("custom_levels", False)
+        (D_CUSTOM_LEVELS_PATH, False)
     ]
     
     for dir_name, copy_from_exe in directories_to_setup:
@@ -64,8 +65,13 @@ def ensure_user_directories():
                 user_dir.mkdir(exist_ok=True)
                 print(f"✅ Dossier {dir_name} créé")
 
-def get_levels_path(folder_name="custom_levels"):
+def get_levels_path(folder_name=None):
     """Retourne le chemin vers un dossier de niveaux (toujours externe)"""
+    from const import D_CUSTOM_LEVELS_PATH
+    
+    if folder_name is None:
+        folder_name = D_CUSTOM_LEVELS_PATH
+    
     if getattr(sys, 'frozen', False):
         # Mode EXE : utiliser les données utilisateur externes
         return get_user_data_dir() / folder_name
@@ -79,7 +85,8 @@ def get_campaign_path():
 
 def get_custom_levels_path():
     """Retourne le chemin vers les niveaux custom"""
-    return get_levels_path("custom_levels")
+    from const import D_CUSTOM_LEVELS_PATH
+    return get_levels_path(D_CUSTOM_LEVELS_PATH)
 
 def get_save_path():
     """Retourne le chemin vers le fichier de sauvegarde"""
