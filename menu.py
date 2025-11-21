@@ -566,8 +566,16 @@ class HexaMaster:
                                     # Appliquer les récompenses du niveau (campagne)
                                     niveau_config = self.jeu.niveau_config
                                     if hasattr(niveau_config, 'chapitre') and hasattr(niveau_config, 'numero'):
-                                        from sauvegarde import appliquer_recompenses_niveau
-                                        appliquer_recompenses_niveau(niveau_config, niveau_config.chapitre, niveau_config.numero)
+                                        from sauvegarde import marquer_niveau_complete, appliquer_recompenses
+                                        
+                                        # Convertir le nom de chapitre si nécessaire
+                                        chapitre_display = niveau_config.chapitre
+                                        if "_" in chapitre_display:
+                                            chapitre_display = chapitre_display.split("_", 1)[1].replace("_", " ")
+                                        
+                                        # Marquer comme complété et appliquer récompenses
+                                        marquer_niveau_complete(chapitre_display, niveau_config.numero)
+                                        appliquer_recompenses(niveau_config)
                                 
                                 self.etat = "menu"
                                 self.jeu = None

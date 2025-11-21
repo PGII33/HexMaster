@@ -217,19 +217,16 @@ class ScrollableList:
 
 
 class ProgressionManager:
-    """Gestionnaire de progression de campagne"""
+    """Gestionnaire de progression de campagne."""
     
     @staticmethod
     def marquer_niveau_complete(sauvegarde_data: dict, chapitre: str, numero: int):
-        """Marque un niveau comme complété dans la sauvegarde"""
+        """Marque un niveau comme complété dans la sauvegarde."""
         if "campagne_progression" not in sauvegarde_data:
             sauvegarde_data["campagne_progression"] = {}
         
         if chapitre not in sauvegarde_data["campagne_progression"]:
-            sauvegarde_data["campagne_progression"][chapitre] = {
-                "niveaux_completes": [],
-                "disponible": True
-            }
+            sauvegarde_data["campagne_progression"][chapitre] = {"niveaux_completes": []}
         
         niveaux_completes = sauvegarde_data["campagne_progression"][chapitre]["niveaux_completes"]
         if numero not in niveaux_completes:
@@ -237,7 +234,7 @@ class ProgressionManager:
     
     @staticmethod
     def est_niveau_complete(sauvegarde_data: dict, chapitre: str, numero: int) -> bool:
-        """Vérifie si un niveau est déjà complété"""
+        """Vérifie si un niveau est déjà complété."""
         if "campagne_progression" not in sauvegarde_data:
             return False
         
@@ -247,44 +244,32 @@ class ProgressionManager:
         return numero in sauvegarde_data["campagne_progression"][chapitre].get("niveaux_completes", [])
     
     @staticmethod
-    def appliquer_recompenses_niveau(sauvegarde_data: dict, niveau_config) -> bool:
+    def appliquer_recompenses(sauvegarde_data: dict, config_niveau) -> bool:
         """Applique les récompenses d'un niveau et retourne True si des récompenses ont été appliquées."""
-        if not niveau_config:
+        if not config_niveau:
             return False
         
         recompenses_appliquees = False
         
         # Appliquer les récompenses CP
-        if hasattr(niveau_config, 'cp_recompense') and niveau_config.cp_recompense > 0:
-            sauvegarde_data["cp"] = sauvegarde_data.get("cp", 5) + niveau_config.cp_recompense
+        if hasattr(config_niveau, 'recompense_cp') and config_niveau.recompense_cp > 0:
+            sauvegarde_data["cp"] = sauvegarde_data.get("cp", 5) + config_niveau.recompense_cp
             recompenses_appliquees = True
         
         # Appliquer les récompenses PA
-        if hasattr(niveau_config, 'pa_recompense') and niveau_config.pa_recompense > 0:
-            sauvegarde_data["pa"] = sauvegarde_data.get("pa", 100) + niveau_config.pa_recompense
+        if hasattr(config_niveau, 'recompense_pa') and config_niveau.recompense_pa > 0:
+            sauvegarde_data["pa"] = sauvegarde_data.get("pa", 100) + config_niveau.recompense_pa
             recompenses_appliquees = True
         
         # Débloquer les unités récompenses
-        if hasattr(niveau_config, 'unites_debloquees') and niveau_config.unites_debloquees:
+        if hasattr(config_niveau, 'unites_debloquees') and config_niveau.unites_debloquees:
             if "unites" not in sauvegarde_data:
-                sauvegarde_data["unites"] = ["Goule"]
+                sauvegarde_data["unites"] = []
             
-            for unite_nom in niveau_config.unites_debloquees:
+            for unite_nom in config_niveau.unites_debloquees:
                 if unite_nom not in sauvegarde_data["unites"]:
                     sauvegarde_data["unites"].append(unite_nom)
                     recompenses_appliquees = True
         
         return recompenses_appliquees
-        """Applique les récompenses d'un niveau à la sauvegarde"""
-        # CP
-        if "cp" not in sauvegarde_data:
-            sauvegarde_data["cp"] = 0
-        sauvegarde_data["cp"] += config_niveau.recompense_cp
-        
-        # Unités débloquées
-        if "unites" not in sauvegarde_data:
-            sauvegarde_data["unites"] = []
-        
-        for unite_nom in config_niveau.unites_debloquees:
-            if unite_nom not in sauvegarde_data["unites"]:
-                sauvegarde_data["unites"].append(unite_nom)
+
