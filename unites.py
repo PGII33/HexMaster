@@ -162,6 +162,10 @@ class Unite:
         """ get attribute vivant """
         return self._vivant
 
+    def set_pos(self, pos):
+        """ set attribute pos to pos """
+        self._pos = pos
+
     def set_vivant(self, etat):
         """ set attribute vivant to etat """
         self._vivant = etat
@@ -323,7 +327,7 @@ class Unite:
 
             # Vérification de mort commune pour tous les types d'attaque
             cible_tuée = False
-            if autre.pv <= 0:
+            if autre.get_pv() <= 0:
                 # Passer la liste complète des unités
                 result = autre.mourir(toutes_unites)
                 cible_tuée = result  # True si l'unité était vivante et est maintenant morte

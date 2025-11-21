@@ -42,7 +42,7 @@ class MovementAction:
     nouvelle_position: Tuple[int, int]
 
     def __str__(self):
-        return f"Move {self.unite.nom} to {self.nouvelle_position}"
+        return f"Move {self.unite.get_nom()} to {self.nouvelle_position}"
 
 
 @dataclass
@@ -52,7 +52,7 @@ class AttackAction:
     cible: 'Unite'
 
     def __str__(self):
-        return f"{self.unite.nom} attacks {self.cible.nom}"
+        return f"{self.unite.get_nom()} attacks {self.cible.get_nom()}"
 
 
 @dataclass
@@ -64,12 +64,11 @@ class ActiveSkillAction:
 
     def __str__(self):
         if isinstance(self.cible_ou_position, tuple):
-            return f"{self.unite.nom} uses {self.nom_competence} on position {self.cible_ou_position}"
+            return f"{self.unite.get_nom()} uses {self.nom_competence} on position {self.cible_ou_position}"
         elif self.cible_ou_position is None:
-            return f"{self.unite.nom} uses {self.nom_competence}"
+            return f"{self.unite.get_nom()} uses {self.nom_competence}"
         else:
-            return f"{self.unite.nom} uses {self.nom_competence} on {self.cible_ou_position.nom}"
-
+            return f"{self.unite.get_nom()} uses {self.nom_competence} on {self.cible_ou_position.get_nom()}"
 
 Action = Union[MovementAction, AttackAction, ActiveSkillAction]
 
@@ -169,24 +168,24 @@ def obtenir_cibles_competence(unite, nom_competence, toutes_unites) -> List[Unio
 
     # Cibles alliées
     if nom_competence in comp_cib_allie:
-        allies = [u for u in toutes_unites if u.vivant and u.equipe ==
-                  unite.equipe]
+        allies = [u for u in toutes_unites if u.get_vivant() and u.get_equipe() ==
+                  unite.get_equipe()]
         for allie in allies:
-            if (hex_distance(unite.pos, allie.pos) <= portee_comp and
+            if (hex_distance(unite.get_pos(), allie.get_pos()) <= portee_comp and
                     peut_cibler_pour_competence(allie, nom_competence)):
                 cibles.append(allie)
 
     # Cibles ennemies
     if nom_competence in com_cib_ennemi:
         ennemis = [
-            u for u in toutes_unites if u.vivant and u.equipe != unite.equipe]
+            u for u in toutes_unites if u.get_vivant() and u.get_equipe() != unite.get_equipe()]
         for ennemi in ennemis:
-            if hex_distance(unite.pos, ennemi.pos) <= portee_comp:
+            if hex_distance(unite.get_pos(), ennemi.get_pos()) <= portee_comp:
                 cibles.append(ennemi)
 
     # Cases vides (dans un rayon autour de l'unité)
     if nom_competence in comp_cib_vide:
-        q_unite, r_unite = unite.pos
+        q_unite, r_unite = unite.get_pos()
         for dq in range(-portee_comp, portee_comp + 1):
             for dr in range(-portee_comp, portee_comp + 1):
                 if abs(dq) + abs(dr) + abs(-dq-dr) <= portee_comp * 2:  # Distance hexagonale
@@ -197,8 +196,8 @@ def obtenir_cibles_competence(unite, nom_competence, toutes_unites) -> List[Unio
                     if -1 <= q <= 6 and -1 <= r <= 6:  # Ajuster selon votre plateau
                         # Vérifier que la case est vide
                         case_occupee = any(
-                            u.pos == position and u.vivant for u in toutes_unites)
-                        if not case_occupee and position != unite.pos:
+                            u.get_pos() == position and u.get_vivant() for u in toutes_unites)
+                        if not case_occupee and position != unite.get_pos():
                             cibles.append(position)
 
     return cibles
@@ -254,7 +253,7 @@ def evaluer_competence_benediction(unite, cible_allie) -> float:
 
 def evaluer_competence_commandement(unite, cible_allie) -> float:
     """Évalue l'intérêt d'utiliser la compétence commandement sur un allié"""
-    if cible_allie.get_equipe() != unite.equipe():
+    if cible_allie.get_equipe() != unite.get_equipe():
         return 0.0
 
     # Éviter de commander plusieurs fois la même unité
@@ -262,7 +261,7 @@ def evaluer_competence_commandement(unite, cible_allie) -> float:
         return 0.0
 
     # Commandement donne +attaque du roi et +1 attaque supplémentaire
-    attaque_roi = unite.dmg
+    attaque_roi = unite.get_attaque_totale()
 
     # Plus l'allié est offensif, plus le commandement a de la valeur
     score = attaque_roi * 8  # Valeur du bonus d'attaque
@@ -291,7 +290,7 @@ def evaluer_competence_tir_precis(unite, cible_ennemi, toutes_unites) -> float:
     bonus_degats = score_attaque_base * 0.5
 
     # Bonus pour la portée étendue (peut toucher des cibles normalement hors de portée)
-    distance = hex_distance(unite.pos, cible_ennemi.pos)
+    distance = hex_distance(unite.get_pos(), cible_ennemi.get_pos())
     portee_normale = getattr(unite, 'portee', 1)
     portee_etendue = portee_normale + comp_portee.get('tir précis', 1)
 
@@ -309,7 +308,7 @@ def evaluer_competence_case_vide(unite, nom_competence, position, toutes_unites)
         # Évaluer l'intérêt de placer un cristal
         # Bonus pour position défensive (près des alliés)
         allies_proches = [u for u in toutes_unites
-                          if u.vivant and u.equipe == unite.equipe and hex_distance(position, u.pos) <= 2]
+                          if u.get_vivant() and u.get_equipe() == unite.get_equipe() and hex_distance(position, u.get_pos()) <= 2]
         score += len(allies_proches) * 10
 
         # Bonus pour contrôle territorial
@@ -325,8 +324,8 @@ def evaluer_competence_case_vide(unite, nom_competence, position, toutes_unites)
 
         for pos in positions_affectees:
             for u in toutes_unites:
-                if u.pos == pos and u.vivant:
-                    if u.equipe != unite.equipe:
+                if u.get_pos() == pos and u.get_vivant():
+                    if u.get_equipe() != unite.get_equipe():
                         ennemis_touches += 1
                         score += sc_stat(u) * 0.1  # 10% de la force ennemie
                     else:
@@ -360,7 +359,7 @@ def debug_afficher_scores_cases(unite, toutes_unites, q_range, r_range, avec_inf
     """Affiche les scores de toutes les cases du plateau pour une unité donnée"""
     type_score = "avec influence" if avec_influence else "score de base"
     print(
-        f"\n=== SCORES DES CASES ({type_score}) pour {unite.nom} (équipe {unite.equipe}) ===")
+        f"\n=== SCORES DES CASES ({type_score}) pour {unite.get_nom()} (équipe {unite.get_equipe()}) ===")
 
     # Calculer les scores pour toutes les cases du plateau
     scores_plateau = {}
@@ -475,16 +474,16 @@ def sc_position_competence(unite, position: Tuple[int, int], toutes_unites) -> f
 
     elif nom_competence == "bénédiction":
         # Pour la bénédiction : privilégier les positions près d'alliés offensifs
-        allies = [u for u in toutes_unites if u.vivant and u.equipe ==
-                  unite.equipe and u != unite]
+        allies = [u for u in toutes_unites if u.get_vivant() and u.get_equipe() ==
+                  unite.get_equipe() and u != unite]
         for allie in allies:
-            if hex_distance(position, allie.pos) <= portee_comp:
+            if hex_distance(position, allie.get_pos()) <= portee_comp:
                 # Éviter de bénir une unité déjà bénie
                 if not hasattr(allie, 'buff_benediction'):
                     # Score basé sur le potentiel offensif de l'allié
-                    score_benediction = allie.dmg * 10  # Valoriser les unités qui frappent fort
+                    score_benediction = allie.get_dmg() * 10  # Valoriser les unités qui frappent fort
                     if hasattr(allie, 'portee'):
-                        score_benediction += allie.portee * 8  # Bonus pour la portée
+                        score_benediction += allie.get_portee() * 8  # Bonus pour la portée
                     if hasattr(allie, 'attaque_restantes') and allie.attaque_restantes > 0:
                         score_benediction *= 1.5  # Bonus si peut encore attaquer
 
@@ -492,22 +491,21 @@ def sc_position_competence(unite, position: Tuple[int, int], toutes_unites) -> f
 
     elif nom_competence == "commandement":
         # Pour le commandement : privilégier les positions près d'alliés avec bon potentiel d'attaque
-        allies = [u for u in toutes_unites if u.vivant and u.equipe ==
-                  unite.equipe and u != unite]
+        allies = [u for u in toutes_unites if u.get_vivant() and u.get_equipe() ==
+                  unite.get_equipe() and u != unite]
         for allie in allies:
-            if hex_distance(position, allie.pos) <= portee_comp:
+            if hex_distance(position, allie.get_pos()) <= portee_comp:
                 # Éviter de commander une unité déjà commandée
                 if not hasattr(allie, 'ba_commandement'):
                     # Score basé sur le potentiel de dégâts de l'allié
-                    score_cmd = unite.dmg * 15  # Valeur du bonus d'attaque accordé
+                    score_cmd = unite.get_attaque_totale() * 15  # Valeur du bonus d'attaque accordé
                     score_cmd += 30  # Valeur de l'attaque supplémentaire
 
                     # Bonus pour les unités avec bonne portée
-                    if hasattr(allie, 'portee'):
-                        score_cmd += allie.portee * 8
+                    score_cmd += allie.get_portee() * 8
 
                     # Bonus si l'allié peut agir
-                    if hasattr(allie, 'attaque_restantes') and allie.attaque_restantes > 0:
+                    if allie.get_attaque_restantes() > 0:
                         score_cmd *= 1.3
 
                     score += score_cmd
@@ -515,16 +513,16 @@ def sc_position_competence(unite, position: Tuple[int, int], toutes_unites) -> f
     elif nom_competence == "tir précis":
         # Pour tir précis : privilégier les positions qui permettent d'atteindre des ennemis prioritaires
         ennemis = [
-            u for u in toutes_unites if u.vivant and u.equipe != unite.equipe]
+            u for u in toutes_unites if u.get_vivant() and u.get_equipe() != unite.get_equipe()]
         for ennemi in ennemis:
-            if hex_distance(position, ennemi.pos) <= portee_comp:
+            if hex_distance(position, ennemi.get_pos()) <= portee_comp:
                 # Score similaire à sc_attaque mais avec bonus pour portée étendue
                 # 80% du score d'attaque normal
                 score_tir = sc_attaque(unite, ennemi, toutes_unites) * 0.8
 
                 # Bonus spécial si cette position permet d'atteindre un ennemi hors portée normale
-                portee_normale = getattr(unite, 'portee', 1)
-                if hex_distance(position, ennemi.pos) > portee_normale:
+                portee_normale = unite.get_portee()
+                if hex_distance(position, ennemi.get_pos()) > portee_normale:
                     score_tir += 25  # Bonus pour atteindre une cible éloignée
 
                 score += score_tir
@@ -544,7 +542,7 @@ def sc_position_competence(unite, position: Tuple[int, int], toutes_unites) -> f
 
                     if -1 <= q <= 6 and -1 <= r <= 6:  # Dans les limites
                         case_occupee = any(
-                            u.pos == pos_cible and u.vivant for u in toutes_unites)
+                            u.get_pos() == pos_cible and u.get_vivant() for u in toutes_unites)
                         if not case_occupee and pos_cible != position:
                             cases_ciblables += 1
 
@@ -555,7 +553,7 @@ def sc_position_competence(unite, position: Tuple[int, int], toutes_unites) -> f
                                     get_positions_adjacentes(pos_cible)
                                 ennemis_touches = sum(1 for pos in positions_aoe
                                                       for u in toutes_unites
-                                                      if u.pos == pos and u.vivant and u.equipe != unite.equipe)
+                                                      if u.get_pos() == pos and u.get_vivant() and u.get_equipe() != unite.get_equipe())
                                 if ennemis_touches >= 1:
                                     positions_interessantes += ennemis_touches * 10
 
@@ -622,7 +620,7 @@ def sc_case(unite, position: Tuple[int, int], toutes_unites) -> float:
     for pos_adj in positions_adjacentes:
         # Vérifier que la case adjacente n'est pas occupée par une unité
         case_occupee = any(
-            u.pos == pos_adj and u.vivant for u in toutes_unites)
+            u.get_pos() == pos_adj and u.get_vivant() for u in toutes_unites)
         if not case_occupee:
             # Calculer le score de base de la case adjacente et en prendre 20%
             score_adj = sc_case_base(unite, pos_adj, toutes_unites)
@@ -641,7 +639,7 @@ def sc_attaque(unite, cible, toutes_unites) -> float:
     score += (1 - pv_ratio) * 50
 
     # Bonus spécial si on peut tuer d'un coup
-    if cible.get_pv() <= unite.dmg:
+    if cible.get_pv() <= unite.get_attaque_totale():
         score += 100  # Très gros bonus pour un kill garanti - DOUBLÉ
 
     # 2. Score de l'unité ennemie (utilise sc_stat inversé)
@@ -649,15 +647,15 @@ def sc_attaque(unite, cible, toutes_unites) -> float:
     score += score_ennemi * 0.5  # 50% du score ennemi en bonus - AUGMENTÉ
 
     # 3. Menace immédiate (priorité aux ennemis qui menacent nos alliés)
-    allies = [u for u in toutes_unites if u.vivant and u.equipe ==
-              unite.equipe and u != unite]
+    allies = [u for u in toutes_unites if u.get_vivant() and u.get_equipe() ==
+              unite.get_equipe() and u != unite]
     allies_menaces = [a for a in allies
-                      if est_a_portee(cible.pos, a.pos, getattr(cible, 'portee', 1))]
+                      if est_a_portee(cible.get_pos(), a.get_pos(), getattr(cible, 'portee', 1))]
     score += len(allies_menaces) * 25  # 25 points par allié menacé - AUGMENTÉ
 
     # 4. Difficulté d'accès (malus selon la distance)
-    distance = hex_distance(unite.pos, cible.pos)
-    portee_unite = getattr(unite, 'portee', 1)
+    distance = hex_distance(unite.get_pos(), cible.get_pos())
+    portee_unite = unite.get_portee()
 
     if distance <= portee_unite:
         # Cible déjà à portée = pas de malus
@@ -689,9 +687,9 @@ def generer_actions_unite(unite, toutes_unites) -> List[Action]:
             unite, cases_accessibles, toutes_unites)
 
         for position, cout in cases_interessantes:
-            if cout <= unite.pm and position != unite.pos:
+            if cout <= unite.get_pm() and position != unite.get_pos():
                 # Vérifier que la nouvelle position est strictement meilleure
-                score_actuel = sc_case(unite, unite.pos, toutes_unites)
+                score_actuel = sc_case(unite, unite.get_pos(), toutes_unites)
                 score_nouveau = sc_case(unite, position, toutes_unites)
                 if score_nouveau > score_actuel:
                     actions.append(MovementAction(unite, position))
@@ -699,16 +697,16 @@ def generer_actions_unite(unite, toutes_unites) -> List[Action]:
     # Actions d'attaque normale - Génère les attaques contre tous les ennemis à portée
     if unite.get_attaque_restantes() > 0:
         ennemis = [
-            u for u in toutes_unites if u.vivant and u.equipe != unite.equipe]
+            u for u in toutes_unites if u.get_vivant() and u.get_equipe() != unite.get_equipe()]
         portee = getattr(unite, 'portee', 1)
 
         for ennemi in ennemis:
-            if est_a_portee(unite.pos, ennemi.pos, portee):
+            if est_a_portee(unite.get_pos(), ennemi.get_pos(), portee):
                 actions.append(AttackAction(unite, ennemi))
 
     # Actions de compétence active - Génère les actions de compétences sur toutes les cibles valides
-    if unite.comp:
-        nom_competence = unite.comp
+    if unite.get_competence():
+        nom_competence = unite.get_competence()
 
         if unite_peut_utiliser_competence(unite, nom_competence):
             cibles_possibles = obtenir_cibles_competence(
@@ -719,7 +717,7 @@ def generer_actions_unite(unite, toutes_unites) -> List[Action]:
 
     if MODE_PRINT:
         for action in actions:
-            print(f"Action générée pour {unite.nom}: {action}")
+            print(f"Action générée pour {unite.get_nom()}: {action}")
 
     return actions
 
@@ -768,7 +766,7 @@ def evaluer_action_complete(action: Action, toutes_unites) -> float:
         score_comp = sc_comp(unite) + sc_attaque(unite,
                                                  action.cible, toutes_unites)
         # Position actuelle
-        score_case = sc_case(unite, unite.pos, toutes_unites)
+        score_case = sc_case(unite, unite.get_pos(), toutes_unites)
         score_stat = sc_stat(unite)
 
     elif isinstance(action, ActiveSkillAction):
@@ -778,7 +776,7 @@ def evaluer_action_complete(action: Action, toutes_unites) -> float:
 
         score_comp = sc_comp(unite)  # Score de base de l'unité
         # Position actuelle
-        score_case = sc_case(unite, unite.pos, toutes_unites)
+        score_case = sc_case(unite, unite.get_pos(), toutes_unites)
         score_stat = sc_stat(unite)
 
         # Évaluer la compétence spécifique
@@ -838,16 +836,16 @@ def tour_ia(toutes_unites: List['Unite']) -> bool:
             peut_agir = False
 
             # Vérifier les mouvements disponibles
-            if hasattr(unite, 'pm') and unite.pm > 0:
+            if hasattr(unite, 'pm') and unite.get_pm() > 0:
                 peut_agir = True
 
             # Vérifier les attaques disponibles
-            if hasattr(unite, 'attaque_restantes') and unite.attaque_restantes > 0:
+            if hasattr(unite, 'attaque_restantes') and unite.get_attaque_restantes() > 0:
                 peut_agir = True
 
             # Vérifier les compétences actives disponibles
-            if hasattr(unite, 'comp') and unite.comp:
-                if unite_peut_utiliser_competence(unite, unite.comp):
+            if hasattr(unite, 'comp') and unite.get_competence():
+                if unite_peut_utiliser_competence(unite, unite.get_competence()):
                     peut_agir = True
 
             # Générer toutes les actions possibles pour cette unité
@@ -908,9 +906,9 @@ def executer_mouvement(action: MovementAction):
     cout = cases_accessibles.get(nouvelle_pos, 0)
 
     # Déplacer l'unité
-    unite.pos = nouvelle_pos
+    unite.set_pos(nouvelle_pos)
     if hasattr(unite, 'pm'):
-        unite.pm = max(0, unite.pm - cout)
+        unite.set_pm(max(0, unite.get_pm() - cout))
 
 
 def executer_attaque(action: AttackAction, toutes_unites: List['Unite']):
@@ -935,7 +933,7 @@ def executer_competence_active(action: ActiveSkillAction, toutes_unites: List['U
     # Si la compétence nécessite une attaque, la consommer
     if nom_competence in comp_attaque and succes:
         if hasattr(unite, 'attaque_restantes'):
-            unite.attaque_restantes = max(0, unite.attaque_restantes - 1)
+            unite.set_attaque_restantes(max(0, unite.get_attaque_restantes() - 1))
 
     # Appliquer le cooldown si applicable
     if nom_competence in cooldowns:

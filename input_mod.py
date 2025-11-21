@@ -37,7 +37,7 @@ def handle_click(jeu, mx, my):
     # clic sur le bouton de compétence active
     if (hasattr(jeu, 'competence_btn_rect') and jeu.competence_btn_rect and
         jeu.competence_btn_rect.collidepoint(mx, my) and jeu.selection and
-            jeu.selection.equipe == jeu.tour):
+            jeu.selection.get_equipe() == jeu.tour):
 
         if DO_PRINT:
             print(
@@ -71,10 +71,10 @@ def handle_click(jeu, mx, my):
 
     # clic sur une unité ?
     for u in jeu.unites:
-        if not u.vivant:
+        if not u.get_vivant():
             continue
 
-        x, y = hex_to_pixel(jeu, u.pos[0], u.pos[1])
+        x, y = hex_to_pixel(jeu, u.get_pos()[0], u.get_pos()[1])
 
         # recalcul des 6 sommets de l’hexagone
         pts = []
@@ -87,7 +87,7 @@ def handle_click(jeu, mx, my):
         # test clic dans l'hexagone
         if point_dans_polygone(mx, my, pts):
             # Vérifier si c'est l'unité du joueur courant
-            if u.equipe == jeu.tour:
+            if u.get_equipe() == jeu.tour:
                 # Sélection/désélection de ses propres unités
                 if jeu.selection == u:
                     jeu.selection = None
@@ -100,10 +100,10 @@ def handle_click(jeu, mx, my):
                 # Clic sur une unité adverse
                 if (
                     jeu.selection
-                    and jeu.selection.attaque_restantes > 0
-                    and jeu.selection.equipe == jeu.tour
-                    and _are_enemies(jeu.selection.equipe, u.equipe, getattr(jeu, 'versus_mode', False))
-                    and est_a_portee(jeu.selection.pos, u.pos, jeu.selection.get_portee())
+                    and jeu.selection.get_attaque_restantes() > 0
+                    and jeu.selection.get_equipe() == jeu.tour
+                    and _are_enemies(jeu.selection.get_equipe(), u.get_equipe(), getattr(jeu, 'versus_mode', False))
+                    and est_a_portee(jeu.selection.get_pos(), u.get_pos(), jeu.selection.get_portee())
                 ):
                     # Attaquer l'unité adverse
                     jeu.selection.attaquer(u, jeu.unites)
@@ -117,7 +117,7 @@ def handle_click(jeu, mx, my):
             return
 
     # clic sur une case accessible ?
-    if jeu.selection and jeu.deplacement_possibles and jeu.selection.equipe == jeu.tour:
+    if jeu.selection and jeu.deplacement_possibles and jeu.selection.get_equipe() == jeu.tour:
         for case, cout in jeu.deplacement_possibles.items():
             q, r = case
             # VÉRIFIER QUE LA CASE EST DANS LA GRILLE VALIDE
@@ -127,10 +127,10 @@ def handle_click(jeu, mx, my):
             cx, cy = hex_to_pixel(jeu, q, r)
             # Utiliser la taille de l'hexagone pour la détection
             if (mx-cx)**2 + (my-cy)**2 <= (jeu.taille_hex)**2:
-                occupee = any(x.pos == case and x.vivant for x in jeu.unites)
-                if not occupee and jeu.selection.pm >= cout:
-                    jeu.selection.pos = case
-                    jeu.selection.pm -= cout
+                occupee = any(x.get_pos() == case and x.get_vivant() for x in jeu.unites)
+                if not occupee and jeu.selection.get_pm() >= cout:
+                    jeu.selection.set_pos(case)
+                    jeu.selection.set_pm(jeu.selection.get_pm() - cout)
                     # Met à jour les cases accessibles après déplacement
                     jeu.deplacement_possibles = jeu.selection.cases_accessibles(
                         jeu.unites, jeu.q_range, jeu.r_range)
@@ -212,7 +212,7 @@ def _get_valid_targets(jeu, comp_name, unite_source):
     if co.peut_cibler_allie(comp_name):
         # Peut cibler les alliés (soin, bénédiction, commandement)
         for u in jeu.unites:
-            if u.vivant and u.equipe == unite_source.equipe:
+            if u.vivant and u.get_equipe() == unite_source.get_equipe():
                 # Vérifier la portée pour chaque compétence
                 for comp_name in co.comp_cib_allie:
                     if comp_name == "soin" and _is_in_range(unite_source, u, co.comp_portee.get(comp_name, 0)):
@@ -225,7 +225,7 @@ def _get_valid_targets(jeu, comp_name, unite_source):
     if co.peut_cibler_ennemi(comp_name):
         # Peut cibler les ennemis
         for u in jeu.unites:
-            if u.vivant and _are_enemies(unite_source.equipe, u.equipe, getattr(jeu, 'versus_mode', False)):
+            if u.vivant and _are_enemies(unite_source.get_equipe(), u.get_equipe(), getattr(jeu, 'versus_mode', False)):
                 # Vérifier la portée pour les compétences qui en ont besoin
                 for comp_name in co.com_cib_ennemi:
                     if comp_name == "tir précis":

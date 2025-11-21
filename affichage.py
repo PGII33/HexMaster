@@ -206,7 +206,7 @@ def dessiner(jeu):
                 jeu.unit_radius * 1.25), width=max(2, int(jeu.taille_hex * 0.08)))
 
     # Indicateurs d'attaque (seulement si pas en mode sélection de compétence)
-    if (jeu.selection and jeu.selection.equipe == jeu.tour and jeu.selection.attaque_restantes > 0 and
+    if (jeu.selection and jeu.selection.get_equipe() == jeu.tour and jeu.selection.get_attaque_restantes() > 0 and
             not (hasattr(jeu, 'mode_selection_competence') and jeu.mode_selection_competence)):
         for u in jeu.unites:
             # Vérifier si c'est un ennemi selon le mode
@@ -217,14 +217,14 @@ def dessiner(jeu):
                     (jeu.selection.equipe == "joueur2" and u.equipe == "joueur")
             else:
                 # Mode normal : joueur vs ennemi
-                is_enemy = u.equipe != jeu.selection.equipe
+                is_enemy = u.get_equipe() != jeu.selection.get_equipe()
             if (
-                u.vivant
+                u.get_vivant()
                 and is_enemy
-                and est_a_portee(jeu.selection.pos, u.pos, jeu.selection.get_portee())
+                and est_a_portee(jeu.selection.get_pos(), u.get_pos(), jeu.selection.get_portee())
             ):
                 # Dessiner un cercle rouge autour de u
-                x, y = hex_to_pixel(jeu, u.pos[0], u.pos[1])
+                x, y = hex_to_pixel(jeu, u.get_pos()[0], u.get_pos()[1])
                 pygame.draw.circle(jeu.screen, (220, 30, 30),
                                    (x, y), jeu.unit_radius+4, 3)
 
@@ -241,12 +241,12 @@ def dessiner(jeu):
             f"DMG: {u.get_attaque_totale()}",
             f"Portée: {u.get_portee()}",
             f"Attaques restantes: {u.get_attaque_restantes()}/{u.get_attaque_max()}",
-            f"PM restants: {u.pm}/{u.mv}",
-            f"Equipe: {u.equipe}",
+            f"PM restants: {u.get_pm()}/{u.get_mv()}",
+            f"Equipe: {u.get_equipe()}",
         ]
 
-        if u.comp:
-            lignes.append(f"Compétence: {u.comp}")
+        if u.get_competence():
+            lignes.append(f"Compétence: {u.get_competence()}")
             # Ajouter l'information de cooldown si la compétence est active
             if hasattr(u, 'a_competence_active') and u.a_competence_active():
                 cooldown_restant = getattr(u, 'cooldown_actuel', 0)

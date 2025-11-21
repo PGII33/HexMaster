@@ -20,14 +20,14 @@ def sangsue(self, degats_infliges):
     """Le vampire récupère autant de PV que de dégâts réellement infligés (peut dépasser PV max)."""
     if DO_PRINT:
         print("Sangsue :", degats_infliges, "PV récupérés")
-    self.pv += degats_infliges
+    self.set_pv(self.get_pv() + degats_infliges)
 
 
 def zombification(self, cible):
     """Transforme l'unite morte en zombie sous le contrôle du joueur de l'attaquant"""
     if DO_PRINT:
         print("Zombification effectuée sur :", cible.get_name())
-    if not cible.vivant and cible.nom != "Zombie":
+    if not cible.is_vivant() and cible.nom != "Zombie":
         cible.__class__ = self.__class__
         cible.__init__(self.get_equipe(), cible.get_pos())
         cible.pm = 0
@@ -37,10 +37,10 @@ def zombification(self, cible):
 def tas_d_os(self):
     """Transforme l'unité morte en tas d'os."""
     from unites_liste import Tas_D_Os
-    # Transformation en tas d'os : c'est une nouvelle unité vivante
+    # Transformation en tas d'os : c'est une nouvelle unité is_vivant()e
     self.__class__ = Tas_D_Os
     self.__init__(self.get_equipe(), self.get_pos())
-    # Le tas d'os est vivant avec 1 PV (défini dans Tas_D_Os.__init__)
+    # Le tas d'os est is_vivant() avec 1 PV (défini dans Tas_D_Os.__init__)
 
 
 def cases_fantomatiques(unite, toutes_unites, q_range=None, r_range=None):
@@ -57,7 +57,7 @@ def cases_fantomatiques(unite, toutes_unites, q_range=None, r_range=None):
     file = deque([(unite.get_pos(), 0)])
     directions = [(-1, 0), (1, 0), (0, 1), (0, -1), (1, -1), (-1, 1)]
     vus = dict()  # (q, r): cout minimal
-    occupees = {u.get_pos() for u in toutes_unites if u.vivant and u != unite}
+    occupees = {u.get_pos() for u in toutes_unites if u.is_vivant() and u != unite}
     while file:
         (q, r), cout = file.popleft()
         if cout > unite.pm:
@@ -142,24 +142,24 @@ def invocation(self, toutes_unites, plateau, q_range=None, r_range=None):
 
 def soin(self, cible):
     """Soigne la cible de 5 points de vie."""
-    if cible.get_equipe() == self.get_equipe() and cible.vivant:
-        cible.pv = min(cible.pv + 5, cible.pv_max)
+    if cible.get_equipe() == self.get_equipe() and cible.is_vivant():
+        cible.set_pv(min(cible.get_pv() + 5, cible.get_pv_max()))
         return True
     return False
 
 
 def explosion_sacrée(self, toutes_unites, cible_attaquee=None):
     """Se sacrifie en attaquant pour infliger ses points de vie en dégâts à la cible uniquement."""
-    degats = self.pv  # Utilise ses PV actuels comme dégâts
+    degats = self.get_pv()  # Utilise ses PV actuels comme dégâts
 
     # Infliger des dégâts uniquement à la cible directe si c'est un ennemi
-    if cible_attaquee and cible_attaquee.get_equipe() != self.get_equipe() and cible_attaquee.vivant:
+    if cible_attaquee and cible_attaquee.get_equipe() != self.get_equipe() and cible_attaquee.is_vivant():
         # Appliquer la protection si applicable
         degats_infliges = protection(cible_attaquee, degats, toutes_unites)
 
         # Vérifier si la cible ou les protecteurs meurent
         for unite in toutes_unites:
-            if unite.pv <= 0 and unite.vivant:
+            if unite.get_pv() <= 0 and unite.is_vivant():
                 unite.mourir(toutes_unites)
 
     # Marquer pour mourir après l'animation (ne pas mourir immédiatement)
@@ -172,7 +172,7 @@ def bouclier_de_la_foi(self, toutes_unites):
     q, r = self.get_pos()
 
     for unite in toutes_unites:
-        if unite.get_equipe() == self.get_equipe() and unite != self and unite.get_vivant():
+        if unite.get_equipe() == self.get_equipe() and unite != self and unite.get_is_vivant()():
             unite_q, unite_r = unite.get_pos()
             for dq, dr in directions:
                 if (q+dq, r+dr) == (unite_q, unite_r):
@@ -183,7 +183,7 @@ def bouclier_de_la_foi(self, toutes_unites):
 
 def bénédiction(self, cible):
     """Augmente l'attaque de 2 et applique 1 bouclier à la cible."""
-    if cible.get_equipe() == self.get_equipe() and cible.vivant:
+    if cible.get_equipe() == self.get_equipe() and cible.is_vivant():
         # Ajouter un buff permanent
         if not hasattr(cible, 'buff_bénédiction'):
             cible.ba_benediction = 2
@@ -207,11 +207,11 @@ def aura_sacrée(self, toutes_unites):
     q, r = self.get_pos()
 
     for unite in toutes_unites:
-        if unite.get_equipe() == self.get_equipe() and unite != self and unite.vivant:
+        if unite.get_equipe() == self.get_equipe() and unite != self and unite.is_vivant():
             unite_q, unite_r = unite.get_pos()
             for dq, dr in directions:
                 if (q+dq, r+dr) == (unite_q, unite_r):
-                    # Bonus permanent tant que l'ArchAnge est vivant
+                    # Bonus permanent tant que l'ArchAnge est is_vivant()
                     if not hasattr(unite, 'ba_aura_sacree'):
                         unite.ba_aura_sacree = 3
                     break
@@ -242,7 +242,7 @@ def pluie_de_fleches(self, cible_pos, toutes_unites):
     # Attaquer TOUTES les unités dans les cases affectées (y compris les alliés)
     unites_touchees = []
     for unite in toutes_unites:
-        if unite.get_pos() in cases_affectees and unite.vivant:  # Touche tout sauf l'archer lui-même
+        if unite.get_pos() in cases_affectees and unite.is_vivant():  # Touche tout sauf l'archer lui-même
             # Appliquer la protection si applicable
             degats_infliges = protection(unite, self.dmg, toutes_unites)
             unites_touchees.append(unite)
@@ -250,7 +250,7 @@ def pluie_de_fleches(self, cible_pos, toutes_unites):
     # Vérifier les morts après tous les dégâts
     # Copie pour éviter les problèmes de modification pendant l'itération
     for unite in toutes_unites[:]:
-        if unite.pv <= 0 and unite.vivant:
+        if unite.get_pv() <= 0 and unite.is_vivant():
             unite.mourir(toutes_unites)
 
     return len(unites_touchees) > 0
@@ -275,7 +275,7 @@ def monture_libere(self, case_pos, toutes_unites):
 
     # Vérifier que la case de destination est libre
     for unite in toutes_unites:
-        if unite.get_pos() == case_pos and unite.vivant:
+        if unite.get_pos() == case_pos and unite.is_vivant():
             return False
 
     # Créer un cheval sur la position actuelle du cavalier
@@ -286,10 +286,10 @@ def monture_libere(self, case_pos, toutes_unites):
     self.set_pos(case_pos)
 
     # Changer les stats pour devenir un guerrier (garder les PV actuels)
-    pv_actuels = self.pv
+    pv_actuels = self.get_pv()
     self.__class__ = Guerrier
     self.__init__(self.get_equipe(), self.get_pos())
-    self.pv = pv_actuels  # Conserver les PV du cavalier
+    self.set_pv(pv_actuels)  # Conserver les PV du cavalier
     self.pm = 0  # Plus de mouvement après la transformation
     self.attaque_restantes = self.attaque_max  # Peut attaquer après transformation
 
@@ -302,7 +302,7 @@ def commandement(unite, cible, toutes_unites):
     # Vérifier si c'est un allié
     if not isinstance(cible, (tuple, list)):
         # Si c'est une unité directement
-        if cible.get_equipe() != unite.get_equipe() or not cible.vivant:
+        if cible.get_equipe() != unite.get_equipe() or not cible.is_vivant():
             return False
 
         if hasattr(cible, 'ba_commandement'):
@@ -340,7 +340,7 @@ def divertissement(self, toutes_unites):
         # Chercher une unité à cette position (peu importe l'équipe)
         for unite in toutes_unites:
             if (unite.get_pos() == pos_adjacente and
-                unite.vivant and
+                unite.is_vivant() and
                     unite != self):  # Exclure le bouffon lui-même
 
                 # Marquer l'unité comme divertie pour le prochain tour
@@ -358,8 +358,8 @@ def manipulation(self, toutes_unites):
 
     for unite in toutes_unites:
         if (unite.get_equipe() != self.get_equipe() and
-            unite.vivant and
-            unite.pv <= 3 and
+            unite.is_vivant() and
+            unite.get_pv() <= 3 and
                 not hasattr(unite, 'manipulee_par')):  # Éviter la double manipulation
 
             # Marquer l'unité comme manipulée
@@ -372,7 +372,7 @@ def manipulation(self, toutes_unites):
             unite.attaque_restantes = unite.attaque_max
 
             unites_manipulees.append(unite)
-            print(f"🎭 {unite.nom} ({unite.pv} PV) est manipulé par {self.nom}!")
+            print(f"🎭 {unite.nom} ({unite.get_pv()} PV) est manipulé par {self.nom}!")
 
     return unites_manipulees
 
@@ -382,20 +382,20 @@ def verifier_conditions_manipulation(toutes_unites):
     unites_a_liberer = []
 
     for unite in toutes_unites:
-        if hasattr(unite, 'manipulee_par') and unite.vivant:
+        if hasattr(unite, 'manipulee_par') and unite.is_vivant():
             marionettiste = unite.manipulee_par
 
             # Condition 1: Le marionettiste est mort
-            if not marionettiste.vivant:
+            if not marionettiste.is_vivant():
                 unites_a_liberer.append(unite)
                 print(
                     f"🎭 {unite.nom} retrouve son libre arbitre car {marionettiste.nom} est mort!")
 
             # Condition 2: L'unité a maintenant plus de 4 PV
-            elif unite.pv > 4:
+            elif unite.get_pv() > 4:
                 unites_a_liberer.append(unite)
                 print(
-                    f"🎭 {unite.nom} ({unite.pv} PV) retrouve son libre arbitre car elle a plus de 4 PV!")
+                    f"🎭 {unite.nom} ({unite.get_pv()} PV) retrouve son libre arbitre car elle a plus de 4 PV!")
 
     # Libérer les unités qui ne remplissent plus les conditions
     for unite in unites_a_liberer:
@@ -445,7 +445,7 @@ def protection(cible_originale, degats, toutes_unites):
     for dq, dr in directions:
         pos_adj = (q + dq, r + dr)
         for unite in toutes_unites:
-            if (unite.comp == "protection" and unite.get_pos() == pos_adj and unite.vivant and unite.get_equipe() == cible_originale.get_equipe()):
+            if (unite.get_competence() == "protection" and unite.get_pos() == pos_adj and unite.get_is_vivant()() and unite.get_equipe() == cible_originale.get_equipe()):
                 protecteurs.add(unite)
                 queue.append(unite)
                 visited.add(unite)
@@ -457,9 +457,9 @@ def protection(cible_originale, degats, toutes_unites):
         for dq, dr in directions:
             pos_adj = (cq + dq, cr + dr)
             for unite in toutes_unites:
-                if (unite.get_pos() == pos_adj and unite.vivant
+                if (unite.get_pos() == pos_adj and unite.get_is_vivant()()
                     and unite.get_equipe() == cible_originale.get_equipe()
-                    and unite.get_comp() == "protection"):
+                    and unite.get_competence() == "protection"):
                     if unite not in visited:
                         protecteurs.add(unite)
                         queue.append(unite)
@@ -479,7 +479,7 @@ def protection(cible_originale, degats, toutes_unites):
 
     # ÉTAPE 2: Répartir les dégâts pour équilibrer les PV restants
     n = len(protecteurs)
-    pv_initiaux = [p.pv for p in protecteurs]
+    pv_initiaux = [p.get_pv() for p in protecteurs]
     degats_restants = degats_apres_armure_cible
     parts = [0] * n
     # On va donner les dégâts un par un à celui qui a le plus de PV restant
@@ -497,7 +497,7 @@ def protection(cible_originale, degats, toutes_unites):
         print(
             f"  {protecteur.nom} subit {parts[i]} dégâts (PV initiaux: {pv_initiaux[i]} → finaux: {pv_initiaux[i]-parts[i]})")
         total_inflige += protecteur.subir_degats(parts[i])
-        if protecteur.pv <= 0 and protecteur.vivant:
+        if protecteur.get_pv() <= 0 and protecteur.is_vivant():
             protecteur.mourir(toutes_unites)
         # Dégâts non absorbés par ce protecteur
         degats_a_rediriger += max(0, parts[i] - (pv_initiaux[i]))
@@ -506,7 +506,7 @@ def protection(cible_originale, degats, toutes_unites):
     if degats_a_rediriger > 0:
         print(f"  {cible_originale.nom} subit {degats_a_rediriger} dégâts restants (aucun protecteur n'a pu les absorber)")
         total_inflige += cible_originale.subir_degats(degats_a_rediriger)
-        if cible_originale.pv <= 0 and cible_originale.vivant:
+        if cible_originale.get_pv() <= 0 and cible_originale.is_vivant():
             cible_originale.mourir(toutes_unites)
     return total_inflige
 
@@ -517,10 +517,10 @@ def enracinement(self):
     """Si l'unité n'a pas bougé en fin de tour, régénère 2 PV."""
     # L'enracinement se déclenche si l'unité n'a pas dépensé de PM (pas bougé)
     if self.pm == self.mv:  # N'a pas bougé (PM restants = MV max)
-        if self.pv + 2 <= self.pv_max:
-            self.pv += 2
+        if self.get_pv() + 2 <= self.get_pv_max():
+            self.set_pv(self.get_pv() + 2)
         else:
-            self.pv = self.pv_max
+            self.set_pv(self.get_pv_max())
 
 
 def vague_apaisante(self, toutes_unites):
@@ -529,15 +529,15 @@ def vague_apaisante(self, toutes_unites):
     q, r = self.get_pos()
 
     for unite in toutes_unites:
-        if unite.get_equipe() == self.get_equipe() and unite != self and unite.vivant:
+        if unite.get_equipe() == self.get_equipe() and unite != self and unite.is_vivant():
             unite_q, unite_r = unite.get_pos()
             for dq, dr in directions:
                 if (q+dq, r+dr) == (unite_q, unite_r):
                     # Soigner l'unité adjacente
-                    if unite.pv + 2 <= unite.pv_max:
-                        unite.pv += 2
+                    if unite.get_pv() + 2 <= unite.get_pv_max():
+                        unite.set_pv(unite.get_pv() + 2)
                     else:
-                        unite.pv = unite.pv_max
+                        unite.set_pv(unite.get_pv_max())
                     break
 
 
@@ -553,7 +553,7 @@ def cristalisation(self, cible_pos, toutes_unites):
             # Vérifier que la case est vide
             case_libre = True
             for unite in toutes_unites:
-                if unite.get_pos() == cible_pos and unite.vivant:
+                if unite.get_pos() == cible_pos and unite.is_vivant():
                     case_libre = False
                     break
 
@@ -569,9 +569,9 @@ def renaissance(self, toutes_unites):
     """80% de chance de revenir à la vie avec tous ses PV."""
 
     # La renaissance se déclenche quand l'unité est sur le point de mourir (PV <= 0)
-    if self.vivant and self.pv <= 0 and random.random() < 0.8:  # 80% de chance
+    if self.is_vivant() and self.get_pv() <= 0 and random.random() < 0.8:  # 80% de chance
         print("Renaissance de", self.nom, "!")
-        self.pv = self.pv_max
+        self.set_pv(self.get_pv_max())
         # Réinitialiser les actions pour le tour suivant
         self.pm = self.mv
         self.attaque_restantes = self.attaque_max
@@ -603,7 +603,7 @@ def gerer_combustion_differee(unite, toutes_unites):
 
         if unite.combustion_tours_restants == 0:
             print(f"💥 {unite.nom} succombe à la combustion différée!")
-            unite.pv = 0
+            unite.set_pv(0)
             unite.mourir(toutes_unites)
             # Nettoyer l'effet
             if hasattr(unite, 'combustion_tours_restants'):
@@ -614,11 +614,11 @@ def gerer_combustion_differee(unite, toutes_unites):
 
 def regard_mortel(attaquant, cible):
     """Renvoie 0 si la cible est de tier 2 ou moins, sinon renvoie les dégâts normaux."""
-    if cible.tier <= 2 and cible.get_equipe() != attaquant.get_equipe() and cible.vivant:
+    if cible.tier <= 2 and cible.get_equipe() != attaquant.get_equipe() and cible.is_vivant():
         print(
             f"{attaquant.nom} utilise son regard mortel sur {cible.nom} (tier {cible.tier})!")
         print(f"{cible.nom} succombe au regard mortel!")
-        cible.pv = 0  # Tue la cible immédiatement
+        cible.set_pv(0)  # Tue la cible immédiatement
         return 0
     return attaquant.dmg  # Dégâts normaux si la cible est de tier > 2
 
@@ -652,7 +652,7 @@ def vol(defenseur, degats):
 
 def venin_incapacitant(attaquant, cible):
     """Empêche la cible de se déplacer au prochain tour."""
-    if cible.vivant and cible.get_equipe() != attaquant.get_equipe():
+    if cible.is_vivant() and cible.get_equipe() != attaquant.get_equipe():
         # Marquer la cible comme empoisonnée (ne peut pas bouger au prochain tour)
         cible.venin_incapacite = True
         print(
@@ -663,7 +663,7 @@ def venin_incapacitant(attaquant, cible):
 
 def sedition_venimeuse(attaquant, cible, toutes_unites):
     """La créature attaquée attaque une autre créature ennemie adjacente s'il y en a une."""
-    if not cible.vivant or cible.get_equipe() == attaquant.get_equipe():
+    if not cible.is_vivant() or cible.get_equipe() == attaquant.get_equipe():
         return False
 
     # Trouver les créatures alliées adjacentes à la cible
@@ -677,7 +677,7 @@ def sedition_venimeuse(attaquant, cible, toutes_unites):
         # Chercher une unité alliée de la cible à cette position
         for unite in toutes_unites:
             if (unite.get_pos() == pos_adjacente and
-                unite.vivant and
+                unite.is_vivant() and
                 unite.get_equipe() == cible.get_equipe() and  # Allié de la cible
                     unite != cible):  # Pas la cible elle-même
 
@@ -697,7 +697,7 @@ def sedition_venimeuse(attaquant, cible, toutes_unites):
             degats_infliges = cible_seduite.subir_degats(degats)
 
             # Gestion de la mort si nécessaire
-            if cible_seduite.pv <= 0:
+            if cible_seduite.get_pv() <= 0:
                 cible_seduite.mourir(toutes_unites)
 
             return True
@@ -707,7 +707,7 @@ def sedition_venimeuse(attaquant, cible, toutes_unites):
 
 def tir_precis(attaquant, cible, toutes_unites):
     """Tir précis : Attaque avec dégâts x1.5 à portée étendue (portée +1)."""
-    if not cible or not cible.vivant:
+    if not cible or not cible.is_vivant():
         return False
 
     # Vérifier que la cible est ennemie
@@ -737,7 +737,7 @@ def tir_precis(attaquant, cible, toutes_unites):
         cible, degats_precis, toutes_unites)
 
     # Gestion de la mort
-    if cible.pv <= 0:
+    if cible.get_pv() <= 0:
         cible.mourir(toutes_unites)
 
     return True

@@ -265,11 +265,11 @@ class Jeu:
                         self.ia_strategy(e, self.unites)
 
                     # Vérifier l'état après l'action IA
-                    attaques_apres = e.attaque_restantes if hasattr(
-                        e, 'attaque_restantes') else 0
-                    position_apres = e.pos
+                    attaques_apres = e.get_attaque_restantes() if hasattr(
+                        e, 'get_attaque_restantes') else 0
+                    position_apres = e.get_pos()
                     ennemis_vivants_apres = len(
-                        [u for u in self.unites if u.equipe != e.equipe and u.vivant])
+                        [u for u in self.unites if u.get_equipe() != e.get_equipe() and u.get_vivant()])
 
                     # Conditions pour continuer :
                     # 1. L'unité a encore des attaques
@@ -278,8 +278,7 @@ class Jeu:
                     # 4. Pas trop de tentatives (protection contre boucles infinies)
                     peut_continuer = (attaques_apres > 0 and
                                       attaques_avant > 0 and
-                                      e.vivant and
-                                      e._ia_tentatives_tour < 10)  # Max 10 actions par tour
+                                      e.get_vivant())  # Max 10 actions par tour
 
                     if peut_continuer:
                         # Détecter si l'IA a fait quelque chose :
@@ -347,7 +346,7 @@ class Jeu:
         # Gérer la combustion différée en fin de tour ennemi
         if self.tour == "ennemi":
             for u in self.unites:
-                if u.vivant and hasattr(u, 'fin_tour_ennemi'):
+                if u.get_vivant():
                     u.fin_tour_ennemi(self.unites)
 
         # Vérifier les conditions de manipulation pour toutes les unités
@@ -413,7 +412,7 @@ class Jeu:
                         not self.niveau_config.completable_plusieurs_fois):
                     # Importer la fonction de vérification
                     try:
-                        from sauvegarde import niveau_est_complete
+                        from sauvegarde import est_niveau_complete
                         if (hasattr(self.niveau_config, 'chapitre') and
                                 hasattr(self.niveau_config, 'numero')):
                             # Convertir le nom de chapitre (ex: "01_Religieux" -> "Religieux")
@@ -422,7 +421,7 @@ class Jeu:
                                 chapitre_display = chapitre_display.split(
                                     "_", 1)[1].replace("_", " ")
 
-                            niveau_deja_complete = niveau_est_complete(
+                            niveau_deja_complete = est_niveau_complete(
                                 chapitre_display,
                                 self.niveau_config.numero
                             )
