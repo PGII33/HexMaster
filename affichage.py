@@ -213,8 +213,8 @@ def dessiner(jeu):
             is_enemy = False
             if getattr(jeu, 'versus_mode', False):
                 # Mode versus : joueur vs joueur2
-                is_enemy = (jeu.selection.equipe == "joueur" and u.equipe == "joueur2") or \
-                    (jeu.selection.equipe == "joueur2" and u.equipe == "joueur")
+                is_enemy = (jeu.selection.get_equipe() == "joueur" and u.get_equipe() == "joueur2") or \
+                    (jeu.selection.get_equipe() == "joueur2" and u.get_equipe() == "joueur")
             else:
                 # Mode normal : joueur vs ennemi
                 is_enemy = u.get_equipe() != jeu.selection.get_equipe()
@@ -268,7 +268,7 @@ def dessiner(jeu):
         attaque_necessaire = getattr(u, 'comp', '') in co.comp_attaque
         if (u.possede_competence_active() and
             (not attaque_necessaire or u.attaque_restantes > 0) and
-                u.equipe == jeu.tour and not (hasattr(jeu, 'mode_selection_competence') and jeu.mode_selection_competence)):
+                u.get_equipe() == jeu.tour and not (hasattr(jeu, 'mode_selection_competence') and jeu.mode_selection_competence)):
 
             btn_y = jeu.info_panel.y + 10 + \
                 len(lignes) * (jeu.font_norm.get_height() + 4) + 10

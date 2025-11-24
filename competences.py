@@ -172,7 +172,7 @@ def bouclier_de_la_foi(self, toutes_unites):
     q, r = self.get_pos()
 
     for unite in toutes_unites:
-        if unite.get_equipe() == self.get_equipe() and unite != self and unite.get_is_vivant()():
+        if unite.get_equipe() == self.get_equipe() and unite != self and unite.is_vivant():
             unite_q, unite_r = unite.get_pos()
             for dq, dr in directions:
                 if (q+dq, r+dr) == (unite_q, unite_r):
@@ -445,7 +445,7 @@ def protection(cible_originale, degats, toutes_unites):
     for dq, dr in directions:
         pos_adj = (q + dq, r + dr)
         for unite in toutes_unites:
-            if (unite.get_competence() == "protection" and unite.get_pos() == pos_adj and unite.get_is_vivant()() and unite.get_equipe() == cible_originale.get_equipe()):
+            if (unite.get_competence() == "protection" and unite.get_pos() == pos_adj and unite.is_vivant() and unite.get_equipe() == cible_originale.get_equipe()):
                 protecteurs.add(unite)
                 queue.append(unite)
                 visited.add(unite)
@@ -457,7 +457,7 @@ def protection(cible_originale, degats, toutes_unites):
         for dq, dr in directions:
             pos_adj = (cq + dq, cr + dr)
             for unite in toutes_unites:
-                if (unite.get_pos() == pos_adj and unite.get_is_vivant()()
+                if (unite.get_pos() == pos_adj and unite.is_vivant()
                     and unite.get_equipe() == cible_originale.get_equipe()
                     and unite.get_competence() == "protection"):
                     if unite not in visited:

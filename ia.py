@@ -133,7 +133,7 @@ def peut_cibler_pour_competence(unite_cible, nom_competence) -> bool:
     Vérifie si une unité peut être ciblée par une compétence spécifique,
     en tenant compte des buffs non-stackables déjà présents.
     """
-    if not unite_cible or not unite_cible.vivant:
+    if not unite_cible or not unite_cible.is_vivant():
         return False
 
     # Vérifications spécifiques par compétence pour les buffs non-stackables
@@ -149,7 +149,7 @@ def peut_cibler_pour_competence(unite_cible, nom_competence) -> bool:
 
     elif nom_competence == "soin":
         # Ne peut pas soigner une unité en pleine santé
-        if unite_cible.pv >= unite_cible.pv_max:
+        if unite_cible.get_pv() >= unite_cible.get_pv_max():
             return False
 
     # D'autres vérifications pourraient être ajoutées ici pour d'autres compétences
@@ -168,7 +168,7 @@ def obtenir_cibles_competence(unite, nom_competence, toutes_unites) -> List[Unio
 
     # Cibles alliées
     if nom_competence in comp_cib_allie:
-        allies = [u for u in toutes_unites if u.get_vivant() and u.get_equipe() ==
+        allies = [u for u in toutes_unites if u.is_vivant() and u.get_equipe() ==
                   unite.get_equipe()]
         for allie in allies:
             if (hex_distance(unite.get_pos(), allie.get_pos()) <= portee_comp and
@@ -178,7 +178,7 @@ def obtenir_cibles_competence(unite, nom_competence, toutes_unites) -> List[Unio
     # Cibles ennemies
     if nom_competence in com_cib_ennemi:
         ennemis = [
-            u for u in toutes_unites if u.get_vivant() and u.get_equipe() != unite.get_equipe()]
+            u for u in toutes_unites if u.is_vivant() and u.get_equipe() != unite.get_equipe()]
         for ennemi in ennemis:
             if hex_distance(unite.get_pos(), ennemi.get_pos()) <= portee_comp:
                 cibles.append(ennemi)
@@ -196,7 +196,7 @@ def obtenir_cibles_competence(unite, nom_competence, toutes_unites) -> List[Unio
                     if -1 <= q <= 6 and -1 <= r <= 6:  # Ajuster selon votre plateau
                         # Vérifier que la case est vide
                         case_occupee = any(
-                            u.get_pos() == position and u.get_vivant() for u in toutes_unites)
+                            u.get_pos() == position and u.is_vivant() for u in toutes_unites)
                         if not case_occupee and position != unite.get_pos():
                             cibles.append(position)
 
@@ -221,7 +221,7 @@ def evaluer_competence_soin(unite, cible_allie) -> float:
     score += force_allie * 0.02  # 2% de la force comme bonus
 
     # Bonus si l'allié est en danger critique
-    if cible_allie.pv <= 10:
+    if cible_allie.get_pv() <= 10:
         score += 30  # Bonus de sauvetage
 
     return score + SC_ACTIF
@@ -248,7 +248,7 @@ def evaluer_competence_benediction(unite, cible_allie) -> float:
     if cible_allie.get_attaque_restantes() > 0:
         bonus_attaque *= 2  # Double valeur si peut encore attaquer
 
-    return bonus_attaque + bonus_bouclier + force_allie * 0.01
+    return bonus_attaque + bonus_bouclier + force_allie * 0.01 + SC_ACTIF
 
 
 def evaluer_competence_commandement(unite, cible_allie) -> float:
@@ -308,7 +308,7 @@ def evaluer_competence_case_vide(unite, nom_competence, position, toutes_unites)
         # Évaluer l'intérêt de placer un cristal
         # Bonus pour position défensive (près des alliés)
         allies_proches = [u for u in toutes_unites
-                          if u.get_vivant() and u.get_equipe() == unite.get_equipe() and hex_distance(position, u.get_pos()) <= 2]
+                          if u.is_vivant() and u.get_equipe() == unite.get_equipe() and hex_distance(position, u.get_pos()) <= 2]
         score += len(allies_proches) * 10
 
         # Bonus pour contrôle territorial
@@ -324,7 +324,7 @@ def evaluer_competence_case_vide(unite, nom_competence, position, toutes_unites)
 
         for pos in positions_affectees:
             for u in toutes_unites:
-                if u.get_pos() == pos and u.get_vivant():
+                if u.get_pos() == pos and u.is_vivant():
                     if u.get_equipe() != unite.get_equipe():
                         ennemis_touches += 1
                         score += sc_stat(u) * 0.1  # 10% de la force ennemie
@@ -454,7 +454,7 @@ def sc_position_competence(unite, position: Tuple[int, int], toutes_unites) -> f
     # Évaluer les cibles accessibles depuis cette position
     if nom_competence == "soin":
         # Pour le soin : privilégier les positions qui permettent de soigner des alliés blessés
-        allies = [u for u in toutes_unites if u.get_vivant() and u.get_equipe() ==
+        allies = [u for u in toutes_unites if u.is_vivant() and u.get_equipe() ==
                   unite.get_equipe()]
         for allie in allies:
             if hex_distance(position, allie.get_pos()) <= portee_comp:
@@ -467,14 +467,14 @@ def sc_position_competence(unite, position: Tuple[int, int], toutes_unites) -> f
                     score_soin += sc_stat(allie) * 0.05
 
                     # Bonus si l'allié est en danger critique
-                    if allie.pv <= 10:
+                    if allie.get_pv() <= 10:
                         score_soin += 50
 
                     score += score_soin
 
     elif nom_competence == "bénédiction":
         # Pour la bénédiction : privilégier les positions près d'alliés offensifs
-        allies = [u for u in toutes_unites if u.get_vivant() and u.get_equipe() ==
+        allies = [u for u in toutes_unites if u.is_vivant() and u.get_equipe() ==
                   unite.get_equipe() and u != unite]
         for allie in allies:
             if hex_distance(position, allie.get_pos()) <= portee_comp:
@@ -491,7 +491,7 @@ def sc_position_competence(unite, position: Tuple[int, int], toutes_unites) -> f
 
     elif nom_competence == "commandement":
         # Pour le commandement : privilégier les positions près d'alliés avec bon potentiel d'attaque
-        allies = [u for u in toutes_unites if u.get_vivant() and u.get_equipe() ==
+        allies = [u for u in toutes_unites if u.is_vivant() and u.get_equipe() ==
                   unite.get_equipe() and u != unite]
         for allie in allies:
             if hex_distance(position, allie.get_pos()) <= portee_comp:
@@ -513,7 +513,7 @@ def sc_position_competence(unite, position: Tuple[int, int], toutes_unites) -> f
     elif nom_competence == "tir précis":
         # Pour tir précis : privilégier les positions qui permettent d'atteindre des ennemis prioritaires
         ennemis = [
-            u for u in toutes_unites if u.get_vivant() and u.get_equipe() != unite.get_equipe()]
+            u for u in toutes_unites if u.is_vivant() and u.get_equipe() != unite.get_equipe()]
         for ennemi in ennemis:
             if hex_distance(position, ennemi.get_pos()) <= portee_comp:
                 # Score similaire à sc_attaque mais avec bonus pour portée étendue
@@ -542,7 +542,7 @@ def sc_position_competence(unite, position: Tuple[int, int], toutes_unites) -> f
 
                     if -1 <= q <= 6 and -1 <= r <= 6:  # Dans les limites
                         case_occupee = any(
-                            u.get_pos() == pos_cible and u.get_vivant() for u in toutes_unites)
+                            u.get_pos() == pos_cible and u.is_vivant() for u in toutes_unites)
                         if not case_occupee and pos_cible != position:
                             cases_ciblables += 1
 
@@ -553,7 +553,7 @@ def sc_position_competence(unite, position: Tuple[int, int], toutes_unites) -> f
                                     get_positions_adjacentes(pos_cible)
                                 ennemis_touches = sum(1 for pos in positions_aoe
                                                       for u in toutes_unites
-                                                      if u.get_pos() == pos and u.get_vivant() and u.get_equipe() != unite.get_equipe())
+                                                      if u.get_pos() == pos and u.is_vivant() and u.get_equipe() != unite.get_equipe())
                                 if ennemis_touches >= 1:
                                     positions_interessantes += ennemis_touches * 10
 
@@ -570,9 +570,9 @@ def sc_case_base(unite, position: Tuple[int, int], toutes_unites) -> float:
     score = 0.0
 
     # Séparer alliés et ennemis
-    allies = [u for u in toutes_unites if u.get_vivant() and u.get_equipe() ==
+    allies = [u for u in toutes_unites if u.is_vivant() and u.get_equipe() ==
               unite.get_equipe() and u != unite]
-    ennemis = [u for u in toutes_unites if u.get_vivant() and u.get_equipe() != unite.get_equipe()]
+    ennemis = [u for u in toutes_unites if u.is_vivant() and u.get_equipe() != unite.get_equipe()]
 
     # 1. Proximité des alliés (bonus modéré)
     allies_adjacents = [u for u in allies if est_adjacent(position, u.get_pos())]
@@ -620,7 +620,7 @@ def sc_case(unite, position: Tuple[int, int], toutes_unites) -> float:
     for pos_adj in positions_adjacentes:
         # Vérifier que la case adjacente n'est pas occupée par une unité
         case_occupee = any(
-            u.get_pos() == pos_adj and u.get_vivant() for u in toutes_unites)
+            u.get_pos() == pos_adj and u.is_vivant() for u in toutes_unites)
         if not case_occupee:
             # Calculer le score de base de la case adjacente et en prendre 20%
             score_adj = sc_case_base(unite, pos_adj, toutes_unites)
@@ -647,7 +647,7 @@ def sc_attaque(unite, cible, toutes_unites) -> float:
     score += score_ennemi * 0.5  # 50% du score ennemi en bonus - AUGMENTÉ
 
     # 3. Menace immédiate (priorité aux ennemis qui menacent nos alliés)
-    allies = [u for u in toutes_unites if u.get_vivant() and u.get_equipe() ==
+    allies = [u for u in toutes_unites if u.is_vivant() and u.get_equipe() ==
               unite.get_equipe() and u != unite]
     allies_menaces = [a for a in allies
                       if est_a_portee(cible.get_pos(), a.get_pos(), getattr(cible, 'portee', 1))]
@@ -697,7 +697,7 @@ def generer_actions_unite(unite, toutes_unites) -> List[Action]:
     # Actions d'attaque normale - Génère les attaques contre tous les ennemis à portée
     if unite.get_attaque_restantes() > 0:
         ennemis = [
-            u for u in toutes_unites if u.get_vivant() and u.get_equipe() != unite.get_equipe()]
+            u for u in toutes_unites if u.is_vivant() and u.get_equipe() != unite.get_equipe()]
         portee = getattr(unite, 'portee', 1)
 
         for ennemi in ennemis:
