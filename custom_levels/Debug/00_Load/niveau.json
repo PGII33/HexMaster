@@ -1,0 +1,190 @@
+{
+  "nom": "Load",
+  "description": "",
+  "chapitre": "Debug",
+  "numero": 0,
+  "type_restriction": "faction_libre",
+  "unites_imposees": [],
+  "placement_impose": false,
+  "factions_autorisees": [],
+  "faction_unique_requise": false,
+  "faction_imposee": "",
+  "cp_disponible": 20,
+  "max_unites": 24,
+  "unites_ennemis": [
+    [
+      "Esprit_Saint",
+      [
+        0,
+        4
+      ]
+    ],
+    [
+      "Liche",
+      [
+        1,
+        4
+      ]
+    ],
+    [
+      "Guerrier",
+      [
+        2,
+        4
+      ]
+    ],
+    [
+      "Golem",
+      [
+        3,
+        4
+      ]
+    ],
+    [
+      "Driade",
+      [
+        4,
+        4
+      ]
+    ],
+    [
+      "Vampire",
+      [
+        5,
+        4
+      ]
+    ],
+    [
+      "Archliche",
+      [
+        6,
+        4
+      ]
+    ],
+    [
+      "Phenix",
+      [
+        -1,
+        4
+      ]
+    ],
+    [
+      "Clerc",
+      [
+        -1,
+        5
+      ]
+    ],
+    [
+      "Fanatique",
+      [
+        0,
+        5
+      ]
+    ],
+    [
+      "Goule",
+      [
+        1,
+        5
+      ]
+    ],
+    [
+      "Ifrit",
+      [
+        2,
+        5
+      ]
+    ],
+    [
+      "Squelette",
+      [
+        3,
+        5
+      ]
+    ],
+    [
+      "Archer",
+      [
+        4,
+        5
+      ]
+    ],
+    [
+      "Paladin",
+      [
+        5,
+        5
+      ]
+    ],
+    [
+      "Ondine",
+      [
+        6,
+        5
+      ]
+    ],
+    [
+      "Esprit",
+      [
+        6,
+        6
+      ]
+    ],
+    [
+      "Missionnaire",
+      [
+        5,
+        6
+      ]
+    ],
+    [
+      "Spectre",
+      [
+        3,
+        6
+      ]
+    ],
+    [
+      "Gnome",
+      [
+        4,
+        6
+      ]
+    ],
+    [
+      "Cavalier",
+      [
+        2,
+        6
+      ]
+    ],
+    [
+      "ArchAnge",
+      [
+        1,
+        6
+      ]
+    ],
+    [
+      "Zombie",
+      [
+        0,
+        6
+      ]
+    ],
+    [
+      "Ange",
+      [
+        -1,
+        6
+      ]
+    ]
+  ],
+  "difficulte_ennemis": "normale",
+  "recompense_cp": 1,
+  "recompense_pa": 0,
+  "unites_debloquees": [],
+  "recompenses_autres": [],
+  "completable_plusieurs_fois": false
+}

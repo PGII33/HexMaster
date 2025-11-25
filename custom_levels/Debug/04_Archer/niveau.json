@@ -1,0 +1,36 @@
+{
+  "nom": "Archer",
+  "description": "",
+  "chapitre": "Debug",
+  "numero": 4,
+  "type_restriction": "faction_libre",
+  "unites_imposees": [],
+  "placement_impose": false,
+  "factions_autorisees": [],
+  "faction_unique_requise": false,
+  "faction_imposee": "",
+  "cp_disponible": 5,
+  "max_unites": 24,
+  "unites_ennemis": [
+    [
+      "Archer",
+      [
+        2,
+        4
+      ]
+    ],
+    [
+      "Archer",
+      [
+        4,
+        4
+      ]
+    ]
+  ],
+  "difficulte_ennemis": "normale",
+  "recompense_cp": 1,
+  "recompense_pa": 0,
+  "unites_debloquees": [],
+  "recompenses_autres": [],
+  "completable_plusieurs_fois": false
+}

@@ -1,0 +1,43 @@
+{
+  "nom": "Roi",
+  "description": "",
+  "chapitre": "Debug",
+  "numero": 6,
+  "type_restriction": "faction_libre",
+  "unites_imposees": [],
+  "placement_impose": false,
+  "factions_autorisees": [],
+  "faction_unique_requise": false,
+  "faction_imposee": "",
+  "cp_disponible": 15,
+  "max_unites": 24,
+  "unites_ennemis": [
+    [
+      "Guerrier",
+      [
+        1,
+        4
+      ]
+    ],
+    [
+      "Guerrier",
+      [
+        5,
+        4
+      ]
+    ],
+    [
+      "Roi",
+      [
+        2,
+        5
+      ]
+    ]
+  ],
+  "difficulte_ennemis": "normale",
+  "recompense_cp": 1,
+  "recompense_pa": 0,
+  "unites_debloquees": [],
+  "recompenses_autres": [],
+  "completable_plusieurs_fois": false
+}
