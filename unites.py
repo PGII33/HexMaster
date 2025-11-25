@@ -146,9 +146,12 @@ class Unite:
 
         return attaque_base + ba_benediction + ba_commandement + ba_aura_sacree + ba_rage
 
-    def get_buff(self, nom_buff):
+    def has_buff(self, nom_buff):
         """ Retourne 1 si le buff est appliqué à l'unité, 0 sinon. Lève une erreur si le buff est inconnu."""
-        return co.get_buff(nom_buff)
+        if co.get_buff(nom_buff):
+            print(f"Vérification du buff {nom_buff} sur {self.get_nom()}, résultat : {hasattr(self, nom_buff)}")
+            return hasattr(self, nom_buff)
+        return False
 
     def get_pos(self):
         """ get attribute pos """

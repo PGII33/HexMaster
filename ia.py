@@ -135,16 +135,15 @@ def peut_cibler_pour_competence(unite_cible, nom_competence) -> bool:
     """
     if not unite_cible or not unite_cible.is_vivant():
         return False
-
     # Vérifications spécifiques par compétence pour les buffs non-stackables
     if nom_competence == "bénédiction":
         # Ne peut pas bénir une unité qui a déjà la bénédiction
-        if unite_cible.get_buff('ba_bénédiction'):
+        if unite_cible.has_buff('ba_benediction'):
             return False
 
     elif nom_competence == "commandement":
         # Ne peut pas commander une unité qui a déjà le commandement
-        if unite_cible.get_buff('ba_commandement'):
+        if unite_cible.has_buff('ba_commandement'):
             return False
 
     elif nom_competence == "soin":
@@ -160,11 +159,13 @@ def peut_cibler_pour_competence(unite_cible, nom_competence) -> bool:
 def obtenir_cibles_competence(unite, nom_competence, toutes_unites) -> List[Union['Unite', Tuple[int, int]]]:
     """Retourne toutes les cibles possibles pour une compétence active, en excluant les cibles déjà buffées"""
     cibles = []
-    portee_comp = comp_portee.get(nom_competence, 1)
+    portee_comp = comp_portee.get(nom_competence, -1)
+    if portee_comp == -1:
+        raise ValueError(f"Portée non définie pour la compétence {nom_competence}")
 
     # Pour tir précis, ajouter la portée de base de l'unité
     if nom_competence == "tir précis":
-        portee_comp += getattr(unite, 'portee', 1)
+        portee_comp += unite.get_portee()
 
     # Cibles alliées
     if nom_competence in comp_cib_allie:
@@ -233,7 +234,7 @@ def evaluer_competence_benediction(unite, cible_allie) -> float:
         return 0.0
 
     # Éviter de bénir plusieurs fois la même unité
-    if cible_allie.get_buff('ba_bénédiction'):
+    if cible_allie.has_buff('ba_benediction'):
         return 0.0
 
     # Plus l'allié est fort, plus la bénédiction a de la valeur
@@ -241,7 +242,7 @@ def evaluer_competence_benediction(unite, cible_allie) -> float:
 
     # Bonus basé sur les stats offensives (attaque et portée)
     # +2 dmg vaut plus sur une unité qui frappe fort
-    bonus_attaque = cible_allie.dmg * 5
+    bonus_attaque = cible_allie.get_attaque_totale() * 5
     bonus_bouclier = 15  # Valeur fixe du bouclier
 
     # Bonus si l'allié a encore des attaques disponibles
@@ -711,8 +712,9 @@ def generer_actions_unite(unite, toutes_unites) -> List[Action]:
         if unite_peut_utiliser_competence(unite, nom_competence):
             cibles_possibles = obtenir_cibles_competence(
                 unite, nom_competence, toutes_unites)
-
             for cible in cibles_possibles:
+                if nom_competence == "bénédiction":
+                    print("oui je peut utiliser bénédiction")
                 actions.append(ActiveSkillAction(unite, nom_competence, cible))
 
     if MODE_PRINT:

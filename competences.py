@@ -154,8 +154,6 @@ def explosion_sacrée(self, toutes_unites, cible_attaquee=None):
 
     # Infliger des dégâts uniquement à la cible directe si c'est un ennemi
     if cible_attaquee and cible_attaquee.get_equipe() != self.get_equipe() and cible_attaquee.is_vivant():
-        # Appliquer la protection si applicable
-        degats_infliges = protection(cible_attaquee, degats, toutes_unites)
 
         # Vérifier si la cible ou les protecteurs meurent
         for unite in toutes_unites:
@@ -185,8 +183,10 @@ def bénédiction(self, cible):
     """Augmente l'attaque de 2 et applique 1 bouclier à la cible."""
     if cible.get_equipe() == self.get_equipe() and cible.is_vivant():
         # Ajouter un buff permanent
-        if not hasattr(cible, 'buff_bénédiction'):
+        if not hasattr(cible, 'ba_benediction'):
             cible.ba_benediction = 2
+            print (f"✨ Bénédiction appliquée à {cible.get_nom()} (+2 attaque)")
+            print(f"A été bénis ? {hasattr(cible, 'ba_benediction')}")
             cible.set_bouclier(cible.get_bouclier() + 1)
         return True
     return False
@@ -825,8 +825,8 @@ cooldowns = {
 }
 
 buffs = {
-    "ba_aura_sacrée": 3,  # +3 DMG permanent
-    "ba_bénédiction": 2,  # +2 DMG permanent
+    "ba_aura_sacree": 3,  # +3 DMG permanent
+    "ba_benediction": 2,  # +2 DMG permanent
     "ba_commandement": 0,  # Variable, dépend de l'attaquant
     "ba_rage": 1,  # +1 DMG par stack
 }
