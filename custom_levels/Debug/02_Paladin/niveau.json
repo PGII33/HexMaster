@@ -1,0 +1,43 @@
+{
+  "nom": "Paladin",
+  "description": "",
+  "chapitre": "Debug",
+  "numero": 2,
+  "type_restriction": "faction_libre",
+  "unites_imposees": [],
+  "placement_impose": false,
+  "factions_autorisees": [],
+  "faction_unique_requise": false,
+  "faction_imposee": "",
+  "cp_disponible": 10,
+  "max_unites": 10,
+  "unites_ennemis": [
+    [
+      "Paladin",
+      [
+        2,
+        5
+      ]
+    ],
+    [
+      "Paladin",
+      [
+        3,
+        5
+      ]
+    ],
+    [
+      "Missionnaire",
+      [
+        3,
+        4
+      ]
+    ]
+  ],
+  "difficulte_ennemis": "normale",
+  "recompense_cp": 1,
+  "recompense_pa": 0,
+  "unites_debloquees": [],
+  "recompenses_autres": [],
+  "completable_plusieurs_fois": false
+}
