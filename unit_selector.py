@@ -513,7 +513,7 @@ class UnitSelector:
                             btn_text = "Max atteint"
                         elif self.config.get("use_cp", False):
                             tmp = cls("joueur", (0,0))
-                            cost = tmp.tier
+                            cost = tmp.get_tier()
                             current_cost = self._calculate_cp_cost(self.selected_units)
                             if current_cost + cost > self.config["cp_disponible"]:
                                 btn_text = "CP insuffisant"

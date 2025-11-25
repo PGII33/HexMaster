@@ -309,7 +309,7 @@ class Unite:
             # Gestion spéciale pour explosion sacrée
             if self.get_competence() == "explosion sacrée":
                 # Le Fanatique inflige ses PV en dégâts et se sacrifie après l'animation
-                co.explosion_sacrée(self, toutes_unites, autre)
+                co.explosion_sacree(self, toutes_unites, autre)
             else:
                 # Attaque normale - calculer les dégâts avec boosts
                 degats_totaux = self.get_attaque_totale()
@@ -337,7 +337,7 @@ class Unite:
 
             # Compétences après l'attaque (quand on sait si la cible est tuée)
             if self.get_competence() == "lumière vengeresse" and cible_tuée:
-                co.lumière_vengeresse(self, autre)
+                co.lumiere_vengeresse(self, autre)
 
             if self.get_competence() == "zombification" and cible_tuée:
                 co.zombification(self, autre)
@@ -366,7 +366,7 @@ class Unite:
 
             # Compétence de renaissance : tentative de résurrection avant la mort
             if self.get_competence() == "renaissance":
-                if co.renaissance(self, toutes_unites):
+                if co.renaissance(self):
                     return False  # L'unité a été ressuscitée, elle n'est pas morte
 
             self.set_vivant(False)
@@ -401,7 +401,7 @@ class Unite:
         elif self.get_competence() == "bouclier de la foi":
             co.bouclier_de_la_foi(self, toutes_unites)
         elif self.get_competence() == "aura sacrée":
-            co.aura_sacrée(self, toutes_unites)
+            co.aura_sacree(self, toutes_unites)
         elif self.get_competence() == "vague apaisante":
             co.vague_apaisante(self, toutes_unites)
 

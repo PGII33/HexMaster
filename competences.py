@@ -27,7 +27,7 @@ def zombification(self, cible):
     """Transforme l'unite morte en zombie sous le contrôle du joueur de l'attaquant"""
     if DO_PRINT:
         print("Zombification effectuée sur :", cible.get_name())
-    if not cible.is_vivant() and cible.nom != "Zombie":
+    if not cible.is_vivant() and cible.get_nom() != "Zombie":
         cible.__class__ = self.__class__
         cible.__init__(self.get_equipe(), cible.get_pos())
         cible.pm = 0
@@ -60,7 +60,7 @@ def cases_fantomatiques(unite, toutes_unites, q_range=None, r_range=None):
     occupees = {u.get_pos() for u in toutes_unites if u.is_vivant() and u != unite}
     while file:
         (q, r), cout = file.popleft()
-        if cout > unite.pm:
+        if cout > unite.get_pm():
             continue
         if (q, r) in vus and cout >= vus[(q, r)]:
             continue
@@ -133,8 +133,8 @@ def invocation(self, toutes_unites, plateau, q_range=None, r_range=None):
                 continue
 
             if plateau.est_case_vide(new_pos, toutes_unites):
-                UniteClass = random.choice(candidates)
-                toutes_unites.append(UniteClass(self.get_equipe(), new_pos))
+                unite_class = random.choice(candidates)
+                toutes_unites.append(unite_class(self.get_equipe(), new_pos))
                 break
 
 # ========== COMPÉTENCES RELIGIEUX ==========
@@ -148,12 +148,14 @@ def soin(self, cible):
     return False
 
 
-def explosion_sacrée(self, toutes_unites, cible_attaquee=None):
+def explosion_sacree(self, toutes_unites, cible_attaquee=None):
     """Se sacrifie en attaquant pour infliger ses points de vie en dégâts à la cible uniquement."""
     degats = self.get_pv()  # Utilise ses PV actuels comme dégâts
 
     # Infliger des dégâts uniquement à la cible directe si c'est un ennemi
     if cible_attaquee and cible_attaquee.get_equipe() != self.get_equipe() and cible_attaquee.is_vivant():
+        # Appliquer la protection si applicable
+        protection(cible_attaquee, degats, toutes_unites)
 
         # Vérifier si la cible ou les protecteurs meurent
         for unite in toutes_unites:
@@ -179,7 +181,7 @@ def bouclier_de_la_foi(self, toutes_unites):
                     break
 
 
-def bénédiction(self, cible):
+def benediction(self, cible):
     """Augmente l'attaque de 2 et applique 1 bouclier à la cible."""
     if cible.get_equipe() == self.get_equipe() and cible.is_vivant():
         # Ajouter un buff permanent
@@ -192,16 +194,17 @@ def bénédiction(self, cible):
     return False
 
 
-def lumière_vengeresse(self, cible):
+def lumiere_vengeresse(self, cible):
     """Regagne son attaque lorsqu'il tue un Mort-Vivant."""
     if cible.get_faction() != "Morts-Vivants":
         return
     self.set_attaque_restantes(self.get_attaque_restantes() + 1)
     # Flag pour indiquer que cette unité devrait continuer à agir
-    self._lumiere_vengeresse_activee = True
+    if not hasattr(self, 'lumiere_vengeresse'):
+        self.lumiere_vengeresse = True
 
 
-def aura_sacrée(self, toutes_unites):
+def aura_sacree(self, toutes_unites):
     """Bonus de dégâts pour tout les alliés adjacents."""
     directions = [(-1, 0), (1, 0), (0, 1), (0, -1), (1, -1), (-1, 1)]
     q, r = self.get_pos()
@@ -244,7 +247,7 @@ def pluie_de_fleches(self, cible_pos, toutes_unites):
     for unite in toutes_unites:
         if unite.get_pos() in cases_affectees and unite.is_vivant():  # Touche tout sauf l'archer lui-même
             # Appliquer la protection si applicable
-            degats_infliges = protection(unite, self.dmg, toutes_unites)
+            protection(unite, self.get_dmg(), toutes_unites)
             unites_touchees.append(unite)
 
     # Vérifier les morts après tous les dégâts
@@ -296,7 +299,7 @@ def monture_libere(self, case_pos, toutes_unites):
     return True
 
 
-def commandement(unite, cible, toutes_unites):
+def commandement(unite, cible):
     """Augmente l'attaque d'un allié de l'attaque actuelle du roi, et +1 attaque supplémentaire."""
     from ia import hex_distance
     # Vérifier si c'est un allié
@@ -316,7 +319,7 @@ def commandement(unite, cible, toutes_unites):
         cible.ba_commandement = unite.get_attaque_totale()
         cible.attaque_restantes += 1
 
-        print(f"{unite.nom} commande {cible.nom} ! (+{unite.get_attaque_totale()} attaque, +1 attaque supplémentaire)")
+        print(f"{unite.get_nom()} commande {cible.get_nom()} ! (+{unite.get_attaque_totale()} attaque, +1 attaque supplémentaire)")
 
         return True
 
@@ -349,7 +352,7 @@ def divertissement(self, toutes_unites):
                 break  # Une seule unité par case
 
     if unites_diverties:
-        print(f"{self.nom} divertit {len(unites_diverties)} unité(s) adjacente(s)!")
+        print(f"{self.get_nom()} divertit {len(unites_diverties)} unité(s) adjacente(s)!")
 
 
 def manipulation(self, toutes_unites):
@@ -372,7 +375,7 @@ def manipulation(self, toutes_unites):
             unite.attaque_restantes = unite.attaque_max
 
             unites_manipulees.append(unite)
-            print(f"🎭 {unite.nom} ({unite.get_pv()} PV) est manipulé par {self.nom}!")
+            print(f"🎭 {unite.get_nom()} ({unite.get_pv()} PV) est manipulé par {self.get_nom()}!")
 
     return unites_manipulees
 
@@ -389,13 +392,13 @@ def verifier_conditions_manipulation(toutes_unites):
             if not marionettiste.is_vivant():
                 unites_a_liberer.append(unite)
                 print(
-                    f"🎭 {unite.nom} retrouve son libre arbitre car {marionettiste.nom} est mort!")
+                    f"🎭 {unite.get_nom()} retrouve son libre arbitre car {marionettiste.get_nom()} est mort!")
 
             # Condition 2: L'unité a maintenant plus de 4 PV
             elif unite.get_pv() > 4:
                 unites_a_liberer.append(unite)
                 print(
-                    f"🎭 {unite.nom} ({unite.get_pv()} PV) retrouve son libre arbitre car elle a plus de 4 PV!")
+                    f"🎭 {unite.get_nom()} ({unite.get_pv()} PV) retrouve son libre arbitre car elle a plus de 4 PV!")
 
     # Libérer les unités qui ne remplissent plus les conditions
     for unite in unites_a_liberer:
@@ -417,7 +420,7 @@ def liberer_toutes_unites_manipulees_par(marionettiste, toutes_unites):
         if (hasattr(unite, 'manipulee_par') and
                 unite.manipulee_par == marionettiste):
             liberer_unite_manipulee(unite)
-            print(f"🎭 {unite.nom} est libérée car {marionettiste.nom} est mort!")
+            print(f"🎭 {unite.get_nom()} est libérée car {marionettiste.get_nom()} est mort!")
 
 
 def gerer_fin_manipulation(toutes_unites):
@@ -475,7 +478,7 @@ def protection(cible_originale, degats, toutes_unites):
     if cible_originale.comp == "armure de pierre":
         degats_apres_armure_cible = max(0, degats - 2)
         print(
-            f" {cible_originale.nom} a armure de pierre: {degats} → {degats_apres_armure_cible} dégâts")
+            f" {cible_originale.get_nom()} a armure de pierre: {degats} → {degats_apres_armure_cible} dégâts")
 
     # ÉTAPE 2: Répartir les dégâts pour équilibrer les PV restants
     n = len(protecteurs)
@@ -491,11 +494,11 @@ def protection(cible_originale, degats, toutes_unites):
         parts[idx] += 1
         pv_apres[idx] -= 1
         degats_restants -= 1
-    print(f" {n} protecteurs protègent {cible_originale.nom} ! Dégâts répartis pour équilibrer les PV :")
+    print(f" {n} protecteurs protègent {cible_originale.get_nom()} ! Dégâts répartis pour équilibrer les PV :")
     total_inflige = 0
     for i, protecteur in enumerate(protecteurs):
         print(
-            f"  {protecteur.nom} subit {parts[i]} dégâts (PV initiaux: {pv_initiaux[i]} → finaux: {pv_initiaux[i]-parts[i]})")
+            f"  {protecteur.get_nom()} subit {parts[i]} dégâts (PV initiaux: {pv_initiaux[i]} → finaux: {pv_initiaux[i]-parts[i]})")
         total_inflige += protecteur.subir_degats(parts[i])
         if protecteur.get_pv() <= 0 and protecteur.is_vivant():
             protecteur.mourir(toutes_unites)
@@ -504,7 +507,7 @@ def protection(cible_originale, degats, toutes_unites):
 
     # ÉTAPE 3: Si des dégâts restent, la cible originale les subit
     if degats_a_rediriger > 0:
-        print(f"  {cible_originale.nom} subit {degats_a_rediriger} dégâts restants (aucun protecteur n'a pu les absorber)")
+        print(f"  {cible_originale.get_nom()} subit {degats_a_rediriger} dégâts restants (aucun protecteur n'a pu les absorber)")
         total_inflige += cible_originale.subir_degats(degats_a_rediriger)
         if cible_originale.get_pv() <= 0 and cible_originale.is_vivant():
             cible_originale.mourir(toutes_unites)
@@ -516,7 +519,7 @@ def protection(cible_originale, degats, toutes_unites):
 def enracinement(self):
     """Si l'unité n'a pas bougé en fin de tour, régénère 2 PV."""
     # L'enracinement se déclenche si l'unité n'a pas dépensé de PM (pas bougé)
-    if self.pm == self.mv:  # N'a pas bougé (PM restants = MV max)
+    if self.get_pm() == self.get_mv():  # N'a pas bougé (PM restants = MV max)
         if self.get_pv() + 2 <= self.get_pv_max():
             self.set_pv(self.get_pv() + 2)
         else:
@@ -565,16 +568,16 @@ def cristalisation(self, cible_pos, toutes_unites):
     return False
 
 
-def renaissance(self, toutes_unites):
+def renaissance(self):
     """80% de chance de revenir à la vie avec tous ses PV."""
 
     # La renaissance se déclenche quand l'unité est sur le point de mourir (PV <= 0)
     if self.is_vivant() and self.get_pv() <= 0 and random.random() < 0.8:  # 80% de chance
-        print("Renaissance de", self.nom, "!")
+        print("Renaissance de", self.get_nom(), "!")
         self.set_pv(self.get_pv_max())
         # Réinitialiser les actions pour le tour suivant
-        self.pm = self.mv
-        self.attaque_restantes = self.attaque_max
+        self.set_pm(self.get_mv())
+        self.set_attaque_restantes(self.get_attaque_max())
         return True  # Indique que la renaissance a eu lieu
 
     return False
@@ -591,7 +594,7 @@ def combustion_differee(attaquant, cible):
         cible.combustion_differee = 3
         cible.combustion_attaquant = attaquant.get_equipe()
         print(
-            f"🔥 {cible.nom} est marqué par la combustion différée! Mort dans 3 tours.")
+            f"🔥 {cible.get_nom()} est marqué par la combustion différée! Mort dans 3 tours.")
 
 
 def gerer_combustion_differee(unite, toutes_unites):
@@ -599,10 +602,10 @@ def gerer_combustion_differee(unite, toutes_unites):
     if hasattr(unite, 'combustion_tours_restants') and unite.combustion_tours_restants > 0:
         unite.combustion_tours_restants -= 1
         print(
-            f"🔥 {unite.nom} - Combustion: {unite.combustion_tours_restants} tours restants")
+            f"🔥 {unite.get_nom()} - Combustion: {unite.combustion_tours_restants} tours restants")
 
         if unite.combustion_tours_restants == 0:
-            print(f"💥 {unite.nom} succombe à la combustion différée!")
+            print(f"💥 {unite.get_nom()} succombe à la combustion différée!")
             unite.set_pv(0)
             unite.mourir(toutes_unites)
             # Nettoyer l'effet
@@ -616,8 +619,8 @@ def regard_mortel(attaquant, cible):
     """Renvoie 0 si la cible est de tier 2 ou moins, sinon renvoie les dégâts normaux."""
     if cible.tier <= 2 and cible.get_equipe() != attaquant.get_equipe() and cible.is_vivant():
         print(
-            f"{attaquant.nom} utilise son regard mortel sur {cible.nom} (tier {cible.tier})!")
-        print(f"{cible.nom} succombe au regard mortel!")
+            f"{attaquant.get_nom()} utilise son regard mortel sur {cible.get_nom()} (tier {cible.tier})!")
+        print(f"{cible.get_nom()} succombe au regard mortel!")
         cible.set_pv(0)  # Tue la cible immédiatement
         return 0
     return attaquant.dmg  # Dégâts normaux si la cible est de tier > 2
@@ -631,7 +634,7 @@ def rage(attaquant):
 
     # Augmente le stack de rage
     attaquant.ba_rage += 1
-    print(f"{attaquant.nom} entre en RAGE ! Attaque +{attaquant.ba_rage} (Total: {attaquant.get_attaque_totale()})")
+    print(f"{attaquant.get_nom()} entre en RAGE ! Attaque +{attaquant.ba_rage} (Total: {attaquant.get_attaque_totale()})")
 
 
 def vol(defenseur, degats):
@@ -643,7 +646,7 @@ def vol(defenseur, degats):
     # Si c'est la première attaque, l'ignorer
     if not defenseur.vol_utilise:
         defenseur.vol_utilise = True
-        print(f"{defenseur.nom} utilise VOL ! La première attaque est ignorée.")
+        print(f"{defenseur.get_nom()} utilise VOL ! La première attaque est ignorée.")
         return 0  # Aucun dégât subi
 
     # Les attaques suivantes passent normalement
@@ -656,7 +659,7 @@ def venin_incapacitant(attaquant, cible):
         # Marquer la cible comme empoisonnée (ne peut pas bouger au prochain tour)
         cible.venin_incapacite = True
         print(
-            f"{attaquant.nom} empoisonne {cible.nom} ! Elle ne pourra pas se déplacer au prochain tour.")
+            f"{attaquant.get_nom()} empoisonne {cible.get_nom()} ! Elle ne pourra pas se déplacer au prochain tour.")
         return True
     return False
 
@@ -688,13 +691,13 @@ def sedition_venimeuse(attaquant, cible, toutes_unites):
         # Choisir la première cible disponible
         cible_seduite = cibles_possibles[0]
         print(
-            f"🐍✨ {attaquant.nom} séduit {cible.nom} ! {cible.nom} attaque {cible_seduite.nom} !")
+            f"🐍✨ {attaquant.get_nom()} séduit {cible.get_nom()} ! {cible.get_nom()} attaque {cible_seduite.get_nom()} !")
 
         # La cible attaque la créature séduite (mais sans déclencher ses propres compétences)
         if cible.est_a_portee(cible_seduite):
             # Calculer les dégâts de la cible
             degats = cible.get_attaque_totale()
-            degats_infliges = cible_seduite.subir_degats(degats)
+            cible_seduite.subir_degats(degats)
 
             # Gestion de la mort si nécessaire
             if cible_seduite.get_pv() <= 0:
@@ -723,14 +726,14 @@ def tir_precis(attaquant, cible, toutes_unites):
     portee_etendue = attaquant.portee + comp_portee.get(attaquant.comp, 0)
     print(portee_etendue)
     if distance > portee_etendue:
-        print(f"{cible.nom} est trop loin pour le tir précis (distance {distance}, portée max {portee_etendue})")
+        print(f"{cible.get_nom()} est trop loin pour le tir précis (distance {distance}, portée max {portee_etendue})")
         return False
 
     # Tir précis activé : dégâts x1.5
     degats_base = attaquant.get_attaque_totale()
     degats_precis = int(degats_base * 1.5)
 
-    print(f"{attaquant.nom} utilise TIR PRÉCIS ! Dégâts augmentés à {degats_precis} !")
+    print(f"{attaquant.get_nom()} utilise TIR PRÉCIS ! Dégâts augmentés à {degats_precis} !")
 
     # Appliquer les dégâts avec protection
     attaquant.appliquer_degats_avec_protection(
@@ -780,9 +783,9 @@ COMPETENCES = {
 
 # liste des noms des compétences dans le jeu par rapport à dans le code
 nom_competences = {
-    "aura sacrée": "aura_sacrée",
+    "aura sacrée": "aura_sacree",
     "armure de pierre": "armure_de_pierre",
-    "bénédiction": "bénédiction",
+    "bénédiction": "benediction",
     "bouclier de la foi": "bouclier_de_la_foi",
     "combustion différée": "combustion_differee",
     "commandement": "commandement",
@@ -900,7 +903,7 @@ def utiliser_competence_active(unite, nom_competence, cible, toutes_unites=None)
     if nom_competence == "soin":
         return soin(unite, cible)
     elif nom_competence == "bénédiction":
-        return bénédiction(unite, cible)
+        return benediction(unite, cible)
     elif nom_competence == "cristalisation":
         return cristalisation(unite, cible, toutes_unites)
     elif nom_competence == "pluie de flèches":
@@ -912,7 +915,7 @@ def utiliser_competence_active(unite, nom_competence, cible, toutes_unites=None)
     elif nom_competence == "monture libéré":
         return monture_libere(unite, cible, toutes_unites)
     elif nom_competence == "commandement":
-        return commandement(unite, cible, toutes_unites)
+        return commandement(unite, cible)
     elif nom_competence == "tir précis":
         return tir_precis(unite, cible, toutes_unites)
     return False

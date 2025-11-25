@@ -298,8 +298,36 @@ def evaluer_competence_tir_precis(unite, cible_ennemi, toutes_unites) -> float:
     if distance > portee_etendue:
         bonus_degats += 20  # Bonus pour atteindre une cible éloignée
 
-    return score_attaque_base + bonus_degats
+    return score_attaque_base + bonus_degats + SC_ACTIF
 
+def evaluer_pluie_de_fleches(unite, position_cible, toutes_unites) -> float:
+    """Évalue l'intérêt d'utiliser pluie de flèches sur une position cible"""
+    score = 0.0
+
+    # Obtenir toutes les positions affectées (cible + adjacentes)
+    positions_affectees = [position_cible] + get_positions_adjacentes(position_cible)
+
+    ennemis_touches = 0
+    allies_touches = 0
+
+    for pos in positions_affectees:
+        for u in toutes_unites:
+            if u.get_pos() == pos and u.is_vivant():
+                if u.get_equipe() != unite.get_equipe():
+                    ennemis_touches += 1
+                    score += sc_stat(u) * 0.1  # 10% de la force ennemie
+                else:
+                    allies_touches += 1
+                    score -= sc_stat(u) * 0.15  # Malus pour friendly fire
+
+    # Bonus pour multi-hit
+    score += ennemis_touches * 300
+
+    # Malus rédhibitoire si trop d'alliés touchés
+    if allies_touches >= ennemis_touches:
+        return 0.0
+
+    return score + SC_ACTIF
 
 def evaluer_competence_case_vide(unite, nom_competence, position, toutes_unites) -> float:
     """Évalue l'intérêt d'utiliser une compétence sur une case vide"""
@@ -316,30 +344,6 @@ def evaluer_competence_case_vide(unite, nom_competence, position, toutes_unites)
         q, r = position
         if 1 <= q <= 5 and 1 <= r <= 5:
             score += 15  # Position centrale
-
-    elif nom_competence == "pluie de flèches":
-        # Évaluer l'AOE
-        positions_affectees = [position] + get_positions_adjacentes(position)
-        ennemis_touches = 0
-        allies_touches = 0
-
-        for pos in positions_affectees:
-            for u in toutes_unites:
-                if u.get_pos() == pos and u.is_vivant():
-                    if u.get_equipe() != unite.get_equipe():
-                        ennemis_touches += 1
-                        score += sc_stat(u) * 0.1  # 10% de la force ennemie
-                    else:
-                        allies_touches += 1
-                        score -= sc_stat(u) * 0.15  # Malus pour friendly fire
-
-        # Bonus pour multi-hit
-        if ennemis_touches >= 2:
-            score += 30
-
-        # Malus rédhibitoire si trop d'alliés touchés
-        if allies_touches >= ennemis_touches and allies_touches > 0:
-            score = 0
 
     elif nom_competence == "monture libéré":
         # Évaluer l'intérêt de la transformation + placement de cheval
@@ -797,6 +801,10 @@ def evaluer_action_complete(action: Action, toutes_unites) -> float:
             elif nom_comp == "commandement":
                 score_competence = evaluer_competence_commandement(
                     unite, cible)
+            elif nom_comp == "pluie de flèches":
+                score_competence = evaluer_pluie_de_fleches(
+
+                    unite, cible, toutes_unites)
             elif nom_comp == "tir précis":
                 score_competence = evaluer_competence_tir_precis(
                     unite, cible, toutes_unites)

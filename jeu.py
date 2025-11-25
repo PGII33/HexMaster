@@ -287,9 +287,9 @@ class Jeu:
                         # 3. A tué un ennemi (important pour lumière vengeresse !)
                         # 4. A déclenché lumière vengeresse (regagné une attaque)
                         lumiere_vengeresse_activee = getattr(
-                            e, '_lumiere_vengeresse_activee', False)
+                            e, 'lumiere_vengeresse', False)
                         if lumiere_vengeresse_activee:
-                            e._lumiere_vengeresse_activee = False  # Reset le flag
+                            e.lumiere_vengeresse = False  # Reset le flag
 
                         action_effectuee = (attaques_apres < attaques_avant or  # Attaque utilisée nette
                                             position_apres != position_avant or   # A bougé
@@ -330,7 +330,7 @@ class Jeu:
         """Renvoie True si aucune unité vivante n'occupe la case pos."""
         if toutes_unites is None:
             toutes_unites = self.unites
-        return all(u.pos != pos or not u.vivant for u in toutes_unites)
+        return all(u.get_pos() != pos or not u.get_vivant() for u in toutes_unites)
 
     def changer_tour(self):
         """Passe au tour suivant et réinitialise les actions/compétences passives."""
