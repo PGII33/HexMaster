@@ -201,6 +201,10 @@ class Unite:
         """ set attribute equipe to equipe """
         self._equipe = equipe
 
+    def set_mv(self, mv):
+        """ set attribute mv to mv """
+        self._mv = mv
+
     # ---------- Logique ----------
     def reset_actions(self):
         """Réinitialise les PM et attaques restantes au début du tour."""

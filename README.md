@@ -181,7 +181,8 @@ Les unités du jeu sont séparés en différentes "factions" il s'agit de groupe
 
 > Vague apaisante (Passif) : Soigne tous les alliés adjacents de 2 PV chaque tour.
 
-> Venin incapacitant (Passif) : L'unité touchée ne peut pas se déplacer au tour suivant.
+> Venin incapacitant (Passif) : L'unité touchée perd 2 MV.
+(Non stackable)
 
 > Vol (Passif) : Ignore complètement la première attaque subie.
 

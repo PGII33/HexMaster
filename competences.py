@@ -655,11 +655,12 @@ def vol(defenseur, degats):
 
 def venin_incapacitant(attaquant, cible):
     """Empêche la cible de se déplacer au prochain tour."""
-    if cible.is_vivant() and cible.get_equipe() != attaquant.get_equipe():
-        # Marquer la cible comme empoisonnée (ne peut pas bouger au prochain tour)
-        cible.venin_incapacite = True
+    if cible.is_vivant() and cible.get_equipe() != attaquant.get_equipe() and not hasattr(cible, 'venin_incapacitant'):
+        # Marquer la cible comme empoisonnée (perd 2 mv)
+        cible.venin_incapacitant = True
+        cible.set_mv(max(0, cible.get_mv() - 2))
         print(
-            f"{attaquant.get_nom()} empoisonne {cible.get_nom()} ! Elle ne pourra pas se déplacer au prochain tour.")
+            f"{attaquant.get_nom()} empoisonne {cible.get_nom()} ! Elle perd 2 mv.")
         return True
     return False
 
@@ -776,7 +777,7 @@ COMPETENCES = {
     "tas d'os": "À la mort de l'unité, se transforme en Tas d'Os.",
     "tir précis": "L'unité attaque à portée +1 avec dmg x1.5. (Rechargement : 1 tour)",
     "vague apaisante": "Soigne tous les alliés adjacents de 2 PV chaque tour.",
-    "venin incapacitant": "L'unité touchée ne peut pas se déplacer au tour suivant.",
+    "venin incapacitant": "L'unité touchée perd 2 MV.",
     "vol": "Ignore complètement la première attaque subie.",
     "zombification": "Transforme l'unité ennemie tuée en zombie allié (de).",
 }
