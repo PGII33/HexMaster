@@ -267,7 +267,7 @@ def dessiner(jeu):
         # Compétences qui ne nécessitent pas d'attaque restante
         attaque_necessaire = getattr(u, 'comp', '') in co.comp_attaque
         if (u.possede_competence_active() and
-            (not attaque_necessaire or u.attaque_restantes > 0) and
+            (not attaque_necessaire or u.get_attaque_restantes() > 0) and
                 u.get_equipe() == jeu.tour and not (hasattr(jeu, 'mode_selection_competence') and jeu.mode_selection_competence)):
 
             btn_y = jeu.info_panel.y + 10 + \
@@ -285,7 +285,7 @@ def dessiner(jeu):
                 btn_text = f"Utiliser {u.get_competence()}"
                 if DO_PRINT:
                     print(
-                        f"🟢 BOUTON COMPETENCE AFFICHE: {u.get_competence()} pour {u.nom}")
+                        f"🔵 BOUTON COMPETENCE AFFICHE: {u.get_competence()} pour {u.get_nom()}")
             else:
                 # Gris si en cooldown ou déjà utilisée
                 btn_color = (150, 150, 150)

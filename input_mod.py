@@ -53,7 +53,7 @@ def handle_click(jeu, mx, my):
         print(jeu.selection.get_competence() in co.comp_attaque)
 
         if (jeu.selection.a_competence_active() and
-            (not attaque_necessaire or jeu.selection.attaque_restantes > 0) and
+            (not attaque_necessaire or jeu.selection.get_attaque_restantes() > 0) and
                 cooldown_restant == 0):
 
             # Compétences qui nécessitent une cible
@@ -151,9 +151,9 @@ def _handle_competence_target_selection(jeu, mx, my):
 
     # Clic sur une unité pour la cibler
     for u in jeu.unites:
-        if not u.vivant:
+        if not u.is_vivant():
             continue
-        x, y = hex_to_pixel(jeu, u.pos[0], u.pos[1])
+        x, y = hex_to_pixel(jeu, u.get_pos()[0], u.get_pos()[1])
         if (mx-x)**2 + (my-y)**2 <= (jeu.unit_radius)**2:
             if u in jeu.cibles_possibles:
                 # Utiliser la compétence sur cette cible
@@ -212,7 +212,7 @@ def _get_valid_targets(jeu, comp_name, unite_source):
     if co.peut_cibler_allie(comp_name):
         # Peut cibler les alliés (soin, bénédiction, commandement)
         for u in jeu.unites:
-            if u.vivant and u.get_equipe() == unite_source.get_equipe():
+            if u.is_vivant() and u.get_equipe() == unite_source.get_equipe():
                 # Vérifier la portée pour chaque compétence
                 for comp_name in co.comp_cib_allie:
                     if comp_name == "soin" and _is_in_range(unite_source, u, co.comp_portee.get(comp_name, 0)):
@@ -225,7 +225,7 @@ def _get_valid_targets(jeu, comp_name, unite_source):
     if co.peut_cibler_ennemi(comp_name):
         # Peut cibler les ennemis
         for u in jeu.unites:
-            if u.vivant and _are_enemies(unite_source.get_equipe(), u.get_equipe(), getattr(jeu, 'versus_mode', False)):
+            if u.is_vivant() and _are_enemies(unite_source.get_equipe(), u.get_equipe(), getattr(jeu, 'versus_mode', False)):
                 # Vérifier la portée pour les compétences qui en ont besoin
                 for comp_name in co.com_cib_ennemi:
                     if comp_name == "tir précis":
@@ -268,7 +268,7 @@ def _add_adjacent_empty_cases(jeu, unite_source, valid_targets):
             # Vérifier que la case est vide
             case_libre = True
             for u in jeu.unites:
-                if u.pos == case_pos and u.vivant:
+                if u.get_pos() == case_pos and u.is_vivant():
                     case_libre = False
                     break
 

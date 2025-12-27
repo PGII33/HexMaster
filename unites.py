@@ -197,6 +197,10 @@ class Unite:
         """ set attribute cooldown_actuel to nb """
         self._cooldown_actuel = nb
 
+    def set_equipe(self, equipe):
+        """ set attribute equipe to equipe """
+        self._equipe = equipe
+
     # ---------- Logique ----------
     def reset_actions(self):
         """Réinitialise les PM et attaques restantes au début du tour."""
@@ -209,14 +213,14 @@ class Unite:
         if hasattr(self, 'venin_incapacite'):
             self.set_pm(0)  # L'unité ne peut plus se déplacer
             print(
-                f"🐍 {self.nom} est incapacité par le venin ! Aucun mouvement possible ce tour.")
+                f"🐍 {self.get_nom()} est incapacité par le venin ! Aucun mouvement possible ce tour.")
 
         # Appliquer l'effet divertissement si l'unité a été divertie
         # TODO: GESTION DES TAGS
         if hasattr(self, 'diverti'):
             self.set_attaque_restantes(max(0, self.get_attaque_restantes() - 1)
                                        )
-            print(f"{self.nom} est diverti et perd 1 attaque!")
+            print(f"{self.get_nom()} est diverti et perd 1 attaque!")
 
     def cases_accessibles(self, toutes_unites, q_range=None, r_range=None):
         """ Retourne un dictionnaire des cases accessibles avec leur coût en PM."""

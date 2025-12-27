@@ -30,8 +30,8 @@ def zombification(self, cible):
     if not cible.is_vivant() and cible.get_nom() != "Zombie":
         cible.__class__ = self.__class__
         cible.__init__(self.get_equipe(), cible.get_pos())
-        cible.pm = 0
-        cible.attaque_restantes = 0
+        cible.set_pm(0)
+        cible.set_attaque_restantes(0)
 
 
 def tas_d_os(self):
@@ -293,8 +293,8 @@ def monture_libere(self, case_pos, toutes_unites):
     self.__class__ = Guerrier
     self.__init__(self.get_equipe(), self.get_pos())
     self.set_pv(pv_actuels)  # Conserver les PV du cavalier
-    self.pm = 0  # Plus de mouvement après la transformation
-    self.attaque_restantes = self.attaque_max  # Peut attaquer après transformation
+    self.set_pm(0)  # Plus de mouvement après la transformation
+    self.set_attaque_restantes(self.get_attaque_max())  # Peut attaquer après transformation
 
     return True
 
@@ -317,7 +317,7 @@ def commandement(unite, cible):
 
         # Appliquer les boosts
         cible.ba_commandement = unite.get_attaque_totale()
-        cible.attaque_restantes += 1
+        cible.set_attaque_restantes(cible.get_attaque_restantes() + 1)
 
         print(f"{unite.get_nom()} commande {cible.get_nom()} ! (+{unite.get_attaque_totale()} attaque, +1 attaque supplémentaire)")
 
@@ -329,7 +329,7 @@ def commandement(unite, cible):
 def divertissement(self, toutes_unites):
     """S'il lui reste une attaque, marque toutes les unités adjacentes comme diverties (perdront 1 attaque au prochain tour)."""
     # Vérifier que l'unité a encore au moins une attaque
-    if self.attaque_restantes <= 0:
+    if self.get_attaque_restantes() <= 0:
         return
 
     # Trouver toutes les unités adjacentes (alliées et ennemies)
@@ -371,8 +371,8 @@ def manipulation(self, toutes_unites):
             unite.manipulee_par = self  # Référence au marionettiste qui manipule
 
             # L'unité manipulée récupère ses actions
-            unite.pm = unite.mv
-            unite.attaque_restantes = unite.attaque_max
+            unite.set_pm(unite.get_mv())
+            unite.set_attaque_restantes(unite.get_attaque_max())
 
             unites_manipulees.append(unite)
             print(f"🎭 {unite.get_nom()} ({unite.get_pv()} PV) est manipulé par {self.get_nom()}!")
@@ -475,7 +475,7 @@ def protection(cible_originale, degats, toutes_unites):
 
     # ÉTAPE 1: Appliquer l'armure de pierre de la cible originale si elle en a
     degats_apres_armure_cible = degats
-    if cible_originale.comp == "armure de pierre":
+    if cible_originale.get_competence() == "armure de pierre":
         degats_apres_armure_cible = max(0, degats - 2)
         print(
             f" {cible_originale.get_nom()} a armure de pierre: {degats} → {degats_apres_armure_cible} dégâts")
@@ -617,13 +617,13 @@ def gerer_combustion_differee(unite, toutes_unites):
 
 def regard_mortel(attaquant, cible):
     """Renvoie 0 si la cible est de tier 2 ou moins, sinon renvoie les dégâts normaux."""
-    if cible.tier <= 2 and cible.get_equipe() != attaquant.get_equipe() and cible.is_vivant():
+    if cible.get_tier() <= 2 and cible.get_equipe() != attaquant.get_equipe() and cible.is_vivant():
         print(
-            f"{attaquant.get_nom()} utilise son regard mortel sur {cible.get_nom()} (tier {cible.tier})!")
+            f"{attaquant.get_nom()} utilise son regard mortel sur {cible.get_nom()} (tier {cible.get_tier()})!")
         print(f"{cible.get_nom()} succombe au regard mortel!")
         cible.set_pv(0)  # Tue la cible immédiatement
         return 0
-    return attaquant.dmg  # Dégâts normaux si la cible est de tier > 2
+    return attaquant.get_dmg()  # Dégâts normaux si la cible est de tier > 2
 
 
 def rage(attaquant):
@@ -723,7 +723,7 @@ def tir_precis(attaquant, cible, toutes_unites):
     distance = max(abs(q1 - q2), abs(r1 - r2), abs((q1 + r1) - (q2 + r2)))
 
     # Vérifier la portée étendue (portée normale + 1)
-    portee_etendue = attaquant.portee + comp_portee.get(attaquant.comp, 0)
+    portee_etendue = attaquant.get_portee() + comp_portee.get(attaquant.get_competence(), 0)
     print(portee_etendue)
     if distance > portee_etendue:
         print(f"{cible.get_nom()} est trop loin pour le tir précis (distance {distance}, portée max {portee_etendue})")

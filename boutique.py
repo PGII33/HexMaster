@@ -34,7 +34,7 @@ class Boutique:
             # Trouver la classe correspondante
             for classe_unite in CLASSES_UNITES:
                 tmp = classe_unite("joueur", (0, 0))
-                if tmp.get_nom() == nom_unite and tmp.faction == faction:
+                if tmp.get_nom() == nom_unite and tmp.get_faction() == faction:
                     return True
         return False
 
@@ -45,8 +45,8 @@ class Boutique:
         base_lines = [
             f"{tmp.get_nom()}",
             f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
-            f"Attaques: {tmp.attaque_max} | Portée: {tmp.portee}",
-            f"Faction: {tmp.faction}",
+            f"Attaques: {tmp.get_attaque_max()} | Portée: {tmp.get_portee()}",
+            f"Faction: {tmp.get_faction()}",
             f"Tier: {tmp.get_tier()}",
             f"Compétence: {'Aucune' if not comp else comp}",
         ]
@@ -106,9 +106,9 @@ class Boutique:
         for classe in CLASSES_UNITES:
             # Créer une instance temporaire pour vérifier le tier
             temp_unit = classe(0, (0, 0))
-            if temp_unit.tier == 4 and temp_unit.nom not in self.data["unites"]:
-                self.data["unites"].append(temp_unit.nom)
-                tier4_units.append(temp_unit.nom)
+            if temp_unit.get_tier() == 4 and temp_unit.get_nom() not in self.data["unites"]:
+                self.data["unites"].append(temp_unit.get_nom())
+                tier4_units.append(temp_unit.get_nom())
 
         if tier4_units:
             print(
@@ -168,7 +168,7 @@ class Boutique:
 
             for cls in CLASSES_UNITES:
                 tmp = cls("joueur", (0, 0))
-                if not self.est_faction_debloquee(tmp.faction):
+                if not self.est_faction_debloquee(tmp.get_faction()):
                     continue
                 unites_visibles.append(cls)
                 total_height = max(total_height, y + card_h)
@@ -197,15 +197,15 @@ class Boutique:
                 base_lines = [
                     f"{nom}",
                     f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
-                    f"Attaques: {tmp.attaque_max} | Portée: {tmp.portee}",
-                    f"Faction: {tmp.faction}",
+                    f"Attaques: {tmp.get_attaque_max()} | Portée: {tmp.get_portee()}",
+                    f"Faction: {tmp.get_faction()}",
                     f"Tier: {tmp.get_tier()}",
                     f"Compétence: {comp_nom}",
                 ]
                 desc_lines = wrap_text(comp_desc, self.font, card_w - 20)
 
                 # Couleur de fond selon la faction
-                faction_color = get_faction_color(tmp.faction)
+                faction_color = get_faction_color(tmp.get_faction())
 
                 rect = pygame.Rect(x, y, card_w, card_h)
                 pygame.draw.rect(self.screen, faction_color,

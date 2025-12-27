@@ -164,7 +164,7 @@ class UnitSelector:
         
         for cls in owned_units:
             tmp_instance = cls("joueur", (0,0))
-            if tmp_instance.faction in factions_autorisees:
+            if tmp_instance.get_faction() in factions_autorisees:
                 filtered_units.append(cls)
         
         return filtered_units
@@ -181,7 +181,7 @@ class UnitSelector:
         
         for cls in owned_units:
             tmp_instance = cls("joueur", (0,0))
-            if tmp_instance.faction == faction_imposee:
+            if tmp_instance.get_faction() == faction_imposee:
                 filtered_units.append(cls)
         
         return filtered_units
@@ -306,9 +306,9 @@ class UnitSelector:
             
             base_lines = [
                 f"{tmp.get_nom()}",
-                f"{tmp.faction}",
+                f"{tmp.get_faction()}",
                 f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
-                f"Attaques: {tmp.attaque_max} | Portée: {tmp.portee}",
+                f"Attaques: {tmp.get_attaque_max()} | Portée: {tmp.get_portee()}",
                 f"Tier: {tmp.get_tier()}",
                 f"Compétence: {'Aucune' if not comp else comp}",
             ]
@@ -366,16 +366,16 @@ class UnitSelector:
             
             base_lines = [
                 f"{tmp.get_nom()}",
-                f"{tmp.faction}",
+                f"{tmp.get_faction()}",
                 f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
-                f"Attaques: {tmp.attaque_max} | Portée: {tmp.portee}",
+                f"Attaques: {tmp.get_attaque_max()} | Portée: {tmp.get_portee()}",
                 f"Tier: {tmp.get_tier()}",
                 f"Compétence: {'Aucune' if not comp else comp}",
             ]
             desc_lines = self.wrap_text(comp_desc, card_w - 20)
             
             rect = pygame.Rect(x, y, card_w, card_h)
-            faction_color = get_faction_color(tmp.faction)
+            faction_color = get_faction_color(tmp.get_faction())
             pygame.draw.rect(self.screen, faction_color, rect, border_radius=12)
             pygame.draw.rect(self.screen, (0, 0, 0), rect, width=2, border_radius=12)
             
@@ -590,7 +590,7 @@ class UnitSelector:
         
         for cls in owned_units:
             tmp = cls("joueur", (0, 0))
-            if tmp.faction == faction_requise:
+            if tmp.get_faction() == faction_requise:
                 faction_units.append(cls)
         
         return faction_units

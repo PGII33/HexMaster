@@ -45,9 +45,9 @@ class Inventaire:
         comp_desc = "" if not comp else COMPETENCES.get(comp, "")
         base_lines = [
             f"{tmp.get_nom()}",
-            f"{tmp.faction}",
+            f"{tmp.get_faction()}",
             f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
-            f"Attaques: {tmp.attaque_max} | Portée: {tmp.portee}",
+            f"Attaques: {tmp.get_attaque_max()} | Portée: {tmp.get_portee()}",
             f"Tier: {tmp.get_tier()}",
             f"Compétence: {'Aucune' if not comp else comp}",
         ]
@@ -132,9 +132,9 @@ class Inventaire:
 
                 base_lines = [
                     f"{nom}",
-                    f"{tmp.faction}",  # Faction mise en valeur
+                    f"{tmp.get_faction()}",  # Faction mise en valeur
                     f"PV: {tmp.get_pv()} | DMG: {tmp.get_dmg()} | MV: {tmp.get_mv()}",
-                    f"Attaques: {tmp.attaque_max} | Portée: {tmp.portee}",
+                    f"Attaques: {tmp.get_attaque_max()} | Portée: {tmp.get_portee()}",
                     f"Tier: {tmp.get_tier()}",
                     f"Compétence: {comp_nom}",
                 ]
@@ -142,7 +142,7 @@ class Inventaire:
 
                 rect = pygame.Rect(x, y, card_w, card_h)
                 # Utiliser la couleur de faction comme fond de carte
-                faction_color = get_faction_color(tmp.faction)
+                faction_color = get_faction_color(tmp.get_faction())
                 pygame.draw.rect(self.screen, faction_color, rect, border_radius=12)
                 pygame.draw.rect(self.screen, (0, 0, 0), rect, width=2, border_radius=12)
 

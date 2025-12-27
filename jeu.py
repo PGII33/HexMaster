@@ -2,6 +2,7 @@
 # pylint: disable=no-member
 import pygame
 import ia
+import unites
 from unites_liste import CLASSES_UNITES
 from layout import recalculer_layout
 from placement import PlacementPhase
@@ -155,17 +156,16 @@ class Jeu:
 
         # Configuration du callback de kill pour le mode hexarene
         if self.mode_hexarene:
-            import unites
             unites.set_kill_callback(self.on_enemy_killed)
 
         recalculer_layout(self)
 
     def on_enemy_killed(self, killed_unit):
         """Appelé quand une unité ennemie est tuée. Affiche seulement un message en mode hexarene."""
-        if self.mode_hexarene and killed_unit.equipe == "ennemi":
+        if self.mode_hexarene and killed_unit.get_equipe() == "ennemi":
             # Juste afficher un message, les PA seront calculés à la fin du combat
             print(
-                f"+ {killed_unit.tier} PA pour avoir tué {killed_unit.nom} (Tier {killed_unit.tier})")
+                f"+ {killed_unit.get_tier()} PA pour avoir tué {killed_unit.get_nom()} (Tier {killed_unit.get_tier()})")
 
     def recalculer_layout(self):
         recalculer_layout(self)
@@ -396,8 +396,8 @@ class Jeu:
         if self.mode_hexarene:
             # HexArène : 5 * somme des tiers des monstres vaincus en PA, 0 CP
             ennemis_morts = [
-                u for u in self.unites if u.equipe != "joueur" and not u.vivant]
-            recompenses["pa"] = 5 * sum(u.tier for u in ennemis_morts)
+                u for u in self.unites if u.get_equipe() != "joueur" and not u.is_vivant()]
+            recompenses["pa"] = 5 * sum(u.get_tier() for u in ennemis_morts)
             recompenses["cp"] = 0  # Pas de CP en mode HexArène
         elif self.versus_mode:
             # Mode versus : aucune récompense

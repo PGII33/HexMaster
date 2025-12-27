@@ -380,7 +380,7 @@ def debug_afficher_scores_cases(unite, toutes_unites, q_range, r_range, avec_inf
             position = (q, r)
             # Vérifier que la case n'est pas occupée
             case_occupee = any(
-                u.pos == position and u.vivant for u in toutes_unites)
+                u.get_pos() == position and u.is_vivant() for u in toutes_unites)
             if not case_occupee:
                 if avec_influence:
                     score = sc_case(unite, position, toutes_unites)
@@ -495,7 +495,7 @@ def sc_position_competence(unite, position: Tuple[int, int], toutes_unites) -> f
                     score_benediction = allie.get_dmg() * 10  # Valoriser les unités qui frappent fort
                     if hasattr(allie, 'portee'):
                         score_benediction += allie.get_portee() * 8  # Bonus pour la portée
-                    if hasattr(allie, 'attaque_restantes') and allie.attaque_restantes > 0:
+                    if allie.get_attaque_restantes() > 0:
                         score_benediction *= 1.5  # Bonus si peut encore attaquer
 
                     score += score_benediction
@@ -849,7 +849,7 @@ def tour_ia(toutes_unites: List['Unite']) -> bool:
         # 1. Générer toutes les actions possibles pour toutes les unités ennemies
         # Toutes les unités non-joueur
         unites_ennemies = [
-            u for u in toutes_unites if u.vivant and u.equipe != 1]
+            u for u in toutes_unites if u.is_vivant() and u.get_equipe() != 1]
 
         if not unites_ennemies:
             break  # Plus d'unités ennemies

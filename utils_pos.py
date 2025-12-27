@@ -18,11 +18,11 @@ def est_a_portee(pos_attaquant: Tuple[int, int], pos_cible: Tuple[int, int], por
 
 def get_unites_adjacentes(position: Tuple[int, int], unites: List['Unite']) -> List['Unite']:
     """Retourne les unités adjacentes à une position donnée"""
-    return [u for u in unites if u.vivant and est_adjacent(position, u.pos)]
+    return [u for u in unites if u.is_vivant() and est_adjacent(position, u.get_pos())]
 
 def get_unites_a_portee(position: Tuple[int, int], unites: List['Unite'], portee: int) -> List['Unite']:
     """Retourne les unités à portée d'une position donnée"""
-    return [u for u in unites if u.vivant and est_a_portee(position, u.pos, portee)]
+    return [u for u in unites if u.is_vivant() and est_a_portee(position, u.get_pos(), portee)]
 
 def get_positions_adjacentes(position: Tuple[int, int]) -> List[Tuple[int, int]]:
     """Retourne les 6 positions hexagonales adjacentes à une position donnée"""
