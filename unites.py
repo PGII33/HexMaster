@@ -421,9 +421,9 @@ class Unite:
         elif self.get_competence() == "manipulation":
             co.manipulation(self, toutes_unites)
 
-    def fin_tour_ennemi(self, toutes_unites):
-        """À appeler en fin de tour ennemi pour gérer la combustion différée."""
-        # Gérer la combustion différée (compte à rebours en fin de tour ennemi)
+    def fin_tour_adverse(self, toutes_unites):
+        """À appeler en fin de tour de l'équipe affectée pour gérer la combustion différée."""
+        # Gérer la combustion différée (compte à rebours en fin de tour de l'équipe de l'unité)
         if hasattr(self, 'combustion_tours_restants'):
             co.gerer_combustion_differee(self, toutes_unites)
 

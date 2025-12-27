@@ -343,11 +343,10 @@ class Jeu:
         self.selection = None
         self.deplacement_possibles = {}
 
-        # Gérer la combustion différée en fin de tour ennemi
-        if self.tour == "ennemi":
-            for u in self.unites:
-                if u.get_vivant():
-                    u.fin_tour_ennemi(self.unites)
+        # Gérer la combustion différée pour toutes les unités dont c'est le tour de l'équipe
+        for u in self.unites:
+            if u.get_vivant() and u.get_equipe() == self.tour:
+                u.fin_tour_adverse(self.unites)
 
         # Vérifier les conditions de manipulation pour toutes les unités
         import competences as co

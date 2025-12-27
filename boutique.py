@@ -72,7 +72,7 @@ class Boutique:
     def creer_boutons(self):
         """ Crée les boutons de la boutique """
         self.boutons = []
-        self.boutons.append(Button((20, 160, 44), "Retour",
+        self.boutons.append(Button((20, 20, 160, 44), "Retour",
                             self.retour_menu, self.font))
 
     def acheter_unite(self, prix, nom):

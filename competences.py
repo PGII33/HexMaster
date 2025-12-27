@@ -590,8 +590,8 @@ def armure_de_pierre(degats_recus):
 
 def combustion_differee(attaquant, cible):
     """Marque la cible pour mourir dans 3 tours."""
-    if not hasattr(cible, 'combustion_differee'):
-        cible.combustion_differee = 3
+    if not hasattr(cible, 'combustion_tours_restants'):
+        cible.combustion_tours_restants = 3
         cible.combustion_attaquant = attaquant.get_equipe()
         print(
             f"🔥 {cible.get_nom()} est marqué par la combustion différée! Mort dans 3 tours.")
