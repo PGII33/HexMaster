@@ -17,7 +17,7 @@ from competences import (
 
 # Constantes et paramètres
 MODE_PRINT = True  # Activer/désactiver les impressions de debug
-MIN_SCORE = 0  # Score minimum pour une action valide
+MIN_SCORE = 1  # Score minimum pour une action valide
 
 SC_DMG = 20  # Score de base pour un point d'attaque
 SC_PV = 20           # Score par point de vie
@@ -302,6 +302,7 @@ def evaluer_competence_tir_precis(unite, cible_ennemi, toutes_unites) -> float:
 
 def evaluer_pluie_de_fleches(unite, position_cible, toutes_unites) -> float:
     """Évalue l'intérêt d'utiliser pluie de flèches sur une position cible"""
+    print(f"Évaluation de pluie de flèches sur la position {position_cible} par {unite.get_nom()}")
     score = 0.0
 
     # Obtenir toutes les positions affectées (cible + adjacentes)
@@ -315,8 +316,10 @@ def evaluer_pluie_de_fleches(unite, position_cible, toutes_unites) -> float:
             if u.get_pos() == pos and u.is_vivant():
                 if u.get_equipe() != unite.get_equipe():
                     ennemis_touches += 1
+                    print(f"Pluie de flèches toucherait ennemi {u.get_nom()} en {pos}")
                     score += sc_stat(u) * 0.1  # 10% de la force ennemie
                 else:
+                    print(f"Pluie de flèches toucherait allié {u.get_nom()} en {pos}")
                     allies_touches += 1
                     score -= sc_stat(u) * 0.15  # Malus pour friendly fire
 
@@ -352,6 +355,9 @@ def evaluer_competence_case_vide(unite, nom_competence, position, toutes_unites)
 
         # Bonus pour créer une unité supplémentaire (cheval)
         score += 40
+    
+    else:
+        return 0.0  # Compétence non gérée
 
     return score
 
@@ -703,7 +709,7 @@ def generer_actions_unite(unite, toutes_unites) -> List[Action]:
     if unite.get_attaque_restantes() > 0:
         ennemis = [
             u for u in toutes_unites if u.is_vivant() and u.get_equipe() != unite.get_equipe()]
-        portee = getattr(unite, 'portee', 1)
+        portee = unite.get_portee()
 
         for ennemi in ennemis:
             if est_a_portee(unite.get_pos(), ennemi.get_pos(), portee):
@@ -717,9 +723,12 @@ def generer_actions_unite(unite, toutes_unites) -> List[Action]:
             cibles_possibles = obtenir_cibles_competence(
                 unite, nom_competence, toutes_unites)
             for cible in cibles_possibles:
+                if nom_competence == "soin":
+                    actions.append(ActiveSkillAction(unite, nom_competence, cible))
                 if nom_competence == "bénédiction":
-                    print("oui je peut utiliser bénédiction")
-                actions.append(ActiveSkillAction(unite, nom_competence, cible))
+                    actions.append(ActiveSkillAction(unite, nom_competence, cible))
+                if nom_competence == "pluie de flèches":
+                    actions.append(ActiveSkillAction(unite, nom_competence, cible))
 
     if MODE_PRINT:
         for action in actions:
@@ -780,7 +789,6 @@ def evaluer_action_complete(action: Action, toutes_unites) -> float:
         nom_comp = action.nom_competence
         cible = action.cible_ou_position
 
-        score_comp = sc_comp(unite)  # Score de base de l'unité
         # Position actuelle
         score_case = sc_case(unite, unite.get_pos(), toutes_unites)
         score_stat = sc_stat(unite)
@@ -790,8 +798,12 @@ def evaluer_action_complete(action: Action, toutes_unites) -> float:
 
         if isinstance(cible, tuple):
             # Cible = position (case vide)
-            score_competence = evaluer_competence_case_vide(
-                unite, nom_comp, cible, toutes_unites)
+            if nom_comp == "pluie de flèches":
+                score_competence = evaluer_pluie_de_fleches(
+                    unite, cible, toutes_unites)
+            else:
+                score_competence = evaluer_competence_case_vide(
+                    unite, nom_comp, cible, toutes_unites)
         elif cible is not None:
             # Cible = unité
             if nom_comp == "soin":
@@ -803,14 +815,16 @@ def evaluer_action_complete(action: Action, toutes_unites) -> float:
                     unite, cible)
             elif nom_comp == "pluie de flèches":
                 score_competence = evaluer_pluie_de_fleches(
-
                     unite, cible, toutes_unites)
             elif nom_comp == "tir précis":
                 score_competence = evaluer_competence_tir_precis(
                     unite, cible, toutes_unites)
 
         # Ajouter le score de la compétence au score total
-        score_comp += score_competence
+        if est_competence_active(nom_comp):
+            score_comp = score_competence
+        else:
+            score_comp = sc_comp(unite)
     else:
         return 0.0
 
