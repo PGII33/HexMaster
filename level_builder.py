@@ -1142,7 +1142,8 @@ class LevelBuilder:
                              niveau_rect, 1)  # Bordure verte
 
             # Texte du niveau avec indication custom
-            text = f"[CUSTOM] {niveau['nom']}"
+            chapitre_nom = niveau.get('chapitre', 'CUSTOM')
+            text = f"[{chapitre_nom}] {niveau['nom']}"
             if niveau.get('config') and hasattr(niveau['config'], 'description') and niveau['config'].description:
                 text += f" - {niveau['config'].description[:50]}..."
 
