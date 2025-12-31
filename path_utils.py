@@ -42,7 +42,7 @@ def ensure_user_directories():
     # Répertoires à créer/copier
     directories_to_setup = [
         ("Campagne", True),  # (nom_dossier, copier_depuis_exe)
-        (D_CUSTOM_LEVELS_PATH, False)
+        (D_CUSTOM_LEVELS_PATH, True)
     ]
     
     for dir_name, copy_from_exe in directories_to_setup:

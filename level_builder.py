@@ -803,8 +803,6 @@ class LevelBuilder:
 
     def sauvegarder_niveau(self):
         """Sauvegarde le niveau (nouveau ou modifié)"""
-        from const import D_CUSTOM_LEVELS_PATH
-        
         # Synchroniser les données de configuration avec les champs de texte
         self._synchroniser_config_avec_ui()
 
@@ -823,7 +821,8 @@ class LevelBuilder:
             return
 
         # TOUJOURS sauvegarder dans custom_levels (jamais dans Campagne)
-        chemin_base = D_CUSTOM_LEVELS_PATH
+        # Utiliser get_custom_levels_path() pour compatibilité EXE/développement
+        chemin_base = str(get_custom_levels_path())
         
         # Si un chapitre est spécifié, créer un sous-dossier dans custom_levels
         if self.niveau_config.chapitre and self.niveau_config.chapitre.strip():
