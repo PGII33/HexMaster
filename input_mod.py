@@ -57,7 +57,7 @@ def handle_click(jeu, mx, my):
                 f"🔵 CLIC SUR BOUTON COMPETENCE: {jeu.selection.get_competence()}")
 
         # Vérifier que la compétence est utilisable (pas en cooldown et pas déjà utilisée)
-        cooldown_restant = getattr(jeu.selection, 'cooldown_actuel', 0)
+        cooldown_restant = jeu.selection.get_cooldown_actuel()
 
         # Compétences qui ne nécessitent pas d'attaque
         comp_name = jeu.selection.get_competence()
