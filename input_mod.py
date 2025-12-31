@@ -264,13 +264,13 @@ def _get_valid_targets(jeu, comp_name, unite_source):
 
 def _is_in_range(source, target, portee):
     """Vérifie si la cible est à portée."""
-    return hex_distance(source.pos, target.pos) <= portee
+    return hex_distance(source.get_pos(), target.get_pos()) <= portee
 
 
 def _add_adjacent_empty_cases(jeu, unite_source, valid_targets):
     """Ajoute les cases vides adjacentes aux cibles valides."""
     directions = [(-1, 0), (1, 0), (0, 1), (0, -1), (1, -1), (-1, 1)]
-    q, r = unite_source.pos
+    q, r = unite_source.get_pos()
 
     for dq, dr in directions:
         case_pos = (q+dq, r+dr)
@@ -296,7 +296,7 @@ def _add_cases_in_range(jeu, unite_source, valid_targets, portee):
     for q in jeu.q_range:
         for r in jeu.r_range:
             case_pos = (q, r)
-            if hex_distance(unite_source.pos, case_pos) <= portee:
+            if hex_distance(unite_source.get_pos(), case_pos) <= portee:
                 valid_targets.append(case_pos)
 
 

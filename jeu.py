@@ -300,7 +300,7 @@ class Jeu:
                         if action_effectuee:
                             # Rester sur la même unité pour qu'elle continue à agir
                             if hasattr(e, '_derniere_position'):
-                                e._derniere_position = e.pos  # Mettre à jour la position
+                                e._derniere_position = e.get_pos()  # Mettre à jour la position
                             if lumiere_vengeresse_activee:
                                 print(
                                     f"IA continue: {type(e).__name__} a déclenché lumière vengeresse!")

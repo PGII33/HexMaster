@@ -179,7 +179,7 @@ def dessiner(jeu):
         if (hasattr(jeu, 'mode_selection_competence') and
                 jeu.mode_selection_competence and
                 hasattr(jeu, 'cibles_possibles') and
-                (u in jeu.cibles_possibles or u.pos in jeu.cibles_possibles)):
+                (u in jeu.cibles_possibles or u.get_pos() in jeu.cibles_possibles)):
             # Cercle jaune pulsant plus visible
             pygame.draw.circle(jeu.screen, (255, 255, 0),
                                (x, y), jeu.unit_radius + 15, 6)
