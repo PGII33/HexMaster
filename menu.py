@@ -345,6 +345,171 @@ class HexaMaster:
         )
         self.etat = "jeu"
 
+    def _rejouer_niveau(self):
+        """Relance le niveau actuel avec les mêmes paramètres"""
+        if not self.jeu:
+            return
+        
+        # Sauvegarder les paramètres du niveau actuel
+        ancien_jeu = self.jeu
+        niveau_config = ancien_jeu.niveau_config
+        chapitre_nom = ancien_jeu.chapitre_nom
+        niveau_nom = ancien_jeu.niveau_nom
+        mode_hexarene = ancien_jeu.mode_hexarene
+        hexarene_mode_type = ancien_jeu.hexarene_mode_type
+        
+        # Appliquer les récompenses si c'était une victoire
+        if (hasattr(ancien_jeu, 'player_victory') and ancien_jeu.player_victory and
+                niveau_config and hasattr(niveau_config, 'chapitre') and hasattr(niveau_config, 'numero')):
+            chapitre_display = niveau_config.chapitre
+            if "_" in chapitre_display:
+                chapitre_display = chapitre_display.split("_", 1)[1].replace("_", " ")
+            marquer_niveau_complete(chapitre_display, niveau_config.numero)
+            appliquer_recompenses(niveau_config)
+        
+        # Détruire l'ancien jeu
+        self.jeu = None
+        
+        # Relancer le niveau selon le mode
+        if mode_hexarene:
+            # Mode hexarene - redemander la sélection d'unités
+            if hexarene_mode_type == "faction":
+                self.start_hexarene_faction()
+            else:
+                self.start_hexarene_libre()
+        elif niveau_config:
+            # Mode campagne - relancer avec la même config
+            player_units = None
+            enable_placement = True
+
+            # Gestion selon le type de restriction
+            if niveau_config.type_restriction.value == "unites_imposees":
+                player_units = niveau_config.unites_imposees
+                enable_placement = not niveau_config.placement_impose
+            elif niveau_config.type_restriction.value == "faction_libre":
+                selector = UnitSelector(self.screen, "campagne_libre",
+                                        cp_max=niveau_config.cp_disponible,
+                                        max_units=niveau_config.max_unites,
+                                        faction_unique=niveau_config.faction_unique_requise,
+                                        faction_imposee=niveau_config.faction_imposee)
+                player_units = selector.run()
+                if player_units is None:
+                    self.etat = "menu"
+                    return
+            elif niveau_config.type_restriction.value == "faction_unique":
+                selector = UnitSelector(self.screen, "campagne_faction",
+                                        cp_max=niveau_config.cp_disponible,
+                                        max_units=niveau_config.max_unites,
+                                        faction_unique=True,
+                                        faction_imposee=niveau_config.faction_imposee)
+                player_units = selector.run()
+                if player_units is None:
+                    self.etat = "menu"
+                    return
+
+            if player_units is None:
+                self.etat = "menu"
+                return
+
+            # Recréer le jeu
+            self.jeu = Jeu(
+                ia_strategy=ia.ia_tactique_avancee,
+                screen=self.screen,
+                initial_player_units=player_units,
+                initial_enemy_units=niveau_config.unites_ennemis,
+                enable_placement=enable_placement,
+                versus_mode=False,
+                niveau_config=niveau_config,
+                chapitre_nom=chapitre_nom,
+                niveau_nom=niveau_nom
+            )
+            self.etat = "jeu"
+        else:
+            # Aucune info de niveau - retour au menu
+            self.etat = "menu"
+
+    def _niveau_suivant(self):
+        """Charge le niveau suivant dans la campagne"""
+        if not self.jeu or not hasattr(self.jeu, 'niveau_config') or not self.jeu.niveau_config:
+            self.etat = "menu"
+            return
+        
+        niveau_config = self.jeu.niveau_config
+        
+        # Vérifier qu'on a les infos nécessaires
+        if not hasattr(niveau_config, 'chapitre') or not hasattr(niveau_config, 'numero'):
+            self.etat = "menu"
+            return
+        
+        # Appliquer les récompenses du niveau actuel
+        chapitre_display = niveau_config.chapitre
+        if "_" in chapitre_display:
+            chapitre_display = chapitre_display.split("_", 1)[1].replace("_", " ")
+        marquer_niveau_complete(chapitre_display, niveau_config.numero)
+        appliquer_recompenses(niveau_config)
+        
+        # Charger le niveau suivant
+        numero_suivant = niveau_config.numero + 1
+        niveau_data = get_niveau_data(chapitre_display, numero_suivant)
+        
+        if niveau_data is None:
+            # Pas de niveau suivant - retour au menu
+            print(f"Niveau suivant non trouvé (Chapitre: {chapitre_display}, Niveau: {numero_suivant})")
+            self.etat = "menu"
+            self.jeu = None
+            return
+        
+        # Détruire l'ancien jeu
+        self.jeu = None
+        
+        # Charger la config du niveau suivant
+        config = niveau_data["config"]
+        player_units = None
+        enable_placement = True
+
+        # Gestion selon le type de restriction
+        if config.type_restriction.value == "unites_imposees":
+            player_units = config.unites_imposees
+            enable_placement = not config.placement_impose
+        elif config.type_restriction.value == "faction_libre":
+            selector = UnitSelector(self.screen, "campagne_libre",
+                                    cp_max=config.cp_disponible,
+                                    max_units=config.max_unites,
+                                    faction_unique=config.faction_unique_requise,
+                                    faction_imposee=config.faction_imposee)
+            player_units = selector.run()
+            if player_units is None:
+                self.etat = "menu"
+                return
+        elif config.type_restriction.value == "faction_unique":
+            selector = UnitSelector(self.screen, "campagne_faction",
+                                    cp_max=config.cp_disponible,
+                                    max_units=config.max_unites,
+                                    faction_unique=True,
+                                    faction_imposee=config.faction_imposee)
+            player_units = selector.run()
+            if player_units is None:
+                self.etat = "menu"
+                return
+
+        if player_units is None:
+            self.etat = "menu"
+            return
+
+        # Créer le nouveau jeu
+        self.jeu = Jeu(
+            ia_strategy=ia.ia_tactique_avancee,
+            screen=self.screen,
+            initial_player_units=player_units,
+            initial_enemy_units=config.unites_ennemis,
+            enable_placement=enable_placement,
+            versus_mode=False,
+            niveau_config=config,
+            chapitre_nom=chapitre_display,
+            niveau_nom=config.nom if hasattr(config, 'nom') else f"Niveau {numero_suivant}"
+        )
+        self.etat = "jeu"
+
     def start_hexarene_faction(self):
         """Lance le mode HexArène avec contrainte de faction (joueur et IA sur même faction)"""
         # Utiliser le mode hexarene existant (qui a déjà la contrainte de faction)
@@ -595,28 +760,38 @@ class HexaMaster:
                             self.jeu.update(dt)
                             self.jeu.dessiner()
                         else:
-                            # Le menu a été fermé ET déjà traité, retourner au menu principal
-                            if getattr(self.jeu, 'end_menu_processed', False):
-                                # Si c'est une victoire en campagne, appliquer récompenses
-                                if (hasattr(self.jeu, 'player_victory') and self.jeu.player_victory and
-                                        hasattr(self.jeu, 'niveau_config') and self.jeu.niveau_config):
-                                    # Appliquer les récompenses du niveau (campagne)
-                                    niveau_config = self.jeu.niveau_config
-                                    if hasattr(niveau_config, 'chapitre') and hasattr(niveau_config, 'numero'):
+                            # Le menu a été fermé - vérifier quelle action a été choisie
+                            action = getattr(self.jeu, 'action_fin_combat', 'menu')
+                            
+                            if action == "rejouer":
+                                # Relancer le même niveau
+                                self._rejouer_niveau()
+                            elif action == "suivant":
+                                # Charger le niveau suivant
+                                self._niveau_suivant()
+                            else:
+                                # Retour au menu principal (comportement par défaut)
+                                if getattr(self.jeu, 'end_menu_processed', False):
+                                    # Si c'est une victoire en campagne, appliquer récompenses
+                                    if (hasattr(self.jeu, 'player_victory') and self.jeu.player_victory and
+                                            hasattr(self.jeu, 'niveau_config') and self.jeu.niveau_config):
+                                        # Appliquer les récompenses du niveau (campagne)
+                                        niveau_config = self.jeu.niveau_config
+                                        if hasattr(niveau_config, 'chapitre') and hasattr(niveau_config, 'numero'):
 
-                                        # Convertir le nom de chapitre si nécessaire
-                                        chapitre_display = niveau_config.chapitre
-                                        if "_" in chapitre_display:
-                                            chapitre_display = chapitre_display.split(
-                                                "_", 1)[1].replace("_", " ")
+                                            # Convertir le nom de chapitre si nécessaire
+                                            chapitre_display = niveau_config.chapitre
+                                            if "_" in chapitre_display:
+                                                chapitre_display = chapitre_display.split(
+                                                    "_", 1)[1].replace("_", " ")
 
-                                        # Marquer comme complété et appliquer récompenses
-                                        marquer_niveau_complete(
-                                            chapitre_display, niveau_config.numero)
-                                        appliquer_recompenses(niveau_config)
+                                            # Marquer comme complété et appliquer récompenses
+                                            marquer_niveau_complete(
+                                                chapitre_display, niveau_config.numero)
+                                            appliquer_recompenses(niveau_config)
 
-                                self.etat = "menu"
-                                self.jeu = None
+                                    self.etat = "menu"
+                                    self.jeu = None
                     else:
                         self.jeu.update(dt)
                         self.jeu.dessiner()

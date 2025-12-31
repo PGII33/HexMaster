@@ -12,12 +12,25 @@ DO_PRINT = True  # Activer les prints de debug
 
 def handle_click(jeu, mx, my):
     """ Gère les clics utilisateur pendant le combat """
-    # Bouton retour au menu principal (priorité absolue si menu fin de combat affiché)
-    if (hasattr(jeu, 'show_end_menu') and jeu.show_end_menu and
-            hasattr(jeu, 'btn_retour_menu') and jeu.btn_retour_menu.collidepoint(mx, my)):
-        jeu.show_end_menu = False  # Fermer le menu de fin de combat
-        retourner_menu_principal()
-        return
+    # Gestion des boutons du menu de fin de combat (priorité absolue)
+    if hasattr(jeu, 'show_end_menu') and jeu.show_end_menu:
+        # Bouton retour au menu principal
+        if hasattr(jeu, 'btn_retour_menu') and jeu.btn_retour_menu.collidepoint(mx, my):
+            jeu.show_end_menu = False
+            jeu.action_fin_combat = "menu"  # Indiquer l'action choisie
+            return
+        
+        # Bouton rejouer
+        if hasattr(jeu, 'btn_rejouer') and jeu.btn_rejouer.collidepoint(mx, my):
+            jeu.show_end_menu = False
+            jeu.action_fin_combat = "rejouer"  # Indiquer qu'on veut rejouer
+            return
+        
+        # Bouton niveau suivant
+        if hasattr(jeu, 'btn_niveau_suivant') and jeu.btn_niveau_suivant and jeu.btn_niveau_suivant.collidepoint(mx, my):
+            jeu.show_end_menu = False
+            jeu.action_fin_combat = "suivant"  # Indiquer qu'on veut le niveau suivant
+            return
 
     # clic bouton abandonner - TOUJOURS ACCESSIBLE
     if hasattr(jeu, 'btn_abandonner') and jeu.btn_abandonner.collidepoint(mx, my):

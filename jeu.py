@@ -64,6 +64,7 @@ class Jeu:
         self.show_end_menu = False
         self.end_menu_processed = False  # Nouveau flag pour éviter les re-activations
         self.recompenses = {"pa": 0, "cp": 0, "unites": []}
+        self.action_fin_combat = "menu"  # Action choisie par l'utilisateur (menu, rejouer, suivant)
 
         # Variables pour le système de compétences actives
         self.mode_selection_competence = False

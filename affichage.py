@@ -417,16 +417,48 @@ def dessiner_menu_fin_combat(jeu):
         jeu.screen.blit(txt_defaite, (menu_x + (menu_width -
                         txt_defaite.get_width()) // 2, defaite_y))
 
-    # Bouton Retour au menu principal
-    btn_width = 200
+    # Boutons en bas du menu - 3 boutons côte à côte
+    btn_width = 140
     btn_height = 50
-    btn_x = menu_x + (menu_width - btn_width) // 2
+    btn_spacing = 10
     btn_y = menu_y + menu_height - 80
+    
+    # Position de départ pour centrer les 3 boutons
+    total_width = (btn_width * 3) + (btn_spacing * 2)
+    start_x = menu_x + (menu_width - total_width) // 2
 
-    jeu.btn_retour_menu = pygame.Rect(btn_x, btn_y, btn_width, btn_height)
+    # Bouton Rejouer
+    jeu.btn_rejouer = pygame.Rect(start_x, btn_y, btn_width, btn_height)
+    pygame.draw.rect(jeu.screen, (100, 200, 100),
+                     jeu.btn_rejouer, border_radius=8)
+    txt_rejouer = jeu.font_norm.render("Rejouer", True, BLANC)
+    jeu.screen.blit(txt_rejouer, (jeu.btn_rejouer.centerx - txt_rejouer.get_width() // 2,
+                                   jeu.btn_rejouer.centery - txt_rejouer.get_height() // 2))
+
+    # Bouton Niveau suivant (seulement si victoire et qu'il y a un niveau suivant)
+    # Déterminer si un niveau suivant existe
+    has_next_level = False
+    if jeu.victoire and hasattr(jeu, 'niveau_config') and jeu.niveau_config:
+        if hasattr(jeu.niveau_config, 'chapitre') and hasattr(jeu.niveau_config, 'numero'):
+            has_next_level = True  # On affichera le bouton et vérifiera l'existence lors du clic
+    
+    btn_next_x = start_x + btn_width + btn_spacing
+    if has_next_level:
+        jeu.btn_niveau_suivant = pygame.Rect(btn_next_x, btn_y, btn_width, btn_height)
+        pygame.draw.rect(jeu.screen, (50, 150, 250),
+                         jeu.btn_niveau_suivant, border_radius=8)
+        txt_suivant = jeu.font_norm.render("Suivant", True, BLANC)
+        jeu.screen.blit(txt_suivant, (jeu.btn_niveau_suivant.centerx - txt_suivant.get_width() // 2,
+                                       jeu.btn_niveau_suivant.centery - txt_suivant.get_height() // 2))
+    else:
+        # Pas de niveau suivant, désactiver le bouton
+        jeu.btn_niveau_suivant = None
+
+    # Bouton Menu Principal
+    btn_menu_x = start_x + (btn_width + btn_spacing) * 2
+    jeu.btn_retour_menu = pygame.Rect(btn_menu_x, btn_y, btn_width, btn_height)
     pygame.draw.rect(jeu.screen, (100, 150, 200),
                      jeu.btn_retour_menu, border_radius=8)
-
-    txt_btn = jeu.font_norm.render("Menu Principal", True, BLANC)
+    txt_btn = jeu.font_norm.render("Menu", True, BLANC)
     jeu.screen.blit(txt_btn, (jeu.btn_retour_menu.centerx - txt_btn.get_width() // 2,
                               jeu.btn_retour_menu.centery - txt_btn.get_height() // 2))
