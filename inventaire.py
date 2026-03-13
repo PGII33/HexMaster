@@ -73,7 +73,7 @@ class Inventaire:
     def creer_boutons(self):
         """ Crée les boutons de l'inventaire """
         self.boutons = []
-        self.boutons.append(Button((20, 160, 44), "Retour", self.retour_menu, self.font))
+        self.boutons.append(Button((20, self.screen.get_height() - 80, 160, 44), "Retour", self.retour_menu, self.font))
 
     def retour_menu(self):
         """ Retourne au menu principal """
